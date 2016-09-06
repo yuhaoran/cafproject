@@ -1,0 +1,7 @@
+\begin{thebibliography}{1}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{{Pen}(2000)}]{2000ApJ...534L..19P}
+{Pen}, U. 2000, \apjl, 534, L19
+
+\end{thebibliography}

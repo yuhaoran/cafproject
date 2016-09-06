@@ -1,0 +1,53 @@
+This is BibTeX, Version 0.99d (TeX Live 2012)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: caf.aux
+The style file: ../hapj.bst
+Database file #1: cafNotes.bib
+Database file #2: ../../haoran_ref.bib
+Repeated entry---line 2477 of file ../../haoran_ref.bib
+ : @article{2000ApJ...534L..19P
+ :                             ,
+I'm skipping whatever remains of this entry
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+You've used 1 entry,
+            3002 wiz_defined-function locations,
+            661 strings with 4709 characters,
+and the built_in function-call counts, 368 in all, are:
+= -- 30
+> -- 11
+< -- 1
++ -- 4
+- -- 3
+* -- 24
+:= -- 74
+add.period$ -- 1
+call.type$ -- 1
+change.case$ -- 5
+chr.to.int$ -- 1
+cite$ -- 1
+duplicate$ -- 18
+empty$ -- 30
+format.name$ -- 4
+if$ -- 71
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 1
+newline$ -- 7
+num.names$ -- 4
+pop$ -- 5
+preamble$ -- 1
+purify$ -- 5
+quote$ -- 0
+skip$ -- 17
+stack$ -- 0
+substring$ -- 21
+swap$ -- 0
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 9
+warning$ -- 0
+while$ -- 4
+width$ -- 0
+write$ -- 13
+(There was 1 error message)

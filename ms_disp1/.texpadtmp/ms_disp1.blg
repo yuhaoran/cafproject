@@ -1,0 +1,52 @@
+This is BibTeX, Version 0.99d (TeX Live 2012)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: ms_disp1.aux
+The style file: ../h-physrev3.bst
+Database file #1: ms_disp1Notes.bib
+Database file #2: ../../haoran_ref.bib
+Repeated entry---line 2477 of file ../../haoran_ref.bib
+ : @article{2000ApJ...534L..19P
+ :                             ,
+I'm skipping whatever remains of this entry
+You've used 1 entry,
+            1958 wiz_defined-function locations,
+            607 strings with 4811 characters,
+and the built_in function-call counts, 199 in all, are:
+= -- 12
+> -- 6
+< -- 0
++ -- 2
+- -- 1
+* -- 16
+:= -- 31
+add.period$ -- 1
+call.type$ -- 1
+change.case$ -- 0
+chr.to.int$ -- 0
+cite$ -- 1
+duplicate$ -- 11
+empty$ -- 22
+format.name$ -- 2
+if$ -- 43
+int.to.chr$ -- 0
+int.to.str$ -- 1
+missing$ -- 1
+newline$ -- 7
+num.names$ -- 1
+pop$ -- 5
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 8
+stack$ -- 0
+substring$ -- 10
+swap$ -- 3
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 2
+width$ -- 2
+write$ -- 9
+(There was 1 error message)
