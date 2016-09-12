@@ -149,6 +149,14 @@ Phi, GPU.
 
 \appendix
 \section{A. Velocity distribution function}
+To optimize the storage of the velocity field, we need to estimate the velocity dispersion at each snapshot. At non-linear scale, the velocity distribution function is surely non-Gaussian. However, to the first order approximation, we simply assume it as Gaussian and characterized by the variance
+\begin{eqnarray}
+\sigma_v = \frac{1}{3}  (a H f D)^2 \int d^3q \frac{P_{L}(q)}{q^2} 
+\end{eqnarray}
+where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the linear growth factor, $f=d \ln D/d\ln a$, 
+and $P_L(k)$ is the linear power spectrum of density contrast at redshift zero. 
+
+ 
 
 \section{B. Initial condition generator}
 
