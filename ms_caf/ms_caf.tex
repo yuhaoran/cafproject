@@ -42,14 +42,23 @@ Instead of storing the particle's global coordinates, we store its relative posi
 \subsection{Particle velocity storage}\label{s.velocity}
 Velocities, in each dimension, are compressed to 2-byte integers representing their index within a histogram containing $2^{16}$ equally spaced bins ranging from $-v_{\rm max}$ to $v_{\rm max}$, where $v_{\rm max}$ is the maximum absolute particle velocity. $v_{\rm max}$ can be derived from either computation or prediction. We prefer the latter case. In cosmological simulations, velocity distribution of matter fluids can be predicted by linear theory, given a model and redshift $z$ (time of the simulation). Then by any time step, we have a cumulative distribution function (CDF) $F(|\bs{v}|)$ of particles' velocity (see appendix A). We, instead, equally divide the $y$-axis of this CDF into $2^{16}$ bins, and the 2-byte integer shows which velocity bin the particle locates, in each dimension. This step does finer sampling on low-velocity end in velocity space and increases the simulation accuracy. This CDF may introduce velocity cutoffs, that particle cannot exceed some certain $\bs{v}_{\rm max}(z)$ given by the model. This process prevents the nonphysical scattering behaviours of particles, which do not exist in fluids. Practically, simulation results are very insensitive to the choice of velocity distribution. Even a top-hat distribution in range $-v_{\rm max}$ to $v_{\rm max}$ give accurate results. One can just assume a Gaussian distribution and whose standard deviation is given by the model and redshift $\sigma(\bs{\theta},z)$. Proper choice of model only optimizes the velocity space sampling, but does not affect the physics.
 
+\begin{figure}[t]
+\includegraphics[width=1.0\linewidth]{fig_tile.pdf}
+\caption{Spacial decomposition.}
+\label{fig.tile}
+\end{figure}
+
 \subsection{Spacial decomposition}
 {\tt CUBE} uses cubic decomposition structures. The global simulation volume is decomposed into ${\tt nn}^3$ cubic sub-volumes, and each of these are assigned to a coarray {\it image}\footnote{Images are the concept of computing nodes or MPI tasks in Coarray Fortran. We use this terminology in this paper.}. Inside of an image, the sub-volume is further decomposed into ${\tt nnt}^3$ cubic {\it tiles}. Each tile is surrounded by a {\it buffer} region which is usually ${\tt ncb}$ coarse cells thick. The buffer is designed for two reasons: (1) computing the fine mesh force, whose cut-off ${\tt nforce\_cutoff}\leq{\tt ncb}$, and (2) collecting all possible particles travelling from a tiles buffer region to its center, {\it physical} region. Thus, a integer-based coarse mesh density is defined as
 \begin{equation*}
 {\tt integer(1)\ rho\_c(nex,nex,nex,nnt,nnt,nnt)[nn,nn,*]}\\
 \end{equation*}
-where ${\tt nex}={\tt nt}+2{\tt ncb}$ covers the buffer region on both sides, {\tt nnt} is the tile dimemsions, and {\tt nn} is the image {\it codimensions}\footnote{Coarray Fortran concept. Codimensions can do communications between images.}. Particles' phase coordinates {\tt x} and {\tt v} are copied between tiles and images, when necessary.
-\begin{figure}[h]
+where ${\tt nex}={\tt nt}+2{\tt ncb}$ covers the buffer region on both sides, {\tt nnt} is the tile dimemsions, and {\tt nn} is the image {\it codimensions}\footnote{Coarray Fortran concept. Codimensions can do communications between images.}. Particles' phase coordinates {\tt x} and {\tt v} are copied between tiles and images, when necessary. Figure \ref{fig.tile} shows the spacial decomposition in a 2-dimensional analogy, with ${\tt nn=2}$ and ${\tt nnt=2}$.
+
+\begin{figure}[t]
 \begin{verbatim}
+
+
     program CUBE
       call initialize
       call particle_initialize
@@ -79,7 +88,7 @@ where ${\tt nex}={\tt nt}+2{\tt ncb}$ covers the buffer region on both sides, {\
 \subsection{Code overview}
 By using the previous compact format storage, we modified the {\tt CUBEP3M} and utilized it in the outputs TianNu simulation. On average, 9.125 bpp is used for all outputs and saves 62 \% hard drive space on Tianhe-2. The compact version of {\tt CUBEP3M}, named {\tt CUBE}, accomplished the compact format in memory, and the code keeps only integer format for storing particles' phase space coordinates. {\tt CUBE} is written in Coarray Fortran, where the coarray features are used to do MPI communications. Here we review the methodology of solving this integer based $N$-body problem. Like its predecessor {\tt CUBEP3M}, {\tt CUBE} uses two-level mesh grids for solving the Poisson equations. The advantages of this are described in \cite{2013MNRAS.436..540H}.
 
-Figure \ref{fig.code} shows the overall structure of the code. Subroutine {\tt initialize} creates necessary FFT plans and read in configuration files telling the program at which redshifts we need to do checkpoints, halofinds, or stop the simulation. Force kernels are also created or read in here. In {\tt particle\_initialize}, for each image, we read in initial positions and velocities in the compressed format. When this step is done by all images (synchronized by ``{\tt sync all}'', which is equivalent to a {\tt mpi\_barrier}), the density fields {\tt rho\_c} are buffered between tiles (communications between images are needed) by subroutine {\tt buffer\_density}. Then, particles' phase space coordinates {\tt x} and {\tt v} are also buffered, by {\tt buffer\_x} and {\tt buffer\_v} respectively. In these steps, {\tt x} and {\tt v}'s ordering is changed according to the updated {\tt rho\_c}.
+Figure \ref{fig.code} shows the overall structure of the code. Subroutine {\tt initialize} creates necessary FFT plans and read in configuration files telling the program at which redshifts we need to do checkpoints, halofinds, or stop the simulation. Force kernels are also created or read in here. In {\tt particle\_initialize}, for each image, we read in initial positions and velocities in the compressed format.  A initial condition generator is also written in the compressed format (see Appendix B). When this step is done by all images (synchronized by ``{\tt sync all}'', which is equivalent to a {\tt mpi\_barrier}), the density fields {\tt rho\_c} are buffered between tiles (communications between images are needed) by subroutine {\tt buffer\_density}. Then, particles' phase space coordinates {\tt x} and {\tt v} are also buffered, by {\tt buffer\_x} and {\tt buffer\_v} respectively. In these steps, {\tt x} and {\tt v}'s ordering is changed according to the updated {\tt rho\_c}.
 
 In each iteration of the main loop, we firstly call {\tt timestep}, where a increment of time {\tt dt} is controlled by particles' maximum velocities, accelerations, and cosmic expansions. According to {\tt dt}, subroutine {\tt update\_x} updates the positions of particles in a ``{\it gather}'' algorithm. ${\tt x}={\tt x}+{\tt v}*{\tt dt}$ is executed twice, first time to determine a updated density field on the tile, {\tt rho\_c\_new}, and second time to generate a new particle list {\tt x\_new} and {\tt v\_new} on the tile. The reason for this repeated execution is the dependence of {\tt x\_new} and {\tt v\_new}'s value and ordering on both the old {\tt x}, {\tt v} and the new {\tt rho\_c\_new}. However, ${\tt x}={\tt x}+{\tt v}*{\tt dt}$ scales as $o(N)$ and is computational inexpensive. Although {\tt x\_new} and {\tt v\_new} arrays take extra memory, they do not appear simultaneously for multiple tiles, and compared to {\tt x} and {\tt v}, the extra memory overhead is by factor of $1/{\tt nnt}^3$. This requires the ``gather'' algorithm to move particles\footnote{In contrast, {\tt CUBEP3M} uses a ``{\it scatter}'' algorithm.} -- as we synchronize the correct \{{\tt rho\_c}, {\tt x}, {\tt v}\} in the buffer region of each tile, and the particles in the extended (physical+buffer) region are a superset of particles locating in the physical region in the next time step, given that ${\tt v}*{\tt dt}$ is not greater than the buffer depth. In {\tt update\_x}, \{{\tt rho\_c\_new}, {\tt x\_new}, {\tt v\_new}\} can be set to collect only the physical region of the tile, with the rest of this subset discarded. At the end, \{{\tt rho\_c}, {\tt x}, {\tt v}\} is replaced by \{{\tt rho\_c\_new}, {\tt x\_new}, {\tt v\_new}\}, and the memory of latter is freed up.
 
@@ -93,22 +102,56 @@ If a desired redshift is reached, we call {\tt checkpoint} and/or exit the main 
 
 
 \subsection{Memory layout}
-
+Here we summarize the memory usage in unit of bpp (byte per particle).
 
 \section{Results}
+We use the same initial conditions, and use {\tt CUBEP3M} and {\tt CUBE} to simulate the large scale structure formation separately and compare their results.
+
+Results of {\tt izipx=1}
+
+Results of {\tt izipx=2}
+
+\begin{figure}[h]
+\begin{verbatim}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{verbatim}
+
+\caption{Power spectrum differential plot}
+\label{fig.power}
+\end{figure}
 
 \section{Discussion and Conclusion}
+Cosmological simulation, PM method.
+
+PID.
+
+Summarize memory.
+
+Phi, GPU.
+
+
+\clearpage
 
 \appendix
-\section{Velocity distribution function}
+\section{A. Velocity distribution function}
 
+\section{B. Initial condition generator}
 
-
-%\begin{figure} \centering
-%  \includegraphics[width=1.0\linewidth]{delta_mesh.pdf}
-%  \caption{Caption goes here.}
-%  \label{fig.1}
-%\end{figure}
 
 \acknowledgements
 Thanks.
