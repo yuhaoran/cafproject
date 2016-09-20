@@ -207,10 +207,10 @@ enddo
   !!!!! test only
 #endif
 
-call cross_power(xi,cube,cube)
-open(11,file='initpower.dat',access='stream')
-write(11) xi
-close(11)
+!call cross_power(xi,cube,cube)
+!open(11,file='initpower.dat',access='stream')
+!write(11) xi
+!close(11)
 
 call fft_cube2pencil_fine
 call trans_zxy2xyz_fine
@@ -286,9 +286,9 @@ if (correct_kernel) then
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
   
-  open(11,file='laplace.dat',access='stream')
-  write(11) cube
-  close(11)
+  !open(11,file='laplace.dat',access='stream')
+  !write(11) cube
+  !close(11)
 
   sync all
 
@@ -339,15 +339,15 @@ cx=real(cx)*cx_temp
 cx_temp=cx  ! backup phi(k)
 
 !!!!!! output phi in real space
-call trans_xyz2zxy_fine
-call ifft_pencil2cube_fine
-phi=0
-phi(1:nf,1:nf,1:nf)=cube ! phi1
-open(11,file='phi1.dat',access='stream')
-write(11) cube
-close(11)
-call fft_cube2pencil_fine
-call trans_zxy2xyz_fine
+!call trans_xyz2zxy_fine
+!call ifft_pencil2cube_fine
+!phi=0
+!phi(1:nf,1:nf,1:nf)=cube ! phi1
+!open(11,file='phi1.dat',access='stream')
+!write(11) cube
+!close(11)
+!call fft_cube2pencil_fine
+!call trans_zxy2xyz_fine
 !!!!!!
 
 #ifndef ZA
@@ -501,9 +501,9 @@ call trans_zxy2xyz_fine
 
   !cube=cube-phixy**2-phiyz**2-phizx**2 ! source term of phi2
 
-  open(11,file='phi2_source.dat',access='stream')
-  write(11) cube
-  close(11)
+  !open(11,file='phi2_source.dat',access='stream')
+  !write(11) cube
+  !close(11)
 
   sync all
 
@@ -535,9 +535,9 @@ call trans_zxy2xyz_fine
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
 
-  open(11,file='phi2.dat',access='stream')
-  write(11) cube
-  close(11)
+  !open(11,file='phi2.dat',access='stream')
+  !write(11) cube
+  !close(11)
 
   phixx=phi(1:nf,1:nf,1:nf) ! backup phi1
   phiyy=cube ! backup phi2
@@ -549,9 +549,9 @@ call trans_zxy2xyz_fine
 
   phi(1:nf,1:nf,1:nf)=phixx-Dgrow(a)*phiyy ! corrected phi for positions
 
-  open(11,file='phi12.dat',access='stream')
-  write(11) phi(1:nf,1:nf,1:nf)
-  close(11)
+  !open(11,file='phi12.dat',access='stream')
+  !write(11) phi(1:nf,1:nf,1:nf)
+  !close(11)
 #endif
 
 
