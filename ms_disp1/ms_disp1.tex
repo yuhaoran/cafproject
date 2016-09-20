@@ -26,7 +26,7 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Displacement field paper}
+\title{Reconstruction of Large Scale Structure by Nonlinear Displacement Fields}
 
 %\author{Hao-Ran~Yu} \affiliation{}\email{haoran@cita.utoronto.ca}
 %\author{Qiaoyin~Pan}
@@ -38,7 +38,7 @@
 %\date{Received \today; published -- 00, 0000}
 
 \begin{abstract}
-In this paper, we discover the ability of using displacement field to reconstruct initial linear perturbations in the early universe.
+We investigate the ability of using nonlinear displacement field to reconstruct the primordial linear perturbations of the large scale structure. According to the linear Lagrangian perturbation theory, the first order primordial linear density field is given by the negative divergence of the displacement field. By running $N$-body simulations, we show that this reconstruction algorithm recovers great amount of nonlinear information in the early universe. In reality, the displacement fields can be solved from only the final stage of the density fields. This has potential to reconstruct baryonic acoustic oscillation (BAO) from current and future large scale structure surveys.
 \end{abstract}
 
 %\pacs{98.80.Es 95.36.+x}
@@ -46,18 +46,20 @@ In this paper, we discover the ability of using displacement field to reconstruc
 \maketitle
 
 \section{Introduction}\label{sec.intro}
-Introduction goes here. Citation example \cite{2013MNRAS.436..540H}.
-Cite Hong-Ming's 1D paper.
+Our universe starts from primordial Gaussian perturbations at a very early stage, and from those fluctuations, the gravitational instability drives the formation of the large scale structure (LSS) distribution of matter. These structures grow linearly until the perturbations are large enough such that first order perturbation theories are unable to analytically describe the LSS distributions. Inversely, the final stage nonlinear LSS distribution contains higher order statistics, and thus makes it more challenging to interpret the basic cosmological parameters. This leads to various attempts to recover earlier stages of LSS, in which statistics are closer to Gaussian. Because Gaussian fields can be adequately described by two-point statistics, ideally after some recovery algorithms, more information can be extracted, more straightforwardly, by power spectra or two-point correlation functions.
 
-The rest of this paper is structured as follows. In section \ref{sec.method} we describe the simulation and reconstruction algorithm. In section \ref{sec.results} we show the results of the reconstruction. Discussion and conclusion are in \ref{sec.discussion}.
+These algorithms include nonlinear Wiener filters in wavelet space, distribution function transforms etc. Standard BAO reconstruction algorithms smooths the nonlinear density field on linear scale ($\sim$10 Mpc$/h$) and reverse the large scale bulk flows by a negative Zel'dovich linear displacement. Here we propose a new reconstruction method that uses the nonlinear displacement field to recover the primordial density field. In the linear Lagrangian perturbation theory, the negative divergence of the the displacement field respect to Lagrangian coordinates gives the linear density field. Of course, the full displacement field is non-observable, as it requires the initial distributions of matter, however there are many techniques to estimate the nonlinear displacement field from a final distribution of matter. For example, when a homogeneous initial matter distribution is assumed, there is a unique solution of curl-less displacement field to relate the initial and final distributions without shell-crossing. This solution can be solved by a metric transformation equation \citep{1995ApJS..100..269P,1998ApJS..115...19P}. In 1-dimensional case, the solution simplifies to a reordering of matter elements by Eulerian positions, and [Hong-ming et. al.] studies this case. The homogeneous and curl-less assumptions are generally valid in cosmology [cite or proof]. Shell-crossing does exist, and this effect can be quantified by $N$-body simulations.
+
+In this paper we track the initial and final distributions of particles in LSS $N$-body simulations, and use the displacement field to reconstruct the initial linear density field. The rest of this paper is structured as follows. In section \ref{sec.method} we describe the simulation and reconstruction algorithm. In section \ref{sec.results} we show the results of the reconstruction. Discussion and conclusion are in \ref{sec.discussion}.
 
 
 
 \section{Method}\label{sec.method}
-Method goes there.
 
 \subsection{Simulation}
-Cosmological parameters, simulation parameters.
+We use the public cosmological simulation code {\tt CUBE}. Cosmological parameters are in accordance with Planck. Initial conditions are generated at redshift $z=100$ using Zel'dovich approximation. $N_p=512^3$ $N$-body particles are evolved via their mutual gravitational interactions to $z=0$, in a periodic box with $L=300$ Mpc$/h$ per side. The code is set to use standard a particle-mesh (PM) algorithm \cite{1988csup.book.....H} on a two-level mesh grids (details see \cite{2013MNRAS.436..540H}) and cloud-in-cell (CIC) is used in particle interpolations in force calculation and obtaining the density field $\rho$ at late stages. 
+
+
 
 Initial conditions, get linear density field $\delta_L$. Run simulation by code {\tt CUBE} and get the nonlinear density field $\delta$ at $z=0$. {\tt CUBE} uses particle-ID (PID) to record the initial location of particles, and the information is tracked until the $z=0$ and we can get the displacement vector ${\bs s}\equiv{\bs x}-{\bs q}$ for every particle. Then these vectors are interpolated onto the initial Lagrangian coordinates ${\bs q}$ of particles and we get the displacement field ${\bs s}({\bs q})$.
 

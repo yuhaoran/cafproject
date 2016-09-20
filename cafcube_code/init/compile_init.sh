@@ -1,7 +1,14 @@
 #/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/lib/
 #/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/include/
+module purge
+module load gcc/5.4.0
+module load openmpi/2.0.0-gcc-5.4.0
+module load fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0
 
-rm *.o *.out
+module list
+
+rm -f *.o *.out *.mod *~
+
 mpif90 -O3 -cpp -fcoarray=single -mcmodel=medium -c ../parameters.f90 -o parameters.o
 
 mpif90 -O3 -cpp -fcoarray=single -mcmodel=medium -Dpenfft_4x -c penfft_config.f90
