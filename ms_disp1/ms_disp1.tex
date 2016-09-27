@@ -14,13 +14,15 @@
 \newcommand{\Msun}{M_\odot}
 \newcommand{\lb}{\left\langle}
 \newcommand{\rb}{\right\rangle}
+\newcommand{\tcb}{\textcolor{blue}}
+\newcommand{\tcr}{\textcolor{red}}
 
 %
 \def\apjl{Astrophys. J. Lett.}
 \def\apjs{Astrophys. J. Suppl. Ser.}
 \def\aj{Astron. J.}
 \def\mnras{Mon. Not. R. Astron. Soc.}
-\def\aap{Astron. Astrophys.}                % Astronomy and Astrophysics
+\def\aap{Astron. Astrophys.}
 \def\jcap{J. Cosmology Astropart. Phys.}
 \def\aapr{Astron. Astrophys. Rev.}
 
@@ -28,15 +30,19 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Reconstruction of Large Scale Structure by Nonlinear Displacement Fields}
+\title{Reconstruction of Large Scale Structure by Nonlinear \tcr{Lagrangian} Displacement Fields}
 
-%\author{Hao-Ran~Yu} \affiliation{}\email{haoran@cita.utoronto.ca}
-%\author{Qiaoyin~Pan}
-%\author{Ue-Li~Pen} \affiliation{}
-%\author{Tong-Jie~Zhang} \affiliation{}
-%---
+\author{Hao-Ran~Yu}%\email{haoran@cita.utoronto.ca}
+\affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
+\affiliation{Canadian Institute for Theoretical Astrophysics, University of Toronto, 60 St. George Street, Toronto, Ontario M5S 3H8, Canada}
 
+\author{Ue-Li~Pen}%\email{pen@cita.utoronto.ca}
+\affiliation{Canadian Institute for Theoretical Astrophysics, University of Toronto, 60 St. George Street, Toronto, Ontario M5S 3H8, Canada}
+\affiliation{Dunlap Institute for Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, Ontario M5S 3H4, Canada}
+\affiliation{Canadian Institute for Advanced Research, CIFAR Program in Gravitation and Cosmology, Toronto, Ontario M5G 1Z8, Canada}
+\affiliation{Perimeter Institute for Theoretical Physics, 31 Caroline Street North, Waterloo, Ontario, N2L 2Y5, Canada}
 
+\date{\today}
 %\date{Received \today; published -- 00, 0000}
 
 \begin{abstract}
@@ -44,7 +50,7 @@ We investigate the ability of using nonlinear displacement field to reconstruct
 the primordial linear perturbations of the large scale structure. According to 
 the linear Lagrangian perturbation theory, the first order primordial linear 
 density field is given by the negative divergence of the displacement field. By 
-running $N$-body simulations, we show that this reconstruction algorithm recovers 
+running $N$-body simulations, we show that this \tcr{new} reconstruction algorithm recovers 
 great amount of nonlinear information in the early universe. In reality, the 
 displacement fields can be solved from only the final stage of the density 
 fields. This demonstrates the potential to reconstruct baryonic acoustic oscillation (BAO) 
@@ -59,38 +65,64 @@ from current and future large scale structure surveys.
 \section{Introduction}\label{sec.intro}
 Our universe starts from primordial Gaussian perturbations at a very early stage, 
 and from those fluctuations, the gravitational instability drives the formation of 
-the large scale structure (LSS) distribution of matter [cite LSS]. These structures grow 
+the large scale structure (LSS) distribution of matter
+\citep{1970A&A.....5...84Z,1985ApJ...292..371D}.
+These structures grow 
 linearly until the perturbations are large enough so that the first order 
-perturbation theories are unable to analytically describe the LSS distributions [cite PT]. 
+perturbation theories are unable to analytically describe the LSS distributions 
+\citep{2016JCAP...01..043M}. 
 As a result, the final nonlinear LSS distribution contains higher order 
 statistics, and thus makes it more challenging to be interpreted into basic
-cosmological parameters [cite constraint]. For example, the baryonic acoustic oscillation (BAO)
+cosmological parameters. One such example is that, the baryonic acoustic oscillation (BAO)
 scale can be used as a ``standard ruler'' to constrain the cosmic expansion history
-and thus probes the dark energy properties [cite BAO], and nonlinear evolution smears the BAO
-features [cite smear BAO]. These leads to various attempts to recover earlier stages of LSS, in 
-which statistics are closer to Gaussian [cite Gaussianize, Reco examples].
+and thus probes the dark energy properties \citep{2005NewAR..49..360E}, but
+nonlinear evolution smears the BAO features and lowers the measurement
+accuracy \citep{2005ApJ...633..560E,2012MNRAS.419.2949N}.
+There are various attempts to recover earlier stages
+of LSS, in which statistics are closer to Gaussian 
+\citep{1992MNRAS.254..315W,2013MNRAS.436..759H}.
 Because Gaussian fields can be adequately described by two-point statistics,
 ideally after some recovery algorithms, more information can be extracted,
-more straightforwardly, by power spectra or two-point correlation functions [can cite friends].
+more straightforwardly, by power spectra or two-point correlation functions
+\citep{2005MNRAS.360L..82R,2012MNRAS.421..832Y}.
 
-These algorithms include nonlinear Wiener filters in wavelet space [cite myself], distribution 
-function transforms etc [cite Pengjie, etc.]. Standard BAO reconstruction algorithms smooth the 
+Standard BAO reconstruction algorithms smooth the 
 nonlinear density field on linear scale ($\sim$10 Mpc$/h$) and reverse the large 
-scale bulk flows by a negative Zel'dovich linear displacement [cite Eisenstein]. Here we propose a 
-new reconstruction method that uses the nonlinear displacement field to recover the 
+scale bulk flows by a negative Zel'dovich linear displacement
+\citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}. Here we propose a 
+\tcr{new reconstruction method} that uses the nonlinear displacement field to recover the 
 primordial density field. In the linear Lagrangian perturbation theory, the 
-negative divergence of the the displacement field respect to Lagrangian coordinates 
-gives the linear density field [cite Jeong]. Of course, the full displacement field is non-
-observable, as it requires the initial distributions of matter, however there are 
+negative divergence of the the displacement field
+$\bs\Psi(\bs q)$ respect to Lagrangian coordinates $\bs q$
+gives the linear density field \tcr{\citep{2010PhDT.........4J}}.
+Of course, the full displacement field $\bs\Psi(\bs q)$
+is non-observable, as it requires the initial distributions of matter, however there are 
 many techniques to estimate the nonlinear displacement field from a final 
 distribution of matter. For example, when a homogeneous initial matter distribution 
 is assumed, there is a unique solution of curl-less displacement field to relate 
 the initial and final distributions without shell-crossing. This solution can be 
-solved by a metric transformation equation \citep{1995ApJS..100..269P,1998ApJS..115...19P}. In 1-dimensional case, the solution simplifies to a reordering of 
-matter elements by Eulerian positions, and \cite{2016arXiv160907041Z} studies this 
-case. The homogeneous and curl-less assumptions are generally valid in cosmology 
-[cite or proof]. Shell-crossing does exist, and this effect can be quantified by 
-$N$-body simulations.
+solved by a metric transformation equation \citep{1995ApJS..100..269P,1998ApJS..115...19P}.
+\tcr{[Peacock, Goldberg?]}
+In 1-dimensional (1D) case, the exact solution of \cite{1995ApJS..100..269P}
+simplifies to an ordering of matter elements by Eulerian coordinates.
+Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
+of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
+displacement field $s(q)$, and find that \tcr{this new method} well recovers the linear
+information and reconstructs BAO peak in correlation function. 
+In 3D case, there are various techniques to obtain $\bs s(\bs q)$.
+However one needs to carefully consider effects of curl, shell-crossing in 3D case.
+
+Before these steps, we need to quantify the amount of linear information
+that can be recovered from the full nonlinear displacement field $\bs\Psi(\bs q)$,
+and further estimations $\bs s(\bs q)$ can be compared with this result.
+In this paper we run a LSS $N$-body simulation and track the motion of
+particles to obtain $\bs\Psi(\bs q)$. According to this we reconstruct the linear density
+field and compare to the primordial density field of the initial
+conditions. We describe the simulation and reconstruction algorithm in section
+\ref{sec.method}, and we show the results in section \ref{sec.results}.
+Discussion and conclusion are in section \ref{sec.discussion}.
+
+
 \begin{figure}[b] \centering
   \includegraphics[width=1.0\linewidth]{fig1.pdf}
   \caption{Dimensionless auto- and cross- power spectra between nonlinear density field $\delta$, linear density field $\delta_L$ and reconstructed density field $\delta_R$.}
@@ -105,20 +137,15 @@ $N$-body simulations.
   \label{fig.2}
 \end{figure}
 
-In this paper we track the initial and final distributions of particles in LSS $N$-
-body simulations, and use the displacement field to reconstruct the initial linear 
-density field. In section 
-\ref{sec.method} we describe the simulation and reconstruction algorithm. In 
-section \ref{sec.results} we show the results of the reconstruction. Discussion and 
-conclusion are in section \ref{sec.discussion}.
+
 
 \section{Method}\label{sec.method}
 We show the LSS simulation and displacement field setups in section \ref{ss.sim},
 and the reconstruction processes are presented in section \ref{ss.reco}.
 
 \subsection{Simulation}\label{ss.sim}
-We use the open source cosmological simulation code {\tt CUBE}\footnote{github link of cafcube}
-[cite Yu et al. in prep].
+We use the open source cosmological simulation code {\tt CUBE}%\footnote{github link of cafcube}
+\citep{cafcube}.
 Cosmological parameters 
 are [TBD before submission]. Initial conditions are generated at redshift $z=50$ 
 using Zel'dovich approximation. $N_p=512^3$ $N$-body particles are evolved via 
