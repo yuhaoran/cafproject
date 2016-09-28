@@ -146,9 +146,11 @@ and the reconstruction processes are presented in section \ref{ss.reco}.
 \subsection{Simulation}\label{ss.sim}
 We use the open source cosmological simulation code {\tt CUBE}%\footnote{github link of cafcube}
 \citep{cafcube}.
-Cosmological parameters 
-are [TBD before submission]. Initial conditions are generated at redshift $z=50$ 
-using Zel'dovich approximation. $N_p=512^3$ $N$-body particles are evolved via 
+Cosmological parameters are set as
+$\Omega_m=0.27$, $\Omega_\Lambda=0.73$, $h_0=0.68$, $n_s=0.96$ and $\sigma_8=0.83$.
+Initial conditions are generated at redshift $z=50$ 
+using Zel'dovich approximation, and using a CLASS transfer function.
+$N_p=512^3$ $N$-body particles are evolved via 
 their mutual gravitational interactions to $z=0$, in a periodic box with $L=300$ 
 Mpc$/h$ per side. The code is set to use standard a particle-mesh (PM) algorithm 
 \cite{1988csup.book.....H} on a two-level mesh grids
@@ -187,8 +189,9 @@ $\delta_R$ takes the coordinates of $\bs q$ instead of $\bs x$.
 We just write $\bs q$'s Fourier wave number
 $k_q$ as $k$ to simplify the expression.
 In Fig.\ref{fig.1} we show the power spectrum of $\delta_R$ and its cross power
-with $\delta_L$. Despite of a lowered power of $\delta_R$ compared to $\delta$, it has a much higher 
-cross power with $\delta_L$, up to a relatively smaller scale (higher $k$).
+with $\delta_L$. Despite of a lowered power of $\delta_R$ compared to $\delta$,
+it has a much higher cross power with $\delta_L$ compared to $\delta_N$,
+up to a relatively smaller scale (higher $k$).
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{fig3.pdf}
   \caption{Power spectra of the nonlinear density field and its
@@ -219,7 +222,7 @@ correlation coefficient $r_{LN}$ and $r_{LR}$ in Fig.\ref{fig.2}. Clearly, $
 \delta_R$ contains much more linear information on smaller scales.
 
 According to equation (\ref{eq.decompose}), the auto power spectrum is decomposed as
-\begin{equation}
+\begin{equation}\label{eq.power}
     P_{RR}=r^2b^2P_{LL}+P_{NN},
 \end{equation}
 and $P_{NN}=(1-r^2)P_{RR}$. Then we construct a Wiener filter to filter out the uncorrelated part in $\delta_R$:
@@ -232,39 +235,59 @@ The Wiener filters are also plot in Fig.\ref{fig.2}. The estimated linear densit
 \end{equation}
 The full filters $Wb^{-1}$ are also plotted in Fig.\ref{fig.2}.
 The optimal reconstructed power spectrum is given by
-\begin{equation}
+\begin{equation}\label{eq.opt}
     \tilde P=W^2b^{-2}P_{RR}=W^2P_{LL}+W^2b^{-2}P_{NN}.
 \end{equation}
 The $W^2$ describes the damping of the linear power spectrum.
 
-
-
-
-
-
-
-
-
 \section{Results}\label{sec.results}
-Fig.\ref{fig.2} shows the cross correlation functions,  damping factors $W^2(k)$ for the optimal filtered 
-nonlinear and reconstructed density fields. We fit the Gaussian BAO damping model $
+Fig.\ref{fig.2} shows the cross correlation functions,
+damping factors $W^2(k)$ for the optimal filtered 
+nonlinear and reconstructed density fields.
+We can see that the cross correlation $r_{LR}$ is recovered to
+nearly an order of magnitude smaller scales compared to $r_{LN}$.
+We also fit the Gaussian BAO damping model $
 {\mathcal D}(k)=\exp(-k^2\Sigma^2/2)$ and give $\Sigma=1.8$ Mpc$/h$ and $\Sigma=10$ 
-Mpc$/h$ for nonlinear and reconstructed fields. 
+Mpc$/h$ for nonlinear and reconstructed fields.
+We repeat the analysis with various box sizes,
+and the results are consistent.
 
-Fig.\ref{fig.3} and Fig.\ref{fig.4} show their filtered power spectra.
-
-
-
+In Fig.\ref{fig.3} and Fig.\ref{fig.4} we show the power spectrum
+decomposition by equation (\ref{eq.power}) for both $\delta_N$ 
+(with subscripts ``$_R$'' replaced by ``$_N$'') and $\delta_R$.
+In Fig.\ref{fig.3} we can see that, on scales $k>0.2\ h/$Mpc,
+$P_{NN}$ term dominates the power spectrum due to a low correlation
+between $\delta_L$ and $delta_N$. The optimal filtered power spectrum
+damps quickly on small scales. In comparison, in Fig.\ref{fig.4},
+$P_{NN}$ starts to dominate on scales $k>1\ h/$Mpc. As a result, the
+optimal filtered reconstructed power spectrum
+(by equation (\ref{eq.opt})) is much higher.
 
 \section{Discussion and conclusion}\label{sec.discussion}
 We extract the actual displacement field of matter elements in cosmological $N$-body
 simulations, and use this displacement field in Lagrangian coordinates to reconstruct
 the primordial linear perturbations. The result shows a prominent improvement from
 $r_{LN}$ to $r_{LR}$ in Fig.\ref{fig.2} -- recovering the lost linear information on
-nearly an order of magnitude smaller scales. more tomorrow...
+nearly an order of magnitude smaller scales.
+This is achieved by implementing differential movement information
+of matter elements on Lagrangian coordinates, rather than on
+Eulerian coordinates. This result illustrates the feasibility
+of using estimated displacement field $\bs s(\bs q)$ to reconstruct primordial linear
+density field. A straightforward example of a estimation of $\bs s(\bs q)$
+is given by \cite{1995ApJS..100..269P,1998ApJS..115...19P}.
+More complicated algorithms can be found in \tcr{[cite]}, where
+shell-crossing effects are also considered. In reality, one needs
+to consider all aspects including vorticity, shell-crossing, bias, noise
+and data complexities. The impact of these factors can be quantitatively
+compared with the impact of different estimation methods, and with
+the exact solution by $N$-body simulations.
+
+\tcr{Is this reconstruction method optimal? Is there any other better methods?}
+
+\tcr{A proper name of this method?}
 
 \section*{Acknowledgements}
-Acknowledgements goes here.
+HRY acknowledges General Financial Grant from the China Postdoctoal Science Foundation No.2015M570884.
 
 %\bibliographystyle{apsrev4-1}
 \bibliographystyle{h-physrev3}
