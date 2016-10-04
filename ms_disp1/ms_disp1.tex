@@ -2,7 +2,7 @@
 %\documentclass[prd,superscriptaddress,twocolumn,floatfix]{revtex4}
 
 \usepackage{graphicx,longtable,natbib,mathrsfs,color}
-\usepackage{txfonts}
+\usepackage{txfonts,aas_macros}
 
 \newcommand{\bs}{\boldsymbol}
 \newcommand{\diff}{{\mathrm d}}
@@ -17,20 +17,11 @@
 \newcommand{\tcb}{\textcolor{blue}}
 \newcommand{\tcr}{\textcolor{red}}
 
-%
-\def\apjl{Astrophys. J. Lett.}
-\def\apjs{Astrophys. J. Suppl. Ser.}
-\def\aj{Astron. J.}
-\def\mnras{Mon. Not. R. Astron. Soc.}
-\def\aap{Astron. Astrophys.}
-\def\jcap{J. Cosmology Astropart. Phys.}
-\def\aapr{Astron. Astrophys. Rev.}
-
 \begin{document}
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Reconstruction of Large Scale Structure by Nonlinear \tcr{Lagrangian} Displacement Fields}
+\title{Reconstruction of Large Scale Structure by Nonlinear \tcr{Lagrangian} Displacement Fields - I}
 
 \author{Hao-Ran~Yu}%\email{haoran@cita.utoronto.ca}
 \affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
@@ -61,7 +52,12 @@ from current and future large scale structure surveys.
 %\pacs{98.80.Es 95.36.+x}
 
 \maketitle
-
+\begin{figure}
+ \centering
+  \includegraphics[width=0.99\linewidth]{denx3.pdf}
+  \caption{}
+  \label{fig.1}
+\end{figure}
 \section{Introduction}\label{sec.intro}
 Our universe starts from primordial Gaussian perturbations at a very early stage, 
 and from those fluctuations, the gravitational instability drives the formation of 
@@ -86,6 +82,7 @@ ideally after some recovery algorithms, more information can be extracted,
 more straightforwardly, by power spectra or two-point correlation functions
 \citep{2005MNRAS.360L..82R,2012MNRAS.421..832Y}.
 
+
 Standard BAO reconstruction algorithms smooth the 
 nonlinear density field on linear scale ($\sim$10 Mpc$/h$) and reverse the large 
 scale bulk flows by a negative Zel'dovich linear displacement
@@ -102,7 +99,8 @@ distribution of matter. For example, when a homogeneous initial matter distribut
 is assumed, there is a unique solution of curl-less displacement field to relate 
 the initial and final distributions without shell-crossing. This solution can be 
 solved by a metric transformation equation \citep{1995ApJS..100..269P,1998ApJS..115...19P}.
-\tcr{[Peacock, Goldberg?]}
+\cite{1989ApJ...344L..53P,2000ApJ...544...21G}
+\tcr{[methods of Peebles, david Goldberg? least action ]}
 In 1-dimensional (1D) case, the exact solution of \cite{1995ApJS..100..269P}
 simplifies to an ordering of matter elements by Eulerian coordinates.
 Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
@@ -122,12 +120,6 @@ conditions. We describe the simulation and reconstruction algorithm in section
 \ref{sec.method}, and we show the results in section \ref{sec.results}.
 Discussion and conclusion are in section \ref{sec.discussion}.
 
-
-\begin{figure}[b] \centering
-  \includegraphics[width=1.0\linewidth]{fig1.pdf}
-  \caption{Dimensionless auto- and cross- power spectra between nonlinear density field $\delta$, linear density field $\delta_L$ and reconstructed density field $\delta_R$.}
-  \label{fig.1}
-\end{figure}
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{fig2.pdf}
   \caption{Correlation functions $r(\delta_L,\delta)$ and $r(\delta_L,\delta_R)$
@@ -193,14 +185,14 @@ with $\delta_L$. Despite of a lowered power of $\delta_R$ compared to $\delta$,
 it has a much higher cross power with $\delta_L$ compared to $\delta_N$,
 up to a relatively smaller scale (higher $k$).
 \begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{fig3.pdf}
+  \includegraphics[width=1.0\linewidth]{recopower.pdf}
   \caption{Power spectra of the nonlinear density field and its
   filtered density field.}
   \label{fig.3}
 \end{figure}
 
 \begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{fig4.pdf}
+  \includegraphics[width=1.0\linewidth]{pdfs.pdf}
   \caption{Power spectra of the reconstructed density field and its
   filtered density field.}
   \label{fig.4}
