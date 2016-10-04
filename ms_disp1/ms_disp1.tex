@@ -54,9 +54,13 @@ from current and future large scale structure surveys.
 \maketitle
 \begin{figure}
  \centering
-  \includegraphics[width=0.99\linewidth]{denx3.pdf}
-  \caption{}
-  \label{fig.1}
+  \includegraphics[width=0.95\linewidth]{denx3.pdf}
+  \caption{Visualization of the nonlinear density field $\delta_N$ (top),
+  linear density field $\delta_L$ (middle) and the raw reconstructed density
+  field $\delta_R$ (bottom). These projections have 9.375 Mpc$/h$ thickness
+  and 300 Mpc$/h$ per side. The top panel shows the nonlinear displacement
+  field $\bs\Psi$ by the deformed mesh, which traces the LSS of $\delta_N$.}
+  \label{fig.projection}
 \end{figure}
 \section{Introduction}\label{sec.intro}
 Our universe starts from primordial Gaussian perturbations at a very early stage, 
@@ -120,11 +124,11 @@ Discussion and conclusion are in section \ref{sec.discussion}.
 
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{fig2.pdf}
-  \caption{Correlation functions $r(\delta_L,\delta)$ and $r(\delta_L,\delta_R)$
+  \caption{Correlation functions $r(\delta_L,\delta_N)$ and $r(\delta_L,\delta_R)$
   (solid lines). Their
   damping of the power spectra $W^2$ (dashed lines),
   and their best fit BAO damping models (dotted lines).}
-  \label{fig.2}
+  \label{fig.corr}
 \end{figure}
 
 
@@ -150,17 +154,20 @@ calculation and obtaining the density field $\rho({\bs x})$ in Eulerian coordina
 ${\bs x}$ at late stages. We use density contrast $\delta\equiv\rho/\lb\rho\rb-1$ 
 to describe the density fluctuations. The primordial linear density field $
 \delta_L$ is given by the initial stage and scaled to $z=0$ by the linear growth 
-factor.
+factor. In the top and middle panels of Fig.1 we show projections of the nonlinear density field
+$\delta_N$ given by the simulation and the linear density field $\delta_L$.
+$\delta_N$ is obtained by the particle distribution at redshift $z=0$, and
+the particles are interpolated by using the cloud-in-cell (CIC) algorithm.
+Because $\delta_N$ is highly nonlinear and follows an approximate
+log-normal distribution, we plot $\log_{10}(\delta_N+1)$ instead.
+The nonlinear evolution of $\delta_N$ makes it very different from $\delta_L$
+in apprearence.
 
-Two-point statistics of the density fields are quantified by the cross power 
+The two-point statistics of these density fields are quantified by the cross power 
 spectrum $P_{ij}(k)\equiv(2\pi)^{-3}\langle|\delta_i(k)||\delta_j(k)|\rangle$, 
 where subscripts $i,j$ may refer to linear ($L$), nonlinear ($N$), or reconstructed ($R$) density 
 fields. When $i=j$ it reduces to the auto power spectrum $P_{ii}(k)$ or $P(k)$. We 
 usually plot the dimensionless power spectrum $\Delta^2(k)\equiv k^3P(k)/2\pi^2$. 
-The blue solid and black dashed curves in Fig.\ref{fig.1} show the power spectra of 
-$\delta$ and $\delta_L$. Their difference shows the nonlinear evolution of LSS on 
-small scales. Their cross power drops to a very low value, indicating a loss of 
-linear information in the nonlinear power spectrum.
 
 \subsection{Reconstruction}\label{ss.reco}
 In the simulation, we use particle-ID (PID) to record the initial (Lagrangian) location ${\bs 
@@ -169,6 +176,14 @@ Lagrangian displacement vector ${\bs \Psi}\equiv{\bs x}-{\bs q}$ for every
 particle. Then these vectors are interpolated onto the initial Lagrangian 
 coordinates ${\bs q}$ of particles and we get the displacement field ${\bs \Psi}
 ({\bs q})$.
+To visualize the $\bs\Psi$ field, we draw a 3D uniform mesh over the volume,
+and use the given $\bs\Psi$ field to deform the mesh according to the direction
+and physical amplitude of $\bs\Psi$. In the top panel of Fig.\ref{fig.projection},
+The resulting mesh illustrates a pseudo
+``curvilinear coordinate'' similar to \cite{1995ApJS..100..269P},
+however the mesh can be overlapped due to shell-crossing. The densest mesh grids
+trace the densest structures of $\delta_N$, whereas the undeformed grid positions
+are the Lagrangian coordinates in which we do the reconstruction.
 The raw reconstructed density field is given by the differential motion of matter 
 elements,
 \begin{equation}
@@ -178,22 +193,19 @@ Because the reconstruction processes are implemented on Lagrangian coordinates,
 $\delta_R$ takes the coordinates of $\bs q$ instead of $\bs x$.
 We just write $\bs q$'s Fourier wave number
 $k_q$ as $k$ to simplify the expression.
-In Fig.\ref{fig.1} we show the power spectrum of $\delta_R$ and its cross power
-with $\delta_L$. Despite of a lowered power of $\delta_R$ compared to $\delta$,
-it has a much higher cross power with $\delta_L$ compared to $\delta_N$,
-up to a relatively smaller scale (higher $k$).
+
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{recopower.pdf}
   \caption{Power spectra of the nonlinear density field and its
   filtered density field.}
-  \label{fig.3}
+  \label{fig.recopower}
 \end{figure}
 
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{pdfs.pdf}
   \caption{Power spectra of the reconstructed density field and its
   filtered density field.}
-  \label{fig.4}
+  \label{fig.pdfs}
 \end{figure}
 
 To quantify the linear information in the reconstructed density field, we decompose $\delta_R$ in Fourier space as
@@ -208,7 +220,7 @@ where $P_{ij}\equiv\langle\delta_i\delta_j\rangle$ denotes the cross power
 spectrum. Since $\delta_N$ is uncorrelated with $\delta_L$, $P_{LN}=0$. With the 
 definition of cross correlation coefficient $r(\delta_L,\delta_R)\equiv P_{LR}/\sqrt{P_{LL}P_{RR}}$ 
 and bias $b^2=P_{RR}/P_{LL}$, we solve $r'=P_{LR}/P_{LL}=rb$. We plot the cross 
-correlation coefficient $r_{LN}$ and $r_{LR}$ in Fig.\ref{fig.2}. Clearly, $
+correlation coefficient $r_{LN}$ and $r_{LR}$ in Fig.\ref{fig.corr}. Clearly, $
 \delta_R$ contains much more linear information on smaller scales.
 
 According to equation (\ref{eq.decompose}), the auto power spectrum is decomposed as
@@ -219,11 +231,11 @@ and $P_{NN}=(1-r^2)P_{RR}$. Then we construct a Wiener filter to filter out the 
 \begin{equation}
     W(k)=\frac{r^2b^2P_{LL}}{r^2b^2P_{LL}+P_{NN}}=r^2.
 \end{equation}
-The Wiener filters are also plot in Fig.\ref{fig.2}. The estimated linear density, or the optimal reconstructed density is given by
+The Wiener filters are also plot in Fig.\ref{fig.corr}. The estimated linear density, or the optimal reconstructed density is given by
 \begin{equation}
     \tilde\delta_R=Wb^{-1}\delta_R.
 \end{equation}
-The full filters $Wb^{-1}$ are also plotted in Fig.\ref{fig.2}.
+%The full filters $Wb^{-1}$ are also plotted in Fig.\ref{fig.corr}.
 The optimal reconstructed power spectrum is given by
 \begin{equation}\label{eq.opt}
     \tilde P=W^2b^{-2}P_{RR}=W^2P_{LL}+W^2b^{-2}P_{NN}.
@@ -231,7 +243,21 @@ The optimal reconstructed power spectrum is given by
 The $W^2$ describes the damping of the linear power spectrum.
 
 \section{Results}\label{sec.results}
-Fig.\ref{fig.2} shows the cross correlation functions,
+
+From the above algorithm, the projection of $\delta_R$ is plotted in
+the bottom panel of Fig.\ref{fig.projection}, which looks closer to 
+$\delta_N$. In the top panel of Fig.\ref{fig.recopower}, the blue solid and
+black dashed curves show the auto power spectra of 
+nonlinear density field $\delta_N$ and $\delta_L$. Their difference shows the nonlinear evolution of LSS on 
+small scales. Their cross power drops to a very low value, indicating a loss of 
+linear information in the nonlinear power spectrum.
+In the bottom panel of Fig.\ref{fig.recopower} 
+we show the auto power spectrum of $\delta_R$ and its cross power
+with $\delta_L$. Despite of a lowered power of $\delta_R$ compared to $\delta$,
+it has a much higher cross power with $\delta_L$ compared to $\delta_N$,
+up to a relatively smaller scale (higher $k$).
+
+Fig.\ref{fig.corr} shows the cross correlation functions,
 damping factors $W^2(k)$ for the optimal filtered 
 nonlinear and reconstructed density fields.
 We can see that the cross correlation $r_{LR}$ is recovered to
@@ -242,22 +268,38 @@ Mpc$/h$ for reconstructed and nonlinear fields.
 We repeat the analysis with various box sizes,
 and the results are consistent.
 
-In Fig.\ref{fig.3} and Fig.\ref{fig.4} we show the power spectrum
+In the two panels of Fig.\ref{fig.recopower} we show the power spectrum
 decomposition by equation (\ref{eq.power}) for both $\delta_N$ 
 (with subscripts ``$_R$'' replaced by ``$_N$'') and $\delta_R$.
-In Fig.\ref{fig.3} we can see that, on scales $k>0.2\ h/$Mpc,
+In the top panel, on scales $k>0.2\ h/$Mpc,
 $P_{NN}$ term dominates the power spectrum due to a low correlation
 between $\delta_L$ and $\delta_N$. The optimal filtered power spectrum
-damps quickly on small scales. In comparison, in Fig.\ref{fig.4},
+damps quickly on small scales. In comparison, in the bottom panel,
 $P_{NN}$ starts to dominate on scales $k>1\ h/$Mpc. As a result, the
 optimal filtered reconstructed power spectrum
 (by equation (\ref{eq.opt})) is much higher.
+
+In Fig.\ref{fig.pdfs} we use the probability distribution
+as functions of $(\delta_L,\delta_N)$ and $(\delta_L,\delta_R)$
+to show the point-point correlation between these two pairs of density
+fields. In the top panel, $\delta_N$ shows an approximate log-normal
+distribution, and shows no correlation with $\delta_L$. Although
+$\delta_L$ and $\delta_N$ have correlations on linear scales (Fig.\ref{fig.corr}),
+they have no correlation in real space, because initial density fluctuations
+in Lagrangian coordinates are evolved/transformed to Eulerian coordinates.
+As the reconstruction is done in Lagrangian space, it recovers
+certain amount of correlation as shown in the bottom panel
+of Fig.\ref{fig.pdfs}. One can also see that $\delta_R$ follows
+a much closer Gaussian distribution.
+\tcr{We notice that the less-dense regions of $\delta_L$ are more
+correlated with $\delta_R$, whereas denser regions of $\delta_L$ are
+reconstructed worse, and $\delta_R$ shows more dispersion.}
 
 \section{Discussion and conclusion}\label{sec.discussion}
 We extract the actual displacement field of matter elements in cosmological $N$-body
 simulations, and use this displacement field in Lagrangian coordinates to reconstruct
 the primordial linear perturbations. The result shows a prominent improvement from
-$r_{LN}$ to $r_{LR}$ in Fig.\ref{fig.2} -- recovering the lost linear information on
+$r_{LN}$ to $r_{LR}$ in Fig.\ref{fig.corr} -- recovering the lost linear information on
 nearly an order of magnitude smaller scales.
 This is achieved by implementing differential movement information
 of matter elements on Lagrangian coordinates, rather than on
@@ -265,19 +307,31 @@ Eulerian coordinates. This result illustrates the feasibility
 of using estimated displacement field $\tilde{\bs \Psi}(\bs q)$ to reconstruct primordial linear
 density field. A straightforward example of a estimation of $\tilde{\bs \Psi}(\bs q)$
 is given by \cite{1995ApJS..100..269P,1998ApJS..115...19P}.
-More complicated algorithms can be found in \tcr{[cite]}, where
+\tcr{More complicated reconstruction algorithms, e.g., least action
+algorithms \cite{1989ApJ...344L..53P,2000ApJ...544...21G} can give
+the exact $\delta_L$}, where
 shell-crossing effects are also considered. In reality, one needs
 to consider all aspects including vorticity, shell-crossing, bias, noise
 and data complexities. The impact of these factors can be quantitatively
 compared with the impact of different estimation methods, and with
 the exact solution by $N$-body simulations.
 
-\cite{1989ApJ...344L..53P,2000ApJ...544...21G}
-\tcr{[methods of Peebles, david Goldberg? least action ]}
+\tcr{A proper name of this method (Lagrangian displacement)?}
 
-\tcr{Is this reconstruction method optimal? Is there any other better methods?}
+\tcr{The advantage of using displacement field in reconstruction is
+its insensitive response from highly nonlinearities --
+densest regions form because matter elements, after shell crossing,
+stop experiencing the linear extrapolated of Zel'dovich approximation.
+i.e. the displacement fields are dominated by early stage linear processes,
+which is the Lagrangian-Eulerian coordinate transform,
+while late stage shell-crossing, nonlinear and baryonic processes
+only fine-tunes the final position $\bs x$. In contrast, traditional
+treatments in reconstruction deals directly on density fields which sensitively
+relies on nonlinear processes --  density values can vary by orders
+of magnitude due to nonlinear/baryonic physics and many sources of errors.}
 
-\tcr{A proper name of this method?}
+
+\tcr{Advantages of this method (simpler?) over least action?}
 
 \section*{Acknowledgements}
 We thank Hong-Ming Zhu for helpful discussions.
