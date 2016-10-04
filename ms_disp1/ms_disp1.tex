@@ -21,7 +21,7 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Reconstruction of Large Scale Structure by Nonlinear \tcr{Lagrangian} Displacement Fields - I}
+\title{Reconstruction of Large Scale Structure by Nonlinear \tcr{Lagrangian} Displacement Fields}
 
 \author{Hao-Ran~Yu}%\email{haoran@cita.utoronto.ca}
 \affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
@@ -99,20 +99,18 @@ distribution of matter. For example, when a homogeneous initial matter distribut
 is assumed, there is a unique solution of curl-less displacement field to relate 
 the initial and final distributions without shell-crossing. This solution can be 
 solved by a metric transformation equation \citep{1995ApJS..100..269P,1998ApJS..115...19P}.
-\cite{1989ApJ...344L..53P,2000ApJ...544...21G}
-\tcr{[methods of Peebles, david Goldberg? least action ]}
 In 1-dimensional (1D) case, the exact solution of \cite{1995ApJS..100..269P}
 simplifies to an ordering of matter elements by Eulerian coordinates.
 Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
 of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
-displacement field $s(q)$, and find that \tcr{this new method} well recovers the linear
+displacement field $\tilde\Psi(q)$, and find that \tcr{this new method} well recovers the linear
 information and reconstructs BAO peak in correlation function. 
-In 3D case, there are various techniques to obtain $\bs s(\bs q)$.
+In 3D case, there are various techniques to obtain $\tilde{\bs \Psi}(\bs q)$.
 However one needs to carefully consider effects of curl, shell-crossing in 3D case.
 
 Before these steps, we need to quantify the amount of linear information
 that can be recovered from the full nonlinear displacement field $\bs\Psi(\bs q)$,
-and further estimations $\bs s(\bs q)$ can be compared with this result.
+and further estimations $\tilde{\bs \Psi}(\bs q)$ can be compared with this result.
 In this paper we run a LSS $N$-body simulation and track the motion of
 particles to obtain $\bs\Psi(\bs q)$. According to this we reconstruct the linear density
 field and compare to the primordial density field of the initial
@@ -136,7 +134,7 @@ We show the LSS simulation and displacement field setups in section \ref{ss.sim}
 and the reconstruction processes are presented in section \ref{ss.reco}.
 
 \subsection{Simulation}\label{ss.sim}
-We use the open source cosmological simulation code {\tt CUBE}%\footnote{github link of cafcube}
+We use the open source cosmological simulation code {\tt CUBE} %\footnote{github link of cafcube}
 \citep{cafcube}.
 Cosmological parameters are set as
 $\Omega_m=0.27$, $\Omega_\Lambda=0.73$, $h_0=0.68$, $n_s=0.96$ and $\sigma_8=0.83$.
@@ -240,7 +238,7 @@ We can see that the cross correlation $r_{LR}$ is recovered to
 nearly an order of magnitude smaller scales compared to $r_{LN}$.
 We also fit the Gaussian BAO damping model $
 {\mathcal D}(k)=\exp(-k^2\Sigma^2/2)$ and give $\Sigma=1.8$ Mpc$/h$ and $\Sigma=10$ 
-Mpc$/h$ for nonlinear and reconstructed fields.
+Mpc$/h$ for reconstructed and nonlinear fields.
 We repeat the analysis with various box sizes,
 and the results are consistent.
 
@@ -249,7 +247,7 @@ decomposition by equation (\ref{eq.power}) for both $\delta_N$
 (with subscripts ``$_R$'' replaced by ``$_N$'') and $\delta_R$.
 In Fig.\ref{fig.3} we can see that, on scales $k>0.2\ h/$Mpc,
 $P_{NN}$ term dominates the power spectrum due to a low correlation
-between $\delta_L$ and $delta_N$. The optimal filtered power spectrum
+between $\delta_L$ and $\delta_N$. The optimal filtered power spectrum
 damps quickly on small scales. In comparison, in Fig.\ref{fig.4},
 $P_{NN}$ starts to dominate on scales $k>1\ h/$Mpc. As a result, the
 optimal filtered reconstructed power spectrum
@@ -264,8 +262,8 @@ nearly an order of magnitude smaller scales.
 This is achieved by implementing differential movement information
 of matter elements on Lagrangian coordinates, rather than on
 Eulerian coordinates. This result illustrates the feasibility
-of using estimated displacement field $\bs s(\bs q)$ to reconstruct primordial linear
-density field. A straightforward example of a estimation of $\bs s(\bs q)$
+of using estimated displacement field $\tilde{\bs \Psi}(\bs q)$ to reconstruct primordial linear
+density field. A straightforward example of a estimation of $\tilde{\bs \Psi}(\bs q)$
 is given by \cite{1995ApJS..100..269P,1998ApJS..115...19P}.
 More complicated algorithms can be found in \tcr{[cite]}, where
 shell-crossing effects are also considered. In reality, one needs
@@ -274,12 +272,16 @@ and data complexities. The impact of these factors can be quantitatively
 compared with the impact of different estimation methods, and with
 the exact solution by $N$-body simulations.
 
+\cite{1989ApJ...344L..53P,2000ApJ...544...21G}
+\tcr{[methods of Peebles, david Goldberg? least action ]}
+
 \tcr{Is this reconstruction method optimal? Is there any other better methods?}
 
 \tcr{A proper name of this method?}
 
 \section*{Acknowledgements}
-HRY acknowledges General Financial Grant from the China Postdoctoal Science Foundation No.2015M570884.
+We thank Hong-Ming Zhu for helpful discussions.
+HRY acknowledges General Financial Grant No.2015M570884 and Special Financial Grant No.2016T90009 from the China Postdoctoal Science Foundation.
 
 %\bibliographystyle{apsrev4-1}
 \bibliographystyle{h-physrev3}
