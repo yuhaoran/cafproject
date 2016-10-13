@@ -21,7 +21,7 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Reconstruction of Large Scale Structure by Nonlinear \tcr{Lagrangian} Displacement Fields}
+\title{Lagrangian Space Nonlinear $E$-mode clustering}
 
 \author{Hao-Ran~Yu}%\email{haoran@cita.utoronto.ca}
 \affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
@@ -33,19 +33,31 @@
 \affiliation{Canadian Institute for Advanced Research, CIFAR Program in Gravitation and Cosmology, Toronto, Ontario M5G 1Z8, Canada}
 \affiliation{Perimeter Institute for Theoretical Physics, 31 Caroline Street North, Waterloo, Ontario, N2L 2Y5, Canada}
 
+\author{Hong-Ming Zhu}%email{hmzhu@bao.ac.cn}
+\affiliation{Key Laboratory for Computational Astrophysics, National Astronomical Observatories, Chinese Academy of Sciences, 20A Datun Road, Beijing 100012, China}
+\affiliation{University of Chinese Academy of Sciences, Beijing 100049, China}
+
 \date{\today}
 %\date{Received \today; published -- 00, 0000}
 
 \begin{abstract}
-We investigate the ability of using nonlinear displacement field to reconstruct 
-the primordial linear perturbations of the large scale structure. According to 
-the linear Lagrangian perturbation theory, the first order primordial linear 
-density field is given by the negative divergence of the displacement field. By 
-running $N$-body simulations, we show that this \tcr{new} reconstruction algorithm recovers 
-great amount of nonlinear information in the early universe. In reality, the 
-displacement fields can be solved from only the final stage of the density 
-fields. This demonstrates the potential to reconstruct baryonic acoustic oscillation (BAO) 
+We study the nonlinear $E$-mode clustering in Lagrangian space
+by using large scale structure (LSS) $N$-body simulations
+and use the displacement field information in Lagrangian space
+to estimate the primordial linear density field.
+We find that, compared to Eulerian nonlinear density fields,
+the negative divergence of $E$-mode displacement fields
+in Lagrangian space improves the cross-correlation with
+initial density field by factor of 6 $\sim$ 7,
+containing 2 orders of magnitude more primordial information. 
+In reality, the displacement field is dominated by linear evolution
+and insensitive of nonlinear shell-crossing, vorticity or
+baryonic physics, and thus can be stably solved from only
+the final matter distributions.
+This illustrates ability of potential reconstruction algorithms,
+to reconstruct baryonic acoustic oscillation (BAO) 
 from current and future large scale structure surveys.
+
 
 \end{abstract}
 
@@ -54,11 +66,11 @@ from current and future large scale structure surveys.
 \maketitle
 \begin{figure}
  \centering
-  \includegraphics[width=0.95\linewidth]{denx3.pdf}
+  \includegraphics[width=0.95\linewidth]{proj.pdf}
   \caption{Visualization of the nonlinear density field $\delta_N$ (top),
   linear density field $\delta_L$ (middle) and the raw reconstructed density
   field $\delta_R$ (bottom). These projections have 9.375 Mpc$/h$ thickness
-  and 300 Mpc$/h$ per side. The top panel shows the nonlinear displacement
+  and 400 Mpc$/h$ per side. The top panel shows the nonlinear displacement
   field $\bs\Psi$ by the deformed mesh, which traces the LSS of $\delta_N$.}
   \label{fig.projection}
 \end{figure}
@@ -91,11 +103,11 @@ Standard BAO reconstruction algorithms smooth the
 nonlinear density field on linear scale ($\sim$10 Mpc$/h$) and reverse the large 
 scale bulk flows by a negative Zel'dovich linear displacement
 \citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}. Here we propose a 
-\tcr{new reconstruction method} that uses the nonlinear displacement field to recover the 
+new reconstruction method that uses the nonlinear displacement field to recover the 
 primordial density field. In the linear Lagrangian perturbation theory, the 
 negative divergence of the the displacement field
 $\bs\Psi(\bs q)$ respect to Lagrangian coordinates $\bs q$
-gives the linear density field \tcr{\citep{2010PhDT.........4J}}.
+gives the linear density field \citep{2010PhDT.........4J}.
 Of course, the full displacement field $\bs\Psi(\bs q)$
 is non-observable, as it requires the initial distributions of matter, however there are 
 many techniques to estimate the nonlinear displacement field from a final 
@@ -107,7 +119,7 @@ In 1-dimensional (1D) case, the exact solution of \cite{1995ApJS..100..269P}
 simplifies to an ordering of matter elements by Eulerian coordinates.
 Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
 of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
-displacement field $\tilde\Psi(q)$, and find that \tcr{this new method} well recovers the linear
+displacement field $\tilde\Psi(q)$, and find that this new method well recovers the linear
 information and reconstructs BAO peak in correlation function. 
 In 3D case, there are various techniques to obtain $\tilde{\bs \Psi}(\bs q)$.
 However one needs to carefully consider effects of curl, shell-crossing in 3D case.
@@ -123,11 +135,9 @@ conditions. We describe the simulation and reconstruction algorithm in section
 Discussion and conclusion are in section \ref{sec.discussion}.
 
 \begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{fig2.pdf}
+  \includegraphics[width=1.0\linewidth]{filter.pdf}
   \caption{Correlation functions $r(\delta_L,\delta_N)$ and $r(\delta_L,\delta_R)$
-  (solid lines). Their
-  damping of the power spectra $W^2$ (dashed lines),
-  and their best fit BAO damping models (dotted lines).}
+  (solid lines) and their scaled BAO damping models (dotted lines).}
   \label{fig.corr}
 \end{figure}
 
@@ -145,7 +155,7 @@ $\Omega_m=0.27$, $\Omega_\Lambda=0.73$, $h_0=0.68$, $n_s=0.96$ and $\sigma_8=0.8
 Initial conditions are generated at redshift $z=50$ 
 using Zel'dovich approximation, and using a CLASS transfer function.
 $N_p=512^3$ $N$-body particles are evolved via 
-their mutual gravitational interactions to $z=0$, in a periodic box with $L=300$ 
+their mutual gravitational interactions to $z=0$, in a periodic box with $L=400$ 
 Mpc$/h$ per side. The code is set to use standard a particle-mesh (PM) algorithm 
 \cite{1988csup.book.....H} on a two-level mesh grids
 (details see \cite{2013MNRAS.436..540H}) and cloud-in-cell
@@ -195,14 +205,14 @@ We just write $\bs q$'s Fourier wave number
 $k_q$ as $k$ to simplify the expression.
 
 \begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{recopower.pdf}
+  \includegraphics[width=1.0\linewidth]{power.pdf}
   \caption{Power spectra decomposition of density fields and their
   filtered density field.}
   \label{fig.recopower}
 \end{figure}
 
 \begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{pdfs_300_z0.pdf}
+  \includegraphics[width=1.0\linewidth]{pdfs.pdf}
   \caption{2D-PDF (preliminary)}
   \label{fig.pdfs}
 \end{figure}
@@ -262,7 +272,7 @@ nonlinear and reconstructed density fields.
 We can see that the cross correlation $r_{LR}$ is recovered to
 nearly an order of magnitude smaller scales compared to $r_{LN}$.
 We also fit the Gaussian BAO damping model $
-{\mathcal D}(k)=\exp(-k^2\Sigma^2/2)$ and give $\Sigma=1.8$ Mpc$/h$ and $\Sigma=10$ 
+{\mathcal D}(k)=\exp(-k^2\Sigma^2/2)$ and give $\Sigma=1.8$ Mpc$/h$ and $\Sigma=12$ 
 Mpc$/h$ for reconstructed and nonlinear fields.
 We repeat the analysis with various box sizes,
 and the results are consistent.
@@ -290,9 +300,11 @@ As the reconstruction is done in Lagrangian space, it recovers
 certain amount of correlation as shown in the bottom panel
 of Fig.\ref{fig.pdfs}. One can also see that $\delta_R$ follows
 a much closer Gaussian distribution.
-\tcr{We notice that the less-dense regions of $\delta_L$ are more
+We notice that the less-dense regions of $\delta_L$ are more
 correlated with $\delta_R$, whereas denser regions of $\delta_L$ are
-reconstructed worse, and $\delta_R$ shows more dispersion.}
+reconstructed worse, and $\delta_R$ shows more dispersion.
+This is caused by nonlinear effects and it damps out in
+higher redshifts.
 
 \section{Discussion and conclusion}\label{sec.discussion}
 We extract the actual displacement field of matter elements in cosmological $N$-body
@@ -306,18 +318,18 @@ Eulerian coordinates. This result illustrates the feasibility
 of using estimated displacement field $\tilde{\bs \Psi}(\bs q)$ to reconstruct primordial linear
 density field. A straightforward example of a estimation of $\tilde{\bs \Psi}(\bs q)$
 is given by \cite{1995ApJS..100..269P,1998ApJS..115...19P}.
-\tcr{More complicated reconstruction algorithms, e.g., least action
-algorithms \cite{1989ApJ...344L..53P,2000ApJ...544...21G} can give
-the exact $\delta_L$}, where
-shell-crossing effects are also considered. In reality, one needs
+%\tcr{More complicated reconstruction algorithms, e.g., least action
+%algorithms \cite{1989ApJ...344L..53P,2000ApJ...544...21G} can give
+%the exact $\delta_L$}, where
+%shell-crossing effects are also considered.
+In reality, one needs
 to consider all aspects including vorticity, shell-crossing, bias, noise
 and data complexities. The impact of these factors can be quantitatively
 compared with the impact of different estimation methods, and with
 the exact solution by $N$-body simulations.
 
-\tcr{A proper name of this method (Lagrangian displacement)?}
 
-\tcr{The advantage of using displacement field in reconstruction is
+The advantage of using displacement field in reconstruction is
 its insensitive response from highly nonlinearities --
 densest regions form because matter elements, after shell crossing,
 stop experiencing the linear extrapolated of Zel'dovich approximation.
@@ -327,14 +339,19 @@ while late stage shell-crossing, nonlinear and baryonic processes
 only fine-tunes the final position $\bs x$. In contrast, traditional
 treatments in reconstruction deals directly on density fields which sensitively
 relies on nonlinear processes --  density values can vary by orders
-of magnitude due to nonlinear/baryonic physics and many sources of errors.}
+of magnitude due to nonlinear/baryonic physics and many sources of errors.
 
 
-\tcr{Advantages of this method (simpler?) over least action?}
 
 \section*{Acknowledgements}
-We thank Hong-Ming Zhu for helpful discussions.
+We thank Pengjie Zhang for helpful discussions which triggered
+the inspiration of the work.
 HRY acknowledges General Financial Grant No.2015M570884 and Special Financial Grant No.2016T90009 from the China Postdoctoal Science Foundation.
+[ZHM's acknowledgements.]
+The Dunlap Institute is funded through an endowment established by the David Dunlap family and the University of Toronto.
+Research at the Perimeter Institute is supported by the Government of Canada
+through Industry Canada and by the Province of Ontario through the Ministry of
+Research $\&$ Innovation.
 
 %\bibliographystyle{apsrev4-1}
 \bibliographystyle{h-physrev3}
