@@ -99,36 +99,39 @@ more straightforwardly, by power spectra or two-point correlation functions
 \citep{2005MNRAS.360L..82R,2012MNRAS.421..832Y}.
 
 
-Standard BAO reconstruction algorithms smooth the 
-nonlinear density field on linear scale ($\sim$10 Mpc$/h$) and reverse the large 
+Standard BAO reconstruction algorithms apply in Eulerian space.
+They usually smooth the nonlinear density field on
+linear scale ($\sim$10 Mpc$/h$) and reverse the large 
 scale bulk flows by a negative Zel'dovich linear displacement
-\citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}. Here we propose a 
-new reconstruction method that uses the nonlinear displacement field to recover the 
-primordial density field. In the linear Lagrangian perturbation theory, the 
+\citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}.
+In the linear Lagrangian perturbation theory, the 
 negative divergence of the the displacement field
 $\bs\Psi(\bs q)$ respect to Lagrangian coordinates $\bs q$
 gives the linear density field \citep{2010PhDT.........4J}.
+Here we study the Lagrangian space clustering of dark matter
+and use this information to estimate the initial density field.
 Of course, the full displacement field $\bs\Psi(\bs q)$
 is non-observable, as it requires the initial distributions of matter, however there are 
-many techniques to estimate the nonlinear displacement field from a final 
+many techniques to estimate the displacement field from a final 
 distribution of matter. For example, when a homogeneous initial matter distribution 
 is assumed, there is a unique solution of curl-less displacement field to relate 
 the initial and final distributions without shell-crossing. This solution can be 
 solved by a metric transformation equation \citep{1995ApJS..100..269P,1998ApJS..115...19P}.
-In 1-dimensional (1D) case, the exact solution of \cite{1995ApJS..100..269P}
+In 1-dimensional (1D) case, the exact solution 
 simplifies to an ordering of matter elements by Eulerian coordinates.
 Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
 of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
 displacement field $\tilde\Psi(q)$, and find that this new method well recovers the linear
-information and reconstructs BAO peak in correlation function. 
-In 3D case, there are various techniques to obtain $\tilde{\bs \Psi}(\bs q)$.
-However one needs to carefully consider effects of curl, shell-crossing in 3D case.
+information and reconstructs 1D BAO peak in correlation function. 
+In a bit more complicated 3D case, there are various
+techniques to estimate $\tilde{\bs \Psi}(\bs q)$,
+and we need to carefully consider effects of curl, shell-crossing in 3D cases.
 
 Before these steps, we need to quantify the amount of linear information
 that can be recovered from the full nonlinear displacement field $\bs\Psi(\bs q)$,
 and further estimations $\tilde{\bs \Psi}(\bs q)$ can be compared with this result.
-In this paper we run a LSS $N$-body simulation and track the motion of
-particles to obtain $\bs\Psi(\bs q)$. According to this we reconstruct the linear density
+In this paper we run LSS $N$-body simulations and track the motion of
+particles to obtain $\bs\Psi(\bs q)$. According to this we estimate the linear density
 field and compare to the primordial density field of the initial
 conditions. We describe the simulation and reconstruction algorithm in section
 \ref{sec.method}, and we show the results in section \ref{sec.results}.
@@ -144,8 +147,14 @@ Discussion and conclusion are in section \ref{sec.discussion}.
 
 
 \section{Method}\label{sec.method}
-We show the LSS simulation and displacement field setups in section \ref{ss.sim},
-and the reconstruction processes are presented in section \ref{ss.reco}.
+We show the LSS simulation and displacement field setups in section \ref{ss.sim}.
+In section \ref{ss.reco}, we estimate the linear density field from the
+displacement field $\bs\Psi(\bs q)$ from simulations.
+Potential reconstruction algorithms are
+based on an estimated displacement field $\tilde{\bs \Psi}(\bs q)$
+instead of $\bs\Psi(\bs q)$. In the following sections we
+simply call the estimation of linear density field
+from $\tilde{\bs \Psi}(\bs q)$ ``reconstruction''.
 
 \subsection{Simulation}\label{ss.sim}
 We use the open source cosmological simulation code {\tt CUBE} %\footnote{github link of cafcube}
@@ -171,11 +180,12 @@ the particles are interpolated by using the cloud-in-cell (CIC) algorithm.
 Because $\delta_N$ is highly nonlinear and follows an approximate
 log-normal distribution, we plot $\log_{10}(\delta_N+1)$ instead.
 The nonlinear evolution of $\delta_N$ makes it very different from $\delta_L$
-in apprearence.
+in appearance.
 
 The two-point statistics of these density fields are quantified by the cross power 
 spectrum $P_{ij}(k)\equiv(2\pi)^{-3}\langle|\delta_i(k)||\delta_j(k)|\rangle$, 
-where subscripts $i,j$ may refer to linear ($L$), nonlinear ($N$), or reconstructed ($R$) density 
+where subscripts $i,j$ may refer to linear ($L$), nonlinear ($N$),
+reconstructed ($R$), or noise ($n$) density 
 fields. When $i=j$ it reduces to the auto power spectrum $P_{ii}(k)$ or $P(k)$. We 
 usually plot the dimensionless power spectrum $\Delta^2(k)\equiv k^3P(k)/2\pi^2$. 
 
@@ -206,109 +216,146 @@ $k_q$ as $k$ to simplify the expression.
 
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{power.pdf}
-  \caption{Power spectra decomposition of density fields and their
-  filtered density field.}
+  \caption{Power spectra of $\delta_L$, $\delta_N$, and the decomposition
+  of $P_{LL}$ into correlated parts and noise terms according to equation
+  (\ref{eq.power}).}
   \label{fig.recopower}
 \end{figure}
 
 \begin{figure}[t] \centering
   \includegraphics[width=1.0\linewidth]{pdfs.pdf}
-  \caption{2D-PDF (preliminary)}
+  \caption{Probability distribution functions (PDFs)
+  $f(\delta_L,\delta_N)$ and $f(\delta_L,\delta_R)$, showing in the upper
+  and lower panels respectively. Both red curves on $x$-axes show $f(\delta_L)$, following
+  a Gaussian distribution. The two curves on $y$-axes in upper and lower panel
+  show respectively $f(\delta_N)$ and $f(\delta_R)$.}
   \label{fig.pdfs}
 \end{figure}
 
-To quantify the linear information in the reconstructed density field, we decompose $\delta_R$ in Fourier space as
+To quantify the linear information in the reconstructed density field, we decompose $\delta_L$ in Fourier space as
 \begin{equation}\label{eq.decompose}
-    \delta_R(k)=r'\delta_L+\delta_N,
+    \delta_L(k)=r'\delta_R+\delta_n,
 \end{equation}
-where $r'\delta_R$ is completely correlated with linear density $\delta_L$. Correlating equation (\ref{eq.decompose}) with $\delta_L$ gives
+where $r'\delta_R$ is completely correlated with linear density $\delta_L$. Correlating equation (\ref{eq.decompose}) with $\delta_R$ gives
 \begin{equation}
-    P_{LR}=r'P_{LL}+P_{LN},
+    P_{LR}=r'P_{RR}+P_{nR},
 \end{equation}
 where $P_{ij}\equiv\langle\delta_i\delta_j\rangle$ denotes the cross power 
-spectrum. Since $\delta_N$ is uncorrelated with $\delta_L$, $P_{LN}=0$. With the 
+spectrum. Since $\delta_n$ is uncorrelated with $\delta_R$, $P_{nR}=0$. With the 
 definition of cross correlation coefficient $r(\delta_L,\delta_R)\equiv P_{LR}/\sqrt{P_{LL}P_{RR}}$ 
-and bias $b^2=P_{RR}/P_{LL}$, we solve $r'=P_{LR}/P_{LL}=rb$. We plot the cross 
-correlation coefficient $r_{LN}$ and $r_{LR}$ in Fig.\ref{fig.corr}. Clearly, $
+and bias $b^2=P_{RR}/P_{LL}$, we solve $r'=P_{LR}/P_{RR}=rb^{-1}$.
+Note that these computations above and below can also be applied on $\delta_N$ for
+comparison, by replacing ``$_R$'' with ``$_N$'' in the equations,
+while we do not rewrite them explicitly
+in the paper for simplicity. From these, we plot the cross 
+correlation coefficient $r_{LN}=r(\delta_L,\delta_N)$ and
+$r_{LR}=r(\delta_L,\delta_R)$ in Fig.\ref{fig.corr}. Clearly, $
 \delta_R$ contains much more linear information on smaller scales.
 
 According to equation (\ref{eq.decompose}), the auto power spectrum is decomposed as
 \begin{equation}\label{eq.power}
-    P_{RR}=r^2b^2P_{LL}+P_{NN},
+    P_{LL}=r^2b^{-2}P_{RR}+P_{nn},
 \end{equation}
-and $P_{NN}=(1-r^2)P_{RR}$. Then we construct a Wiener filter to filter out the uncorrelated part in $\delta_R$:
+and $P_{nn}=(1-r^2)P_{LL}$. Then we construct a Wiener filter to filter out the uncorrelated part in $\delta_R$:
 \begin{equation}
-    W(k)=\frac{r^2b^2P_{LL}}{r^2b^2P_{LL}+P_{NN}}=r^2.
+    W(k)=\frac{r^2b^{-2}P_{RR}}{r^2b^{-2}P_{RR}+P_{nn}}=r^2.
 \end{equation}
-The Wiener filters are also plot in Fig.\ref{fig.corr}. The estimated linear density, or the optimal reconstructed density is given by
+The optimal reconstructed density is given by
 \begin{equation}
-    \tilde\delta_R=Wb^{-1}\delta_R.
+    \tilde\delta_R=Wb^{-1}\delta_R,
 \end{equation}
-%The full filters $Wb^{-1}$ are also plotted in Fig.\ref{fig.corr}.
-The optimal reconstructed power spectrum is given by
+and the optimal reconstructed power spectrum is given by
 \begin{equation}\label{eq.opt}
     \tilde P=W^2b^{-2}P_{RR}=W^2P_{LL}+W^2b^{-2}P_{NN}.
 \end{equation}
-The $W^2$ describes the damping of the linear power spectrum.
+Here $W^2$ describes the damping of the linear power spectrum.
 
 \section{Results}\label{sec.results}
 
-From the above algorithm, the projection of $\delta_R$ is plotted in
+To visualize the above algorithms, a projection of $\delta_R$ is plotted in
 the bottom panel of Fig.\ref{fig.projection}, which looks closer to 
-$\delta_N$. In the top panel of Fig.\ref{fig.recopower}, the blue solid and
-black dashed curves show the auto power spectra of 
-nonlinear density field $\delta_N$ and $\delta_L$. Their difference shows the nonlinear evolution of LSS on 
-small scales. Their cross power drops to a very low value, indicating a loss of 
-linear information in the nonlinear power spectrum.
-In the bottom panel of Fig.\ref{fig.recopower} 
-we show the auto power spectrum of $\delta_R$ and its cross power
-with $\delta_L$. Despite of a lowered power of $\delta_R$ compared to $\delta$,
-it has a much higher cross power with $\delta_L$ compared to $\delta_N$,
-up to a relatively smaller scale (higher $k$).
+$\delta_L$ compared to $\delta_N$. However the smallest scales are unable
+to be reconstructed.
 
-Fig.\ref{fig.corr} shows the cross correlation functions,
-damping factors $W^2(k)$ for the optimal filtered 
-nonlinear and reconstructed density fields.
-We can see that the cross correlation $r_{LR}$ is recovered to
-nearly an order of magnitude smaller scales compared to $r_{LN}$.
-We also fit the Gaussian BAO damping model $
-{\mathcal D}(k)=\exp(-k^2\Sigma^2/2)$ and give $\Sigma=1.8$ Mpc$/h$ and $\Sigma=12$ 
+As discussed in section \ref{ss.reco},
+Fig.\ref{fig.corr} shows the cross correlation functions
+$r_{LN}$ and $r_{LR}$. The latter extends the correlation
+with $\delta_L$ to smaller scales by nearly an order of
+magnitude. The extra correlation scales well cover the BAO
+scales of our interest.
+
+In Fig.\ref{fig.recopower}, we show the auto power spectra of
+$\delta_L$ and $\delta_N$ in black dashed and blue solid curves.
+Their difference shows the nonlinear evolution of LSS on 
+small scales. Their cross power (not shown for clarity of the figure)
+drops to a very low value on scales $k\gtrsim 0.1h/$Mpc,
+indicating a loss of linear information in the
+nonlinear power spectrum $P_{NN}$. This scenario directly
+leads to how $\P_{LL}$ is decomposed according to equation
+(\ref{eq.power}). In nonlinear case (with ``$_R$'' replaced
+by ``$_N$'' equation (\ref{eq.power})), on small
+scales $k\gtrsim 0.1h/$Mpc, $P_{LL}$ is dominated by
+uncorrelated, nonlinear noise, shown in the green
+dotted line. In reconstructed case, however, $P_{LL}$
+is decomposed into orange dash-dotted correlated
+part and purple dotted uncorrelated part according to
+equation (\ref{eq.power}). The correlated power spectrum
+is dominated on BAO scales of our interest.
+
+To quantify the improvement of cross-correlation in the power
+spectrum, we compute the 
+damping factors $W^2(k)$ respectively for the optimal filtered 
+nonlinear and reconstructed density fields $\tilde\delta_N$
+and $\tilde\delta_R$.
+We fit Gaussian BAO damping models
+${\mathcal D}(k)=\exp(-k^2\Sigma^2/2)$ to these $W^2(k)$'s
+and give $\Sigma=1.8$ Mpc$/h$ and $\Sigma=12$ 
 Mpc$/h$ for reconstructed and nonlinear fields.
-We repeat the analysis with various box sizes,
-and the results are consistent.
+Since ${\mathcal D}(k)=W^2=r^4$, we plot
+${\mathcal D}_N^{1/4}$ and ${\mathcal D}_R^{1/4}$
+over $r_{LN}$ and $r_{LR}$ in Fig.\ref{fig.corr}.
+The analyses are repeated with various box sizes (100, 300, 800 Mpc$/h$ per side)
+and give consistent results.
 
-In the two panels of Fig.\ref{fig.recopower} we show the power spectrum
-decomposition by equation (\ref{eq.power}) for both $\delta_N$ 
-(with subscripts ``$_R$'' replaced by ``$_N$'') and $\delta_R$.
-In the top panel, on scales $k>0.2\ h/$Mpc,
-$P_{NN}$ term dominates the power spectrum due to a low correlation
-between $\delta_L$ and $\delta_N$. The optimal filtered power spectrum
-damps quickly on small scales. In comparison, in the bottom panel,
-$P_{NN}$ starts to dominate on scales $k>1\ h/$Mpc. As a result, the
-optimal filtered reconstructed power spectrum
-(by equation (\ref{eq.opt})) is much higher.
-
-In Fig.\ref{fig.pdfs} we use the probability distribution
-as functions of $(\delta_L,\delta_N)$ and $(\delta_L,\delta_R)$
+To further illustrate the improvement in real space
+one point function correlations,
+in Fig.\ref{fig.pdfs} we use the probability distribution
+as functions (PDFs) of $(\delta_L,\delta_N)$ and $(\delta_L,\delta_R)$
 to show the point-point correlation between these two pairs of density
-fields. In the top panel, $\delta_N$ shows an approximate log-normal
-distribution, and shows no correlation with $\delta_L$. Although
-$\delta_L$ and $\delta_N$ have correlations on linear scales (Fig.\ref{fig.corr}),
-they have no correlation in real space, because initial density fluctuations
+fields. Since $\delta_n$ in equation (\ref{eq.decompose}) is
+uncorrelated, we use Wiener filtered fields. To keep the
+consistency over $\delta_L$, $\delta_N$ and $\delta_R$, we
+use the $W(k)=r^2_{LR}$ as the Wiener filter.
+The grey-scaled plots in the center of both panels show the 2-variable PDFs,
+whereas their projections onto each variable are just
+1-variable PDFs -- $f(\delta_L)$, $f(\delta_N)$ and $f(\delta_R)$, shown
+as red/blue curves on the axes of Fig.\ref{fig.pdfs}.
+In the top panel, $\delta_N$ shows an approximate log-normal
+distribution (blue curve) and $\delta_L$ follows an expected
+Gaussian distribution. They show tiny positive correlation in the
+2D PDF.
+Because in Fourier space, $\delta_L$ and $\delta_N$ have
+correlations on only very large, linear scales (Fig.\ref{fig.corr}),
+they result in little correlation in real space -- initial density fluctuations
 in Lagrangian coordinates are evolved/transformed to Eulerian coordinates.
 As the reconstruction is done in Lagrangian space, it recovers
-certain amount of correlation as shown in the bottom panel
+certain amount of correlation, as shown in the 2D PDF of the bottom panel
 of Fig.\ref{fig.pdfs}. One can also see that $\delta_R$ follows
-a much closer Gaussian distribution.
-We notice that the less-dense regions of $\delta_L$ are more
+a much closer Gaussian distribution (blue curve of the bottom panel).
+We notice that the less-dense regions of $\delta_L$ are strongly
 correlated with $\delta_R$, whereas denser regions of $\delta_L$ are
-reconstructed worse, and $\delta_R$ shows more dispersion.
-This is caused by nonlinear effects and it damps out in
-higher redshifts.
+reconstructed less better, and $\delta_R$ shows more dispersion.
+These second uncorrelated peaks in the 2D PDF and $f(\delta_R)$
+are caused by nonlinear effects. We examine the reconstruction on
+higher redshifts, and confirm that these second uncorrelated peaks
+damp out as we go to higher redshifts.
+
+
 
 \section{Discussion and conclusion}\label{sec.discussion}
 We extract the actual displacement field of matter elements in cosmological $N$-body
-simulations, and use this displacement field in Lagrangian coordinates to reconstruct
+simulations, and use this displacement field to study the LSS nonlinear
+clustering in Lagrangian space. The displacement information is used to reconstruct
 the primordial linear perturbations. The result shows a prominent improvement from
 $r_{LN}$ to $r_{LR}$ in Fig.\ref{fig.corr} -- recovering the lost linear information on
 nearly an order of magnitude smaller scales.
@@ -347,7 +394,9 @@ of magnitude due to nonlinear/baryonic physics and many sources of errors.
 We thank Pengjie Zhang for helpful discussions which triggered
 the inspiration of the work.
 HRY acknowledges General Financial Grant No.2015M570884 and Special Financial Grant No.2016T90009 from the China Postdoctoal Science Foundation.
-[ZHM's acknowledgements.]
+HMZ acknowledges the support of the Chinese MoST 863 program under Grant
+No. 2012AA121701, the CAS Science Strategic Priority Research Program
+XDB09000000 and the NSFC under Grant No. 11373030.
 The Dunlap Institute is funded through an endowment established by the David Dunlap family and the University of Toronto.
 Research at the Perimeter Institute is supported by the Government of Canada
 through Industry Canada and by the Province of Ontario through the Ministry of
