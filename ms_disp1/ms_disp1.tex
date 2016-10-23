@@ -21,19 +21,19 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{\tcr{Recovery of Primordial Density Field by Reversing the Lagrangian Space Nonlinear $E$-mode clustering}}
+\title{Lagrangian Space Nonlinear $E$-mode clustering}
 
-\author{Hao-Ran~Yu}%\email{haoran@cita.utoronto.ca}
+\author{Hao-Ran~Yu}\email{haoran@cita.utoronto.ca}
 \affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
 \affiliation{Canadian Institute for Theoretical Astrophysics, University of Toronto, 60 St. George Street, Toronto, Ontario M5S 3H8, Canada}
 
-\author{Ue-Li~Pen}%\email{pen@cita.utoronto.ca}
+\author{Ue-Li~Pen}\email{pen@cita.utoronto.ca}
 \affiliation{Canadian Institute for Theoretical Astrophysics, University of Toronto, 60 St. George Street, Toronto, Ontario M5S 3H8, Canada}
 \affiliation{Dunlap Institute for Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, Ontario M5S 3H4, Canada}
 \affiliation{Canadian Institute for Advanced Research, CIFAR Program in Gravitation and Cosmology, Toronto, Ontario M5G 1Z8, Canada}
 \affiliation{Perimeter Institute for Theoretical Physics, 31 Caroline Street North, Waterloo, Ontario, N2L 2Y5, Canada}
 
-\author{Hong-Ming Zhu}%email{hmzhu@bao.ac.cn}
+\author{Hong-Ming Zhu}\email{hmzhu@bao.ac.cn}
 \affiliation{Key Laboratory for Computational Astrophysics, National Astronomical Observatories, Chinese Academy of Sciences, 20A Datun Road, Beijing 100012, China}
 \affiliation{University of Chinese Academy of Sciences, Beijing 100049, China}
 
@@ -46,14 +46,10 @@ by using large scale structure (LSS) $N$-body simulations
 and use the displacement field information in Lagrangian space
 to recover the primordial linear density field.
 We find that, compared to Eulerian nonlinear density fields,
-the negative divergence of $E$-mode displacement fields
-in Lagrangian space improves the cross-correlation with
+the $E$-mode displacement fields
+in Lagrangian space improves the cross-correlation scale $k$ with
 initial density field by factor of 6 $\sim$ 7,
-containing 2 orders of magnitude more primordial information. 
-In reality, the displacement field is dominated by linear evolution
-and insensitive of nonlinear shell-crossing, vorticity or
-baryonic physics, and thus can be stably solved from only
-the final matter distributions.
+containing 2 orders of magnitude more primordial information.
 This illustrates ability of potential density reconstruction algorithms,
 to improve the baryonic acoustic oscillation (BAO) mesurements
 from current and future large scale structure surveys.
@@ -64,16 +60,7 @@ from current and future large scale structure surveys.
 %\pacs{98.80.Es 95.36.+x}
 
 \maketitle
-\begin{figure}
- \centering
-  \includegraphics[width=0.95\linewidth]{proj.pdf}
-  \caption{Visualization of the nonlinear density field $\delta_N$ (top),
-  linear density field $\delta_L$ (middle) and the raw recovered density
-  field $\delta_R$ (bottom). These projections have 9.375 Mpc$/h$ thickness
-  and 400 Mpc$/h$ per side. The top panel shows the nonlinear displacement
-  field $\bs\Psi$ by the deformed mesh, which traces the LSS of $\delta_N$.}
-  \label{fig.projection}
-\end{figure}
+
 \section{Introduction}\label{sec.intro}
 Our universe starts from primordial Gaussian perturbations at a very early stage, 
 and from those fluctuations, the gravitational instability drives the formation of 
@@ -99,29 +86,27 @@ more straightforwardly, by power spectra or two-point correlation functions
 \citep{2005MNRAS.360L..82R,2012MNRAS.421..832Y}.
 
 
-\tcb{Standard BAO reconstruction algorithms apply in Eulerian space.
+Standard BAO reconstruction algorithms apply in Eulerian space.
 They usually smooth the nonlinear density field on
 linear scale ($\sim$10 Mpc$/h$) and reverse the large 
 scale bulk flows by a negative Zel'dovich linear displacement
-\citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}.}
+\citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}.
 In the linear Lagrangian perturbation theory (LPT), the 
 negative divergence of the the displacement field
 $-\nabla_q\cdot\bs\Psi(\bs q)$ respect to Lagrangian coordinates $\bs q$
 gives the linear density field \citep{2010PhDT.........4J},
-\tcr{and in many literatures
+and in many literatures
 \cite{2013MNRAS.428..141N,2014PhRvD..89h3515C,2016JCAP...03..017B}
 $\nabla_q\cdot\bs\Psi(\bs q)$ is compared with various standard LPT
 and corrected LPT initial conditions. Their motivation was
 trying to correct or modify the LPT displacement fields
 in order that the final positions of particles are brought
-closer to $N$-body results. Their results show that 
-all LPT methods are still unable to mimic the shell-crossing
-scales given by $N$-body simulation. Because of the absence
+closer to $N$-body results. Because of the absence
 of Lagrangian space information in observations, few density
 reconstruction algorithms are developed according to the relation
 between displacement and linear density. However,
 there are techniques to estimate the displacement field from a final 
-distribution of matter.}
+distribution of matter.
 For example, when a homogeneous initial matter distribution 
 is assumed, there is a unique solution of curl-less displacement field to relate 
 the initial and final distributions without shell-crossing. This solution can be 
@@ -134,43 +119,43 @@ of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
 displacement field $\tilde\Psi(q)$, and find
 that this new method well recovers the linear
 information and reconstructs 1D BAO peak in correlation function.
-\tcr{In 3D and more realistic cases, one needs to
+In 3D and more realistic cases, one needs to
 carefully consider effects of curl, shell-crossing, 
-complicated baryonic physics and biased tracers (galaxies).}
+complicated baryonic physics and biased tracers (galaxies).
 
-\tcr{Before these steps, we need to quantify the amount of linear information
+\begin{figure}
+ \centering
+  \includegraphics[width=0.95\linewidth]{proj.pdf}
+  \caption{Visualization of the nonlinear density field $\delta_N$ (top),
+  linear density field $\delta_L$ (middle) and the raw recovered density
+  field $\delta_R$ (bottom). These projections have 9.375 Mpc$/h$ thickness
+  and 400 Mpc$/h$ per side. The top panel shows the nonlinear displacement
+  field $\bs\Psi$ by the deformed mesh, which traces the LSS of $\delta_N$.}
+  \label{fig.projection}
+\end{figure}
+
+Before these steps, we need to quantify the amount of linear information
 that can be recovered\footnote{To avoid ambiguity, we call
-$\delta_R=-\nabla_q\cdot\bs\Psi(\bs q)$ recovered linear density field, which
+$\delta_R\equiv-\nabla_q\cdot\bs\Psi(\bs q)$ recovered linear density field, which
 requires $\bs\Psi(\bs q)$ from $N$-body simulations, while
 $-\nabla_q\cdot\tilde{\bs \Psi}(\bs q)$ is called the
-reconstructed density field.}
+reconstructed density field, which uses the estimated displacement field.}
  from the full nonlinear displacement field $\bs\Psi(\bs q)$.
 In $\bs\Psi(\bs q)$ from $N$-body simulations,
 (1) shell-crossing effects are fully considered; (2) $E$-mode displacement
 field is used for recovering the linear information (although $B$-mode is
 also present); (3) the setup is clean in absence of baryons and realistic
-observables. So it sets the best quality that potential reconstruction
-algorithms can achieve and further reconstructions by $\tilde{\bs \Psi}(\bs q)$
-can be compared with this result. Actually, in the later discussions and
-our next works we will show that, compared to $\tilde{\bs \Psi}(\bs q)$,
-additional information (shell-crossing) do not enhance the reconstruction
-prominently. Further more, we study the scale dependent cross-correlation
+observables. Further reconstructions by $\tilde{\bs \Psi}(\bs q)$
+can be compared with this result.
+Further more, we study the scale dependent cross-correlation
 between $-\nabla_q\cdot\bs\Psi(\bs q)$ and linear density field
 and construct optimal Wiener filters to get the optimal filtered
-recovered linear density field and recovered linear power spectrum.}
+recovered linear density field and recovered linear power spectrum.
 
 In the rest part of the paper, we describe the simulation,
 density recovery algorithm and Wiener filter setups in section
 \ref{sec.method}. We show results in section \ref{sec.results}.
 Discussion and conclusion are in section \ref{sec.discussion}.
-
-\begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{filter.pdf}
-  \caption{Correlation functions $r(\delta_L,\delta_N)$ and $r(\delta_L,\delta_R)$
-  (solid lines) and their scaled BAO damping models (dotted lines).}
-  \label{fig.corr}
-\end{figure}
-
 
 
 \section{Method}\label{sec.method}
@@ -209,6 +194,14 @@ log-normal distribution, we plot $\log_{10}(\delta_N+1)$ instead.
 The nonlinear evolution of $\delta_N$ makes it very different from $\delta_L$
 in appearance.
 
+\begin{figure}[t] \centering
+  \includegraphics[width=1.0\linewidth]{filter.pdf}
+  \caption{Correlation functions $r(\delta_L,\delta_N)$ and $r(\delta_L,\delta_R)$
+  (solid lines) and their scaled BAO damping models (dotted lines).}
+  \label{fig.corr}
+\end{figure}
+
+
 The two-point statistics of these density fields are quantified by the cross power 
 spectrum $P_{ij}(k)\equiv(2\pi)^{-3}\langle|\delta_i(k)||\delta_j(k)|\rangle$, 
 where subscripts $i,j$ may refer to linear ($L$), nonlinear ($N$),
@@ -241,24 +234,6 @@ $\delta_R$ takes the coordinates of $\bs q$ instead of $\bs x$.
 We just write $\bs q$'s Fourier wave number
 $k_q$ as $k$ to simplify the expression.
 
-\begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{power.pdf}
-  \caption{\tcr{Power spectra of $\delta_L$, $\delta_N$, and the decomposition
-  of $P_{LL}$ into correlated parts and noise terms according to equation
-  (\ref{eq.power}).}}
-  \label{fig.recopower}
-\end{figure}
-
-\begin{figure}[t] \centering
-  \includegraphics[width=1.0\linewidth]{pdfs.pdf}
-  \caption{Probability distribution functions (PDFs)
-  $f(\delta_L,\delta_N)$ and $f(\delta_L,\delta_R)$, showing in the upper
-  and lower panels respectively. Both red curves on $x$-axes show $f(\delta_L)$, following
-  a Gaussian distribution. The two curves on $y$-axes in upper and lower panel
-  show respectively $f(\delta_N)$ and $f(\delta_R)$.}
-  \label{fig.pdfs}
-\end{figure}
-
 To quantify the linear information in the recovered density field, we decompose $\delta_L$ in Fourier space as
 \begin{equation}\label{eq.decompose}
     \delta_L(k)=r'\delta_R+\delta_n,
@@ -276,7 +251,9 @@ comparison, by replacing ``$_R$'' with ``$_N$'' in the equations,
 while we do not rewrite them explicitly
 in the paper for simplicity. From these, we plot the cross 
 correlation coefficient $r_{LN}=r(\delta_L,\delta_N)$ and
-$r_{LR}=r(\delta_L,\delta_R)$ in Fig.\ref{fig.corr}. Clearly, $
+$r_{LR}=r(\delta_L,\delta_R)$ in Fig.\ref{fig.corr}.
+$r_{LN}$ shows no correlation starting from $k\simeq 0.4 h/$Mpc \citep{2004MNRAS.355..129S}.
+Clearly, $
 \delta_R$ contains much more linear information on smaller scales.
 
 According to equation (\ref{eq.decompose}), the auto power spectrum is decomposed as
@@ -310,6 +287,24 @@ $r_{LN}$ and $r_{LR}$. The latter extends the correlation
 with $\delta_L$ to smaller scales by nearly an order of
 magnitude. The extra correlation scales well cover the BAO
 scales of our interest.
+
+\begin{figure}[t] \centering
+  \includegraphics[width=1.0\linewidth]{power.pdf}
+  \caption{Power spectra of $\delta_L$, $\delta_N$, and the decomposition
+  of $P_{LL}$ into correlated parts and noise terms according to equation
+  (\ref{eq.power}).}
+  \label{fig.recopower}
+\end{figure}
+
+\begin{figure}[t] \centering
+  \includegraphics[width=1.0\linewidth]{pdfs.pdf}
+  \caption{Probability distribution functions (PDFs)
+  $f(\delta_L,\delta_N)$ and $f(\delta_L,\delta_R)$, showing in the upper
+  and lower panels respectively. Both red curves on $x$-axes show $f(\delta_L)$, following
+  a Gaussian distribution. The two curves on $y$-axes in upper and lower panel
+  show respectively $f(\delta_N)$ and $f(\delta_R)$.}
+  \label{fig.pdfs}
+\end{figure}
 
 In Fig.\ref{fig.recopower}, we show the auto power spectra of
 $\delta_L$ and $\delta_N$ in black dashed and blue solid curves.
@@ -373,7 +368,7 @@ In denser regions of $\delta_L$, $\delta_R$ is saturated at
 $\delta_R=3$, signifying the extreme collapsing of matter \citep{2013MNRAS.428..141N}:
 $\delta_R=-\nabla\cdot\bs\Psi=\nabla\cdot\bs q=3$. Shell crossing
 makes $\delta_R$ oscillate around 3. These second uncorrelated peaks
-damp out as we go to higher redshifts. \tcr{more?}
+damp out as we go to higher redshifts.
 
 
 
@@ -400,11 +395,15 @@ and data complexities. The impact of these factors can be quantitatively
 compared with the impact of different estimation methods, and with
 the exact solution by $N$-body simulations.
 
-\tcr{The advantage of using displacement field in reconstruction is
-its insensitive response from highly nonlinearities --
-densest regions form because matter elements, after shell crossing,
-stop experiencing the linear extrapolated of Zel'dovich approximation.
-i.e. the displacement fields are dominated by early stage linear processes,
+The advantage of using displacement field in reconstruction is
+its insensitive response from highly nonlinearities.
+nonlinear densities $\delta_N$ can be arbitrarily large -- 
+one expect virialized regions to be observable, where nonlinear
+density is given by the inverse determinant of the Jacobian
+$\delta_N=|\bs J|^{-1}\gtrsim 200$.
+However, reconstructed densities $\delta_R$ is given by
+the trace $\rm{tr}(\bs J)$ and saturates at 3.
+Actually, the displacement fields are dominated by early stage linear processes,
 which is the Lagrangian-Eulerian coordinate transform,
 while late stage shell-crossing, nonlinear and baryonic processes
 only fine-tunes the final position $\bs x$
@@ -417,18 +416,17 @@ which are expected to give similar results of this paper.
 In contrast, traditional
 treatments in reconstruction deals directly on density fields which sensitively
 relies on nonlinear processes --  density values can vary by orders
-of magnitude due to nonlinear/baryonic physics and many sources of errors.}
+of magnitude due to nonlinear/baryonic physics and many sources of errors.
 
 
 
 \section*{Acknowledgements}
-We thank Pengjie Zhang for helpful discussions which triggered
-the inspiration of the work.
+We thank Pengjie Zhang for helpful discussions and comments.
+We acknowledge funding from NSERC.
 HRY acknowledges General Financial Grant No.2015M570884 and Special Financial Grant No.2016T90009 from the China Postdoctoal Science Foundation.
 HMZ acknowledges the support of the Chinese MoST 863 program under Grant
 No. 2012AA121701, the CAS Science Strategic Priority Research Program
 XDB09000000 and the NSFC under Grant No. 11373030.
-The Dunlap Institute is funded through an endowment established by the David Dunlap family and the University of Toronto.
 Research at the Perimeter Institute is supported by the Government of Canada
 through Industry Canada and by the Province of Ontario through the Ministry of
 Research $\&$ Innovation.
