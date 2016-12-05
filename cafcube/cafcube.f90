@@ -6,8 +6,6 @@
 program cafcube
 use variables
 use pm
-!use cubefft
-!use penfft
 implicit none
 save
 
@@ -18,7 +16,7 @@ call initialize
 call particle_initialization
 
 sync all
-
+print*,'buffer density'
 call buffer_density
 call buffer_x
 call buffer_v

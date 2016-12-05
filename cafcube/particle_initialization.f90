@@ -96,7 +96,7 @@ print*, 'vmax',vmax
 
   read(12) sim ! 128 bytes header
   ! check zip format
-  if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izip2/=4) then
+  if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
     print*, 'zip format incompatable'
     close(12)
     stop
@@ -176,15 +176,16 @@ enddo
 mass_p=real((nf*nn)**3)/nptotal
 
 if (head) then
-	print*, 'nptotal =', nptotal
+  print*, 'nptotal =', nptotal
   print*, 'mass_p=', mass_p
-	print*, 'max np per cell =', maxval(rhoc)
-	!print*, 'min v_i =', minval(v)*v_i2r
-	!print*, 'max v_i =', maxval(v)*v_i2r
-	!print*, 'velocity resolution ='
-	!print*, v_i2r
-	print*, 'particle_initialization done'
-	print*, ''
+  print*, 'max np per cell =', maxval(rhoc)
+  print*, 'npmax =', npmax
+  !print*, 'min v_i =', minval(v)*v_i2r
+  !print*, 'max v_i =', maxval(v)*v_i2r
+  !print*, 'velocity resolution ='
+  !print*, v_i2r
+  print*, 'particle_initialization done'
+  print*, ''
 endif
 
 

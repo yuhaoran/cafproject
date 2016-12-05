@@ -1,5 +1,5 @@
 !#define readkernel
-!#define penffttest
+#define penffttest
 #define mkdir
 
 subroutine initialize
@@ -18,14 +18,17 @@ call create_penfft_plan
 
 #ifdef penffttest
   call random_number(r3)
-  print*, r3(::8,::8,::8)
+  !print*, r3(::8,::8,::8)
+print*, 'called random number'
   call fft_cube2pencil
+print*, 'called c2p'
   call trans_zxy2xyz
-
+print*, 'called trans'
   call trans_xyz2zxy
   call ifft_pencil2cube
 
-  print*, r3(::8,::8,::8)
+  !print*, r3(::8,::8,::8)
+  if (head) print*, 'penfft test done.'
 #endif
 
 #ifndef readkernel

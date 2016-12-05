@@ -123,8 +123,8 @@ do itx=1,nnt
     force_f(i_dim,:,:,:,ithread)=rho_f(nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ithread)
   enddo
 
-  !print*, 'force1'
-  !!! print*, 'maxf', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
+  print*, 'force1'
+  print*, 'maxf', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
 
 
 #ifdef  write_file
@@ -381,8 +381,8 @@ close(10)
 
 call fft_cube2pencil ! r3 -> cz
 call trans_zxy2xyz ! cz -> cx
-crho_c(::2,:,:)=realpart(cx)
-crho_c(2::2,:,:)=imagpart(cx)
+crho_c(::2,:,:)=real(cx)
+crho_c(2::2,:,:)=imag(cx)
 
 do i_dim=1,3
   cx=cmplx(-crho_c(2::2,:,:)*kern_c(i_dim,:,:,:),crho_c(::2,:,:)*kern_c(i_dim,:,:,:))

@@ -47,7 +47,7 @@ complex cdiv(ng*nn/2+1,ng,ngpen)
 complex pdim, ekx(3)
 
 if (head) then
-  print*, 'Displacement field analysis'
+  print*, 'Displacement field analysis on resolution:'
   print*, 'ng=',ng
 endif
 
@@ -83,11 +83,12 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   fn4='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
   //'zipid_'//image2str(this_image()-1)//'.dat'
 
-  
+  if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
+
   open(12,file=fn2,status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
-  if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izip2/=4) then
+  if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
     print*, 'zip format incompatable'
     close(12)
     stop
@@ -96,9 +97,11 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   close(12)
 
   mass_p=sim%mass_p
+  if (head) print*, 'mass_p =',mass_p
 
   !print*, sum(rhoc), sim%nplocal
   nplocal=sim%nplocal
+  if (head) print*, 'nplocal =',nplocal
 
   open(10,file=fn0,status='old',action='read',access='stream')
   read(10) x(:,:nplocal)
@@ -117,6 +120,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
+  if (head) print*, 'CIC interpolation on tile'
   do k=1,nt
   do j=1,nt
   do i=1,nt
@@ -188,8 +192,9 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   enddo
   enddo
   
-  print*, sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
-  
+  print*, 'sum of rho_grid',sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
+  print*, 'Start sync from buffer regions'  
+  print*, '  dsp'
   sync all
   ! buffer dsp
   dsp(:,1,:,:)=dsp(:,1,:,:)+dsp(:,ng+1,:,:)[image1d(inx,icy,icz)]
@@ -203,7 +208,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   sync all
 
   ! buffer fine density
-
+  print*, '  rho_0'
   rho_0(1,:,:)=rho_0(1,:,:)+rho_0(ng+1,:,:)[image1d(inx,icy,icz)]
   rho_0(ng,:,:)=rho_0(ng,:,:)+rho_0(0,:,:)[image1d(ipx,icy,icz)]
   sync all
@@ -213,7 +218,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   rho_0(:,:,1)=rho_0(:,:,1)+rho_0(:,:,ng+1)[image1d(icx,icy,inz)]
   rho_0(:,:,ng)=rho_0(:,:,ng)+rho_0(:,:,0)[image1d(icx,icy,ipz)]
   sync all
-
+  print*, '  rho_grid'
   rho_grid(1,:,:)=rho_grid(1,:,:)+rho_grid(ng+1,:,:)[image1d(inx,icy,icz)]
   rho_grid(ng,:,:)=rho_grid(ng,:,:)+rho_grid(0,:,:)[image1d(ipx,icy,icz)]
   sync all
@@ -228,28 +233,36 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   print*, sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
   rho_grid=rho_grid/(sum(rho_grid(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
   cube2=rho_grid(1:ng,1:ng,1:ng)
+
+  if (head) print*,'Write delta_N into file'
   open(15,file='delta_nbody.dat',access='stream')
   write(15) cube2
   close(15)
 
   do i_dim=1,3
     dsp(i_dim,1:ng,1:ng,1:ng)=dsp(i_dim,1:ng,1:ng,1:ng)/rho_0(1:ng,1:ng,1:ng)
-    print*, 'dim',int(i_dim,1),'min,max values'
+    print*, 'dsp: dim',int(i_dim,1),'min,max values ='
     print*, minval(dsp(i_dim,1:ng,1:ng,1:ng)), maxval(dsp(i_dim,1:ng,1:ng,1:ng))
   enddo
-
+  
+  if (head) print*,'Write dsp into file'
   open(15,file='dsp.dat',access='stream')
   write(15) dsp(1,1:ng,1:ng,1:ng)
   write(15) dsp(2,1:ng,1:ng,1:ng)
   write(15) dsp(3,1:ng,1:ng,1:ng)
   close(15)
 
+  if (head) print*,'Start reconstructing delta_R'
   !cphi=0
   cdiv=0
   do i_dim=1,3
-    cube=dsp(i_dim,1:ng,1:ng,1:ng)    
+    if (head) print*,'Start working on dim',int(i_dim,1)
+    cube=dsp(i_dim,1:ng,1:ng,1:ng)
+    if (head) print*,'start forward tran'
     call fft_cube2pencil_fine
+    if (head) print*,'start transpose'
     call trans_zxy2xyz_fine
+    if (head) print*,'loop over k'
     ! cx is the fourier of dsp(i_dim,1:ng,1:ng,1:ng)
     do k=1,ngpen
     do j=1,ng
@@ -279,41 +292,43 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
 
   !! reconstructed delta
   cx=cdiv
+  if (head) print*,'start backward tran'
   call trans_xyz2zxy_fine
+  if (head) print*,'start transpose'
   call ifft_pencil2cube_fine
   cube1=-cube
-  open(15,file='delta_reco.dat',access='stream')
+  if (head) print*,'Write delta_R into file'
+  open(15,file='delta_reco.dat',status='replace',access='stream')
   write(15) cube1
   close(15)
   sync all
 
+  if (head) print*,'Read delta_L from file'
   !! linear delta
-  open(15,file='delta_L.dat',access='stream')
+  open(15,file='delta_L.dat',status='old',access='stream')
   read(15) cube0
   close(15)
   sync all
 
-  call cross_power(xi,cube0,cube2)
-  open(15,file='xi_LN.dat',access='stream')
-  write(15) xi
-  close(15)
-  call system('mv power_fields.dat power_fields_LN.dat')
-
+  if (head) print*,'Main: call cross_power LR____________________'
+  xi=0 ! force cross_power use generated Wiener filter
   call cross_power(xi,cube0,cube1)
-  open(15,file='xi_LR.dat',access='stream')
+  open(15,file='xi_LR.dat',status='replace',access='stream')
   write(15) xi
   close(15)
-  call system('mv power_fields.dat power_fields_LR.dat')
+  call system('mv power_fields.dat delta_wiener_LR.dat')
 
-  stop
+  if (head) print*,'Main: call cross_power LN____________________'
+  ! xi from last step is input to cross_power for filtering delta_N
+  call cross_power(xi,cube0,cube2)
+  open(15,file='xi_LN.dat',status='replace',access='stream')
+  write(15) xi
+  close(15)
+  call system('mv power_fields.dat delta_wiener_LN.dat')
 
 enddo !cur_checkpoint
-
+if (head) print*, 'destroying fft plans'
 call destroy_penfft_fine_plan
 print*,'displacement done'
 
-
-contains
-
-
-end  
+endprogram

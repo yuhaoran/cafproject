@@ -10,7 +10,6 @@ save
 
 ! nc: coarse grid per node per dim
 ! nf: fine grid per node per dim
-real,parameter :: s8=0.83
 real,parameter :: a=1/(1+z_i)
 real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf)
 integer,parameter :: nk=1000
@@ -38,11 +37,9 @@ real phi(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
   real,dimension(nf,nf,nf) :: phixx,phiyy,phizz,phixy,phiyz,phizx
 #endif
 logical,parameter :: correct_kernel=.true.
-logical,parameter :: np_2n3=.false.
 
 
 ! zip arrays
-integer,parameter :: np_nc=ncell ! number of particles / coarse cell / dim
 integer,parameter :: npt=nt*np_nc ! np / tile / dim
 integer,parameter :: npb=ncb*np_nc
 integer,parameter :: npmax=2*(npt+2*npb)**3
@@ -63,6 +60,13 @@ character (200) :: fn0,fn1,fn2,fn3,fn4
 !equivalence(phixx,phixy)
 !equivalence(phiyy,phiyz)
 !equivalence(phizz,phizx)
+
+if (head) then
+  print*, 'Initial conditions on resolution', nf
+  print*, 'Number of particles per side', np_nc*nc
+  print*, 'np_2n3 =',np_2n3
+endif
+
 
 #ifdef mkdir
   call system('mkdir -p '//'.'//ipath//'node'//image2str(this_image()-1))
@@ -90,22 +94,20 @@ sim%cur_checkpoint=0
 sim%cur_proj=0
 sim%cur_halo=0
 
-sim%mass_p=real((nf)**3)/nplocal ! will be overwritten
+sim%mass_p=real((nf)**3)/sim%nplocal ! will be overwritten
 sim%v_r2i=1 ! will be overwritten
 sim%shake_offset=0
 
 sim%box=box
 sim%rank=this_image()-1
-sim%nn=int(nn,1)
-sim%nnt=int(nnt,1)
-sim%nt=int(nt,1)
-sim%ncell=int(ncell,1)
-sim%ncb=int(ncb,1)
+sim%nn=int(nn,2)
+sim%nnt=int(nnt,2)
+sim%nt=int(nt,2)
+sim%ncell=int(ncell,2)
+sim%ncb=int(ncb,2)
 sim%izipx=int(izipx,1)
 sim%izipv=int(izipv,1)
-sim%izip2=int(4,1)
 
-sim%tile_struc=.true.
 sim%h0=h0
 sim%omega_m=omega_m
 sim%omega_l=omega_l
@@ -114,6 +116,7 @@ sim%s8=s8
 sim%m_neu(1:3)=0
 sim%vsim2phys=1.0/(300.*sqrt(omega_m)*box/a/2./ nf/nn)
 sim%z_i=z_i
+
 
 ! initialize variables
 if (np_2n3) then
@@ -128,6 +131,8 @@ tf=0
 pkm=0
 pkn=0
 
+
+print*,'Creating FFT plans'
 call create_penfft_fine_plan
 
 ! transferfnc
@@ -153,40 +158,28 @@ do k=1,nk
 enddo
 tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
 
-!open(15,file='tf_modified.dat',access='stream')
-!write(15) tf
-!close(15)
-!stop
-
 ! noisemap
+print*,'Generating random noise'
+
 call random_seed()
 call random_seed(size=seedsize)
 
 allocate(iseed(seedsize))
 allocate(rseed_all(seedsize,nn**3))
 
-!call random_seed(get=iseed)
-!print*, iseed
-!call system_clock(count=clock)
-!print*, clock
+call random_seed(get=iseed)
+print*, iseed
 
-!call random_seed(put=(/1,2,3,4,5,6,7,8,9,10,11,12/))
-!call random_number(x)
-!print*,x
+call random_seed()
+call random_number(cube)
 
-! node independent random seed
-call random_number(rseed_all)
-iseed=rseed_all(:,this_image())
-call random_seed(put=iseed)
-
-do i=1,2
-  call random_number(cube)
-enddo
-
-deallocate(iseed)
-deallocate(rseed_all)
+!#ifdef IFYOUWANTBUG
+  deallocate(iseed)
+  deallocate(rseed_all)
+!#endif
 
 !! Box-Muller transform
+print*,'Box-Muller transform'
 do k=1,nf
 do j=1,nf
 do i=1,nf,2
@@ -212,30 +205,28 @@ enddo
 !write(11) xi
 !close(11)
 
+print*, 'Start ftran'
 call fft_cube2pencil_fine
+print*, 'Start transpose'
 call trans_zxy2xyz_fine
 
 
 ! delta field
-
-!dx=fsize(1)
-!dxy=dx*fsize(2)
-!ind=0
-
+print*, 'Wiener filter noise'
 do k=1,nfpen
 do j=1,nf
-do i=1,nf*nn+1,2
+do i=1,nf*nn/2+1
   ! global grid in Fourier space for i,j,k
   kg=(nn*(icz-1)+icy-1)*nfpen+k
   jg=(icx-1)*nf+j
   ig=i
   kz=mod(kg+nf/2-1,nf)-nf/2
   ky=mod(jg+nf/2-1,nf)-nf/2
-  kx=(ig-1)/2
+  kx=ig-1
   kr=sqrt(kx**2+ky**2+kz**2)
   kr=max(kr,1.0)
   pow=interp_tf(2*pi*kr/box,1,2)/(4*pi*kr**3)
-  cx((i+1)/2,j,k)=cx((i+1)/2,j,k)*sqrt(pow*nf**3)
+  cx(i,j,k)=cx(i,j,k)*sqrt(pow*nf**3)
 enddo
 enddo
 enddo
@@ -245,14 +236,16 @@ sync all
 
 cx_temp=cx ! backup delta
 
+print*,'Start transpose'
 call trans_xyz2zxy_fine
+print*,'Start btran'
 call ifft_pencil2cube_fine
 
 ! write initial overdensity
-open(11,file='delta_L.dat',access='stream')
+print*,'Write delta_L into file'
+open(11,file='delta_L.dat',status='replace',access='stream')
 write(11) cube/Dgrow(a)
 close(11)
-
 ! potential field
 
 do k=1,nfpen
@@ -286,9 +279,9 @@ if (correct_kernel) then
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
   
-  !open(11,file='laplace.dat',access='stream')
-  !write(11) cube
-  !close(11)
+  open(11,file='laplace.dat',status='replace',access='stream')
+  write(11) cube
+  close(11)
 
   sync all
 
@@ -339,15 +332,15 @@ cx=real(cx)*cx_temp
 cx_temp=cx  ! backup phi(k)
 
 !!!!!! output phi in real space
-!call trans_xyz2zxy_fine
-!call ifft_pencil2cube_fine
-!phi=0
-!phi(1:nf,1:nf,1:nf)=cube ! phi1
-!open(11,file='phi1.dat',access='stream')
-!write(11) cube
-!close(11)
-!call fft_cube2pencil_fine
-!call trans_zxy2xyz_fine
+call trans_xyz2zxy_fine
+call ifft_pencil2cube_fine
+phi=0
+phi(1:nf,1:nf,1:nf)=cube ! phi1
+open(11,file='phi1.dat',status='replace',access='stream')
+write(11) cube
+close(11)
+call fft_cube2pencil_fine
+call trans_zxy2xyz_fine
 !!!!!!
 
 #ifndef ZA
@@ -501,9 +494,9 @@ cx_temp=cx  ! backup phi(k)
 
   !cube=cube-phixy**2-phiyz**2-phizx**2 ! source term of phi2
 
-  !open(11,file='phi2_source.dat',access='stream')
-  !write(11) cube
-  !close(11)
+  open(11,file='phi2_source.dat',status='replace',access='stream')
+  write(11) cube
+  close(11)
 
   sync all
 
@@ -535,9 +528,9 @@ cx_temp=cx  ! backup phi(k)
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
 
-  !open(11,file='phi2.dat',access='stream')
-  !write(11) cube
-  !close(11)
+  open(11,file='phi2.dat',status='replace',access='stream')
+  write(11) cube
+  close(11)
 
   phixx=phi(1:nf,1:nf,1:nf) ! backup phi1
   phiyy=cube ! backup phi2
@@ -549,9 +542,9 @@ cx_temp=cx  ! backup phi(k)
 
   phi(1:nf,1:nf,1:nf)=phixx-Dgrow(a)*phiyy ! corrected phi for positions
 
-  !open(11,file='phi12.dat',access='stream')
-  !write(11) phi(1:nf,1:nf,1:nf)
-  !close(11)
+  open(11,file='phi12.dat',status='replace',access='stream')
+  write(11) phi(1:nf,1:nf,1:nf)
+  close(11)
 #endif
 
 
@@ -690,7 +683,9 @@ do itx=1,nnt
 
   write(10) x(:,1:iright)
   write(11) v(:,1:iright)
+#ifdef PID
   write(14) pid(:,1:iright)
+#endif
   write(12) rhoce(1:nt,1:nt,1:nt)
 
   nplocal=nplocal+iright

@@ -5,7 +5,7 @@ save
 
 integer i,j,k,l
 integer nplocal
-integer,parameter :: ng=nf*2
+integer,parameter :: ng=nf/8
 integer,parameter :: npnode=nf**3
 real,parameter :: density_buffer=1.5
 integer,parameter :: npmax=npnode*density_buffer
@@ -62,7 +62,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   open(12,file=fn2,status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
-  if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izip2/=4) then
+  if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
     print*, 'zip format incompatable'
     close(12)
     stop

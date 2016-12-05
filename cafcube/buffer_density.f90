@@ -1,5 +1,5 @@
 !#define debug
-#define redundant
+!#define redundant
 subroutine buffer_density
 use variables
 implicit none
@@ -7,7 +7,7 @@ save
 !integer ntemp
 integer nshift,nlen,nlast,ifrom,mlast
 
-if (head) print*, 'buffer_density'
+print*, 'buffer_density'
 
 ! convert integer(1) density into integer(4) density with buffer: rhoc
 
@@ -17,7 +17,6 @@ if (head) print*, 'buffer_density'
 !print*, 'particles =', sum(rhoc)
 
 ! sync buffer regions in rhoc for each tile
-
 !x
 rhoc(:0,1:nt,1:nt,1,:,:)=rhoc(nt-ncb+1:nt,1:nt,1:nt,nnt,:,:)[image1d(inx,icy,icz)]
 rhoc(:0,1:nt,1:nt,2:,:,:)=rhoc(nt-ncb+1:nt,1:nt,1:nt,:nnt-1,:,:)

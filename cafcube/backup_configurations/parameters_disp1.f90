@@ -16,7 +16,7 @@ integer,parameter :: ncell=4
 integer,parameter :: rsoft=0.1
 
 integer,parameter :: nnt=2 ! n_tile/node/dim
-integer,parameter :: nc=64 ! nc_physical/node/dim
+integer,parameter :: nc=128 ! nc_physical/node/dim
 integer,parameter :: nt=nc/nnt ! nc_physical/tile/dim
 integer,parameter :: npen=nc/nn ! pencil
 
@@ -40,7 +40,7 @@ real,parameter :: z_i=50
 real,parameter :: z_i_nu=5
 real,parameter :: a_i=1/(1+z_i)
 
-real,parameter :: box=300 ! Mpc/h
+real,parameter :: box=400 ! Mpc/h
 real,parameter :: h0=68
 real,parameter :: ratio_nudm_dim=2
 real,parameter :: m_neu=0.05
@@ -64,12 +64,12 @@ real,parameter :: n_s=0.96
 real,parameter :: scalar_amp=2.46e-9
 
 integer,parameter :: nts=400 ! maximum number of timesteps
-real,parameter :: ra_max=0.05
+real,parameter :: ra_max=0.1
 real,parameter :: v_resolution=2.1/(2**(izipv*8))
 real,parameter :: x_resolution=1.0/2**(izipx*8)
 
 !! MPI images !!
-integer,parameter :: rank=this_image()-1            ! MPI_rank
+integer,parameter :: rank=0                         ! MPI_rank
 integer,parameter :: icz=rank/(nn**2)+1             ! image_z
 integer,parameter :: icy=(rank-nn**2*(icz-1))/nn+1  ! image_y
 integer,parameter :: icx=mod(rank,nn)+1             ! image_x
@@ -97,9 +97,10 @@ type sim_header
   ! more simulation config info
   real box
   integer(4) rank
-  integer(1) nn,nnt,nt,ncell,ncb
-  integer(1) izipx,izipv,izip2
-  logical(4) tile_struc ! 22
+  integer(2) nn,nnt,nt,ncell,ncb
+  integer(1) izipx,izipv
+  
+  ! cosmology
   real h0
   real omega_m
   real omega_l
@@ -126,14 +127,14 @@ subroutine print_header(s)
   print*,'| shake_offset =',s%shake_offset
   print*,'| '
   print*,'| box/(Mpc/h)=',s%box
-  print*,'| rank       =',int(s%rank,2)
+  print*,'| rank       =',s%rank
   print*,'| nn         =',s%nn
   print*,'| nnt        =',s%nnt
   print*,'| nt         =',s%nt, ' ( nf_tile=',int(ncell*(nt+2*ncb),2),')'
   print*,'| ncell      =',s%ncell
   print*,'| ncb        =',s%ncb
-  print*,'| izip x,v,2 =',s%izipx,s%izipv,s%izip2
-  print*,'| tile_struc =',s%tile_struc
+  print*,'| izip x,v =',s%izipx,s%izipv
+  print*,'| '
   print*,'| h0         =',s%h0
   print*,'| omega_m    =',s%omega_m
   print*,'| omega_l    =',s%omega_l

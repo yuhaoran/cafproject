@@ -4,8 +4,11 @@ OPT+=-DPID
 
 OPTIONS=$(OPT)
 
-FFTWLIB=/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/lib/
-FFTWINC=/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/include/
+#FFTWLIB=/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/lib/
+#FFTWINC=/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/include/
+
+FFTWINC=/usr/local/include/
+FFTWLIB=/usr/local/lib/
 
 XFLAG=-O3 -cpp -fno-range-check -mcmodel=medium -fcoarray=single -fopenmp -lfftw3f -I$(FFTWINC) -L$(FFTWLIB) $(OPTIONS)
 

@@ -8,9 +8,9 @@ save
 
 integer i,j,k,l
 integer nplocal
-integer,parameter :: npnode=(nf/2)**3
-real,parameter :: density_buffer=1.5
-integer,parameter :: npmax=npnode*(nce*1./nc)**3*density_buffer
+integer,parameter :: npnode=nf**3
+real,parameter :: density_buffer=1.2
+integer,parameter :: npmax=npnode*density_buffer
 integer ind,dx,dxy,kg,mg,jg,ig,i0,j0,k0,itx,ity,itz,idx,imove,nf_shake,ibin
 integer nshift,ifrom,ileft,iright,nlen,nlast,g(3)
 real kr,kx(3), sincx,sincy,sincz,sinc, rbin
@@ -34,7 +34,11 @@ character (200) :: fn0,fn1,fn2,fn3,fn4
 integer,parameter :: nexp=4
 
 
-if (head) print*, 'CAF power spectrum'
+if (head) then
+  print*, 'CAF power spectrum on resolution:'
+  print*, 'ng=',ng
+endif
+
 sync all
 
 call create_penfft_fine_plan
@@ -63,11 +67,13 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   //'zip2_'//image2str(this_image()-1)//'.dat'
   fn3='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
   //'zip3_'//image2str(this_image()-1)//'.dat'
-  
+
+  if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
+
   open(12,file=fn2,status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
-  if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izip2/=4) then
+  if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
     print*, 'zip format incompatable'
     close(12)
     stop
@@ -76,9 +82,11 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   close(12)
 
   mass_p=sim%mass_p
+  if (head) print*, 'mass_p =',mass_p
 
   !print*, sum(rhoc), sim%nplocal
   nplocal=sim%nplocal
+  if (head) print*, 'nplocal =',nplocal
 
   open(10,file=fn0,status='old',action='read',access='stream')
   read(10) x(:,:nplocal)
@@ -90,6 +98,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
+  if (head) print*, 'CIC interpolation on tile'
   do k=1,nt
   do j=1,nt
   do i=1,nt
@@ -121,7 +130,8 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   enddo
   enddo
   
-  print*, sum(rho_f*1d0)
+  print*, 'sum of rho_grid',sum(rho_f(1:ng,1:ng,1:ng)*1d0)
+  print*, 'Start sync from buffer regions'
 
   sync all
 
@@ -151,6 +161,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
 
 enddo !cur_checkpoint
 
+if (head) print*, 'destroying fft plans'
 call destroy_penfft_fine_plan
 
 print*,'cafpower done', nbin

@@ -35,9 +35,7 @@ sim%ncell=int(ncell,1)
 sim%ncb=int(ncb,1)
 sim%izipx=int(izipx,1)
 sim%izipv=int(izipv,1)
-sim%izip2=int(4,1)
 
-sim%tile_struc=.true.
 sim%h0=h0
 sim%omega_m=omega_m
 sim%omega_l=omega_l
