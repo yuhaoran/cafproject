@@ -1,53 +1,57 @@
 module parameters
 implicit none
 save
-!parameters
 
-character(*),parameter :: ipath='./init/2lpt/'
-character(*),parameter :: opath='./output/'
+! simulation parameters
+character(*),parameter :: ipath='./init/2lpt/' ! initial conditions
+character(*),parameter :: opath='./output/' ! snapshots
 
-integer,parameter :: izipx=2
-integer,parameter :: izipv=2
+integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
+integer,parameter :: izipv=2 ! 1 or 2, integer*? for particle velocity
 integer(izipx),parameter :: ishift=-(2**(izipx*8-1))
 real,parameter :: rshift=0.5-ishift
 
-integer,parameter :: nn=1
-integer,parameter :: ncell=4
-integer,parameter :: rsoft=0.1
-
-integer,parameter :: nnt=2 ! n_tile/node/dim
-integer,parameter :: nc=24 ! nc_physical/node/dim >=24
-integer,parameter :: nt=nc/nnt ! nc_physical/tile/dim
-integer,parameter :: npen=nc/nn ! pencil
+! (hereafter 'number of fine cells' = 'nf')
+! (hereafter 'number of coarse cells' = 'nc')
+! (hereafter 'per dimension' = '/dim')
+integer,parameter :: nn=1 ! number of imgages (nodes) /dim
+integer,parameter :: ncell=4 ! number of nf in each nc, /dim
+integer,parameter :: nnt=2 ! number of tiles /image/dim
+integer,parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
+integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
+integer,parameter :: npen=nc/nn ! nc /dim in shorter side of the pencil, for pencil decomposition
 
 integer,parameter :: nf=nc*ncell ! >=96
-integer,parameter :: nft=nt*ncell ! 48 by default
+integer,parameter :: nft=nt*ncell ! >=48
 integer,parameter :: nfpen=npen*ncell
 
-integer,parameter :: ncore=1
-integer,parameter :: n_nest=4
+integer,parameter :: ncore=1 ! number of cores per image
+integer,parameter :: n_nest=4 ! number of nested threads
 
-integer,parameter :: ncb=6 ! 6 by default
-integer,parameter :: nce=nc+2*ncb
-integer,parameter :: nte=nt+2*ncb
+integer,parameter :: ncb=6 ! nc in buffer /dim, single side; 6 by default
+integer,parameter :: nce=nc+2*ncb ! extended nc
+integer,parameter :: nte=nt+2*ncb ! extended nt
 
 integer,parameter :: nfb=ncb*ncell ! 24
-integer,parameter :: nf_cutoff=16
+integer,parameter :: nf_cutoff=16 ! beyond this length, fine force is zero
 
 integer,parameter :: nfe=nft+2*nfb ! 96
 
 integer,parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
-logical,parameter :: np_2n3=.false.
 
-real,parameter :: z_i=50
-real,parameter :: z_i_nu=5
-real,parameter :: a_i=1/(1+z_i)
+real,parameter :: rsoft=0.1 ! PP softening length
+logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
 
-real,parameter :: box=400 ! Mpc/h
-real,parameter :: h0=68
-real,parameter :: s8=0.83
-real,parameter :: ratio_nudm_dim=2
-real,parameter :: m_neu=0.05
+! cosmological parameters
+real,parameter :: z_i=50 ! initial redshift
+real,parameter :: z_i_nu=5 ! initial redshift for neutrinos
+real,parameter :: a_i=1/(1+z_i) ! initial scale factor
+
+real,parameter :: box=400 ! simulation scale /dim, in unit of Mpc/h
+real,parameter :: h0=68 ! Hubble constant
+real,parameter :: s8=0.83 ! \sigma_8
+real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
+real,parameter :: m_neu=0.05 ! neutrino mass
 real,parameter :: omega_nu=m_neu/93.14/(h0/100.)**2
 
 !real,parameter :: omega_c=0.27
