@@ -1,0 +1,67 @@
+-------------------------------
+Cosmological N-body CUBE Manual
+-------------------------------
+
+Lines start with a ">" are commands.
+------------------------------------
+
+Download the code CUBE from github:
+> git clone https://github.com/yuhaoran/cafproject.git
+> cd cafproject/cafcube_code/
+> vim README
+(You are doing this step.)
+
+Requirements for laptop: see appendix
+
+Clean up data files: source clean_up.sh
+
+Set your parameters
+> vim parameters.f90
+Set checkpoints
+> vim redshifts.txt
+
+Initial condition generator (works in folder cafcube_code/init/):
+> cd init
+Compile:
+> source compile_init_mac.sh
+Execute by:
+> ./a.out
+
+
+Main N-body code (work in the folder cafcube_code/):
+Compile by:
+> source compile_caf_mac.sh
+Execute by:
+> ./cafcube.x
+
+
+More details see this paper:
+https://github.com/yuhaoran/cafproject/blob/master/ms_caf/ms_caf.pdf
+or ask:
+haoran@cita.utoronto.ca
+
+
+Appendix
+
+I gfortran
+
+https://gcc.gnu.org/wiki/GFortranBinaries
+
+
+II Open MPI
+
+https://www.open-mpi.org
+https://wiki.helsinki.fi/display/HUGG/Open+MPI+install+on+Mac+OS+X
+https://www.open-mpi.org/doc/current/
+./configure --prefix=/usr/local
+make all
+sudo make install
+
+III FFTW
+
+http://fftw.org
+http://www.fftw.org/fftw2_doc/fftw_6.html
+#./configure CFLAGS="-mcmodel=medium" --enable-float --enable-threads --with-openmp
+./configure --enable-float --enable-threads --with-openmp
+make
+sudo make install
