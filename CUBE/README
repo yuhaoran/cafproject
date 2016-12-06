@@ -7,7 +7,7 @@ Lines start with a ">" are commands.
 
 Download the code CUBE from github:
 > git clone https://github.com/yuhaoran/cafproject.git
-> cd cafproject/cafcube_code/
+> cd cafproject/CUBE/
 > vim README
 (You are doing this step.)
 

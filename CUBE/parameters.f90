@@ -3,7 +3,7 @@ implicit none
 save
 
 ! output directory for both IC and snapshots
-character(*),parameter :: opath='./output/LOS1/'
+character(*),parameter :: opath='./output/universe1/'
 
 ! simulation parameters
 integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
