@@ -63,7 +63,6 @@ character (200) :: fn0,fn1,fn2,fn3,fn4
 !equivalence(phizz,phizx)
 
 if (head) then
-  print*, 'output: ', opath
   print*, 'Initial conditions on resolution', nf
   print*, 'Number of particles per side', np_nc*nc
   print*, 'np_2n3 =',np_2n3
