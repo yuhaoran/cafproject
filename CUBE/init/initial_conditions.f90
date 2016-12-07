@@ -16,6 +16,7 @@ integer,parameter :: nk=1000
 integer i,j,k,l,seedsize
 real kmax,temp_r,temp_theta,pow,phi8
 real(8) v8
+integer(8) :: t
 
 integer nplocal
 ! power spectrum arrays
@@ -163,14 +164,20 @@ print*,'Generating random noise'
 
 call random_seed()
 call random_seed(size=seedsize)
-
 allocate(iseed(seedsize))
 allocate(rseed_all(seedsize,nn**3))
+call system_clock(t)
+  do i = 1, seedsize
+      iseed(i) = t+i
+      !print*,t,seed(i)
+  end do
 
-call random_seed(get=iseed)
+call random_seed(put=iseed) ! generate seed using system time
+
+!call random_seed(get=iseed)
 print*, iseed
 
-call random_seed()
+!call random_seed()
 call random_number(cube)
 
 !#ifdef IFYOUWANTBUG
