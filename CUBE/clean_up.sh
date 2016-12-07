@@ -1,5 +1,7 @@
 make clean
 rm -fr output/*
+rm -f many/*
+rm -f init/many/*
 rm -f init/fort.*
 rm -f init/*.out
 rm -f init/*.o

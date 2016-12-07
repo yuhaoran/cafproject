@@ -20,6 +20,10 @@ Set your parameters
 Set checkpoints
 > vim redshifts.txt
 
+Compile
+> source compile_many_mac.sh
+by default it compiles 2 universes
+
 Initial condition generator (works in folder cafcube_code/init/):
 > cd init
 Compile:

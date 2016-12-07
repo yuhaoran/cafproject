@@ -59,6 +59,7 @@ checkpoint_step=.false.
 final_step=.false.
 
 if (head) then
+  print*, 'output: ', opath
   print*, 'checkpoint at:'
   open(16,file='redshifts.txt',status='old')
   do i=1,nmax_redshift

@@ -19,13 +19,13 @@ do i0=1,nn ! cube->x
   print*, i1,m1,m3,image1d(i1,m1,m3)
   rxlong(npen*nn*(i1-1)+1:npen*nn*i1,:,:)=r3(:,:,npen*(m2-1)+1:npen*m2)[image1d(i1,m1,m3)]
 enddo
-print*, 'got here'
+!print*, 'got here'
 sync all
 
 call sfftw_execute(planx)
 sync all
 
-print*,'called x'
+!print*,'called x'
 
 cx=cmplx(rxlong(::2,:,:),rxlong(2::2,:,:))
 
@@ -44,14 +44,14 @@ call sfftw_execute(plany)
 
 sync all
 
-print*, 'called y'
+!print*, 'called y'
 
 do i0=1,nn**2 ! y->z
   i1=mod(i0+m-2,nn)+1
   i2=mod((i0+m-2)/nn,nn)+1
-print*, i1,i2,image1d(m1,i1,i2)
+!print*, i1,i2,image1d(m1,i1,i2)
   cz(:,i1,i2,:,:)=trans13(cy(:,m2,m3, :, :)[image1d(m1,i1,i2)],npen,npen*nn/2+1,npen)
-print*,'here'
+!print*,'here'
 enddo
 
 
@@ -59,7 +59,7 @@ sync all
 
 call sfftw_execute(planz)
 
-print*, 'called z'
+!print*, 'called z'
 
 sync all
 endsubroutine fft_cube2pencil
