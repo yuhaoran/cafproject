@@ -5,6 +5,7 @@
 
 program initial_conditions
 use penfft_fine
+use iso_fortran_env , only : int64
 implicit none
 save
 
@@ -16,7 +17,7 @@ integer,parameter :: nk=1000
 integer i,j,k,l,seedsize
 real kmax,temp_r,temp_theta,pow,phi8
 real(8) v8
-integer(8) :: t
+integer(int64) :: t
 
 integer nplocal
 ! power spectrum arrays
@@ -168,7 +169,7 @@ allocate(iseed(seedsize))
 allocate(rseed_all(seedsize,nn**3))
 call system_clock(t)
   do i = 1, seedsize
-      iseed(i) = t+i
+      iseed(i) = lcg(t)
       !print*,t,seed(i)
   end do
 
@@ -722,7 +723,6 @@ if (head) print*, 'initial condition done'
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 contains
 
 function cumsum3(input)
@@ -800,5 +800,18 @@ function vfactor(a)
   H=2/(3*sqrt(a**3))*sqrt(1+a*km+a**3*lm)
   vfactor=a**2*H
 endfunction vfactor
+
+Function lcg(s) !// Linear congruential generator
+  implicit none
+  integer :: lcg
+  integer(int64) :: s
+  if (s == 0) then
+     s = 104729
+  else
+     s = mod(s, 4294967296_int64)
+  end if
+  s = mod(s * 279470273_int64, 4294967291_int64)
+  lcg = int(mod(s, int(huge(0), int64)), kind(0))
+End Function lcg
 
 end
