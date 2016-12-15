@@ -1,3 +1,0 @@
-test.f90: Use system_clock to generate different random seed for each run.
-
-test.sh: Change content in test.f90, compile and run it for multiple times.

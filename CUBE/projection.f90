@@ -49,22 +49,22 @@ enddo
 enddo
 enddo
 
-open(11,file='./output/proj_yz.dat',status='replace',access='stream')
-write(11) proj_yz
-close(11)
+!open(11,file='./output/proj_yz.dat',status='replace',access='stream')
+!write(11) proj_yz
+!close(11)
 
-open(12,file='./output/proj_xz.dat',status='replace',access='stream')
-write(12) proj_xz
-close(12)
+!open(12,file='./output/proj_xz.dat',status='replace',access='stream')
+!write(12) proj_xz
+!close(12)
 
-open(13,file='./output/proj_xy.dat',status='replace',access='stream')
-write(13) proj_xy
-close(13)
+!open(13,file='./output/proj_xy.dat',status='replace',access='stream')
+!write(13) proj_xy
+!close(13)
 
-#ifdef proj3d
-open(14,file='./output/proj_3d.dat',status='replace',access='stream')
-write(14) proj_3d
-close(14)
-#endif
+!#ifdef proj3d
+!open(14,file='./output/proj_3d.dat',status='replace',access='stream')
+!write(14) proj_3d
+!close(14)
+!#endif
 
 endsubroutine

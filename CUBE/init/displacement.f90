@@ -235,7 +235,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cube2=rho_grid(1:ng,1:ng,1:ng)
 
   if (head) print*,'Write delta_N into file'
-  open(15,file='delta_nbody.dat',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_nbody.dat',access='stream')
   write(15) cube2
   close(15)
 
@@ -246,7 +246,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   enddo
   
   if (head) print*,'Write dsp into file'
-  open(15,file='dsp.dat',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/dsp.dat',access='stream')
   write(15) dsp(1,1:ng,1:ng,1:ng)
   write(15) dsp(2,1:ng,1:ng,1:ng)
   write(15) dsp(3,1:ng,1:ng,1:ng)
@@ -298,14 +298,14 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   call ifft_pencil2cube_fine
   cube1=-cube
   if (head) print*,'Write delta_R into file'
-  open(15,file='delta_reco.dat',status='replace',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_reco.dat',status='replace',access='stream')
   write(15) cube1
   close(15)
   sync all
 
   if (head) print*,'Read delta_L from file'
   !! linear delta
-  open(15,file='delta_L.dat',status='old',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_L.dat',status='old',access='stream')
   read(15) cube0
   close(15)
   sync all
@@ -313,7 +313,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   if (head) print*,'Main: call cross_power LR____________________'
   xi=0 ! force cross_power use generated Wiener filter
   call cross_power(xi,cube0,cube1)
-  open(15,file='xi_LR.dat',status='replace',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/xi_LR.dat',status='replace',access='stream')
   write(15) xi
   close(15)
   call system('mv power_fields.dat delta_wiener_LR.dat')
@@ -321,7 +321,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   if (head) print*,'Main: call cross_power LN____________________'
   ! xi from last step is input to cross_power for filtering delta_N
   call cross_power(xi,cube0,cube2)
-  open(15,file='xi_LN.dat',status='replace',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/xi_LN.dat',status='replace',access='stream')
   write(15) xi
   close(15)
   call system('mv power_fields.dat delta_wiener_LN.dat')

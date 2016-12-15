@@ -17,7 +17,7 @@ integer,parameter :: nk=1000
 integer i,j,k,l,seedsize
 real kmax,temp_r,temp_theta,pow,phi8
 real(8) v8
-integer(int64) :: t
+integer(int64) :: time64
 
 integer nplocal
 ! power spectrum arrays
@@ -67,6 +67,7 @@ if (head) then
   print*, 'Initial conditions on resolution', nf
   print*, 'Number of particles per side', np_nc*nc
   print*, 'np_2n3 =',np_2n3
+  print*, 'output: ', opath
 endif
 
 
@@ -163,28 +164,31 @@ tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
 ! noisemap
 print*,'Generating random noise'
 
-call random_seed()
 call random_seed(size=seedsize)
+print*,'min seedsize =', seedsize
+seedsize=max(seedsize,12)
+
 allocate(iseed(seedsize))
 allocate(rseed_all(seedsize,nn**3))
-call system_clock(t)
-  do i = 1, seedsize
-      iseed(i) = lcg(t)
-      !print*,t,seed(i)
-  end do
+
+call system_clock(time64)
+do i = 1, seedsize
+  iseed(i) = lcg(time64)
+  print*,'time64,iseed(',int(i,1),')=',time64,iseed(i)
+enddo
 
 call random_seed(put=iseed) ! generate seed using system time
+print*, 'iseed', iseed
+open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='replace',access='stream')
+write(11) iseed
+close(11)
 
-!call random_seed(get=iseed)
-print*, iseed
-
-!call random_seed()
 call random_number(cube)
 
-!#ifdef IFYOUWANTBUG
-  deallocate(iseed)
-  deallocate(rseed_all)
-!#endif
+deallocate(iseed)
+deallocate(rseed_all)
+
+! to-do: rseed_all for image-dependent seed
 
 !! Box-Muller transform
 print*,'Box-Muller transform'
@@ -251,7 +255,7 @@ call ifft_pencil2cube_fine
 
 ! write initial overdensity
 print*,'Write delta_L into file'
-open(11,file='delta_L.dat',status='replace',access='stream')
+open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_L.dat',status='replace',access='stream')
 write(11) cube/Dgrow(a)
 close(11)
 ! potential field
@@ -287,9 +291,9 @@ if (correct_kernel) then
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
   
-  open(11,file='laplace.dat',status='replace',access='stream')
-  write(11) cube
-  close(11)
+  !open(11,file='laplace.dat',status='replace',access='stream')
+  !write(11) cube
+  !close(11)
 
   sync all
 
@@ -344,9 +348,9 @@ call trans_xyz2zxy_fine
 call ifft_pencil2cube_fine
 phi=0
 phi(1:nf,1:nf,1:nf)=cube ! phi1
-open(11,file='phi1.dat',status='replace',access='stream')
-write(11) cube
-close(11)
+!open(11,file='phi1.dat',status='replace',access='stream')
+!write(11) cube
+!close(11)
 call fft_cube2pencil_fine
 call trans_zxy2xyz_fine
 !!!!!!
