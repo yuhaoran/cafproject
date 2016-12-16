@@ -1,10 +1,18 @@
 ##!/bin/bash
+
+n1=101  # first universe to submit
+n2=102 # last universe to submit
+
 mkdir -p many
 mkdir -p init/many
 
 grep universe parameters.f90
 
-for i in {1..2}; do # compile many universes
+sed -i 's/universe1/universe'"$n1"'/g' parameters.f90
+
+#for i in {1..2}; do # compile many universes
+for ((i=$n1; i<=$n2; i++))
+do
   echo compile uninverse$i
 
   cd init/
@@ -27,7 +35,7 @@ for i in {1..2}; do # compile many universes
 done
 
 # reset parameters.f90 ('sed' has system dependency)
-sed -i 's/universe'"$((i+1))"'/universe1/g' parameters.f90
+sed -i 's/universe'"$((n2+1))"'/universe1/g' parameters.f90
 
 grep universe parameters.f90
 
