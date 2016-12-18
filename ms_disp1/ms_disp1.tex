@@ -21,7 +21,7 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Lagrangian Space Nonlinear $E$-mode clustering}
+\title{Nonlinear ${\bs E}$-mode clustering in Lagrangian Space}
 
 \author{Hao-Ran~Yu}\email{haoran@cita.utoronto.ca}
 \affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
@@ -112,8 +112,8 @@ is assumed, there is a unique solution of curl-less displacement field to relate
 the initial and final distributions without shell-crossing. This solution can be 
 solved by a metric transformation equation
 \citep{1995ApJS..100..269P,1998ApJS..115...19P}.
-In 1-dimensional (1D) case, the exact solution 
-simplifies to an ordering of matter elements by Eulerian coordinates.
+In 1-dimensional (1D) case, this solution 
+simplifies to an ordering of mass elements by their final, Eulerian coordinates.
 Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
 of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
 displacement field $\tilde\Psi(q)$, and find
@@ -140,11 +140,15 @@ $\delta_R\equiv-\nabla_q\cdot\bs\Psi(\bs q)$ recovered linear density field, whi
 requires $\bs\Psi(\bs q)$ from $N$-body simulations, while
 $-\nabla_q\cdot\tilde{\bs \Psi}(\bs q)$ is called the
 reconstructed density field, which uses the estimated displacement field.}
- from the full nonlinear displacement field $\bs\Psi(\bs q)$.
+from the full nonlinear displacement field $\bs\Psi(\bs q)$.
+This field can be decomposed into a curl-less ``$E$-mode'' component
+and a divergence-less ``$B$-mode'' component, $\bs\Psi=\bs\Psi_E+\bs\Psi_B$,
+where the $B$-mode is raised by late stage non-Gaussianities and is not
+dominant in $\bs\Psi$ \citep{2014PhRvD..89h3515C}.
 In $\bs\Psi(\bs q)$ from $N$-body simulations,
-(1) shell-crossing effects are fully considered; (2) $E$-mode displacement
-field is used for recovering the linear information (although $B$-mode is
-also present); (3) the setup is clean in absence of baryons and realistic
+(1) $E$-mode displacement field is used for recovering the linear information
+(although $B$-mode is also present); (2) shell-crossing effects are fully considered;
+(3) the setup is clean in absence of baryons and realistic
 observables. Further reconstructions by $\tilde{\bs \Psi}(\bs q)$
 can be compared with this result.
 Further more, we study the scale dependent cross-correlation
@@ -191,7 +195,9 @@ $\delta_N$ given by the simulation and the linear density field $\delta_L$.
 $\delta_N$ is obtained by the particle distribution at redshift $z=0$, and
 the particles are interpolated by using the cloud-in-cell (CIC) algorithm.
 Because $\delta_N$ is highly nonlinear and follows an approximate
-log-normal distribution, we plot $\log_{10}(\delta_N+1)$ instead.
+log-normal distribution, we plot $\log_{10}(\delta_N+1)$ instead, and show
+the color scale $\log_{10}(\delta_N+1)\in[-1,1]$ (or $\rho_N/\langle\rho_N\rangle\in[0.1,10]$)
+only, for a better visualization.
 The nonlinear evolution of $\delta_N$ makes it very different from $\delta_L$
 in appearance.
 
@@ -235,11 +241,16 @@ $\delta_R$ takes the coordinates of $\bs q$ instead of $\bs x$.
 We just write $\bs q$'s Fourier wave number
 $k_q$ as $k$ to simplify the expression.
 
-To quantify the linear information in the recovered density field, we decompose $\delta_L$ in Fourier space as
+To quantify the linear information in the recovered density field $\delta_R$,
+we decompose $\delta_L$ in Fourier space into two uncorrelated parts,
 \begin{equation}\label{eq.decompose}
     \delta_L(k)=r'\delta_R+\delta_n,
 \end{equation}
-where $r'\delta_R$ is completely correlated with linear density $\delta_L$. Correlating equation (\ref{eq.decompose}) with $\delta_R$ gives
+where the first term $r'\delta_R$ is completely correlated with $\delta_R$,
+meaning the linear information we can extract from $\delta_R$.
+The noise term $\delta_n$ is uncorrelated with $\delta_R$, being
+the rest of linear information which is not contained in $\delta_R$.
+Correlating equation (\ref{eq.decompose}) with $\delta_R$ gives
 \begin{equation}
     P_{LR}=r'P_{RR}+P_{nR},
 \end{equation}
@@ -257,11 +268,18 @@ $r_{LN}$ shows no correlation starting from $k\simeq 0.4 h/$Mpc \citep{2004MNRAS
 Clearly, $
 \delta_R$ contains much more linear information on smaller scales.
 
-According to equation (\ref{eq.decompose}), the auto power spectrum is decomposed as
+According to equation (\ref{eq.decompose}), the auto power spectrum of $\delta_L$ is decomposed as
 \begin{equation}\label{eq.power}
     P_{LL}=r^2b^{-2}P_{RR}+P_{nn},
 \end{equation}
-and $P_{nn}=(1-r^2)P_{LL}$. Then we construct a Wiener filter to filter out the uncorrelated part in $\delta_R$:
+and $P_{nn}=(1-r^2)P_{LL}$. We also explicitly
+compute the cross power spectrum between $\delta_R$ and $\delta_n=\delta_L-rb^{-1}\delta_R$,
+and found that $rb^{-1}P_{nR}$ is about two orders of magnitude lower than $P_{LL}$,
+being consistent with zero. This confirms that
+the signal term $rb^{-1}\delta_R$ and the noise term $\delta_n$
+is indeed uncorrelated and validates equation (\ref{eq.power}).
+According to these two terms, we construct a Wiener filter to filter
+out the uncorrelated part in $\delta_R$:
 \begin{equation}
     W(k)=\frac{r^2b^{-2}P_{RR}}{r^2b^{-2}P_{RR}+P_{nn}}=r^2.
 \end{equation}
@@ -398,7 +416,7 @@ the exact solution by $N$-body simulations.
 
 The advantage of using displacement field in reconstruction is
 its insensitive response from highly nonlinearities.
-nonlinear densities $\delta_N$ can be arbitrarily large -- 
+Nonlinear densities $\delta_N$ can be arbitrarily large -- 
 one expect virialized regions to be observable, where nonlinear
 density is given by the inverse determinant of the Jacobian
 $\delta_N=|\bs J|^{-1}\gtrsim 200$.
@@ -422,7 +440,7 @@ of magnitude due to nonlinear/baryonic physics and many sources of errors.
 
 
 \section*{Acknowledgements}
-We thank Pengjie Zhang for helpful discussions and comments.
+We thank Pengjie Zhang and Kwan Chuen Chan for helpful discussions and comments.
 We acknowledge funding from NSERC.
 HRY acknowledges General Financial Grant No.2015M570884 and Special Financial Grant No.2016T90009 from the China Postdoctoal Science Foundation.
 HMZ acknowledges the support of the Chinese MoST 863 program under Grant
