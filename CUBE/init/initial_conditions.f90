@@ -1,7 +1,8 @@
 #define ZA
 #define mkdir
 #define PID
-!#define FIXED_IC
+!#define READ_NOISE
+!#define READ_SEED
 
 program initial_conditions
 use penfft_fine
@@ -171,17 +172,29 @@ seedsize=max(seedsize,12)
 allocate(iseed(seedsize))
 allocate(rseed_all(seedsize,nn**3))
 
-call system_clock(time64)
-do i = 1, seedsize
-  iseed(i) = lcg(time64)
-  print*,'time64,iseed(',int(i,1),')=',time64,iseed(i)
-enddo
-
-call random_seed(put=iseed) ! generate seed using system time
-print*, 'iseed', iseed
-open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='replace',access='stream')
-write(11) iseed
-close(11)
+#ifdef READ_SEED
+  ! Read seeds
+  open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='old',access='stream')
+  read(11) iseed
+  close(11)
+  ! Input iseed
+  call random_seed(put=iseed)
+  print*, 'iseed', iseed
+#else
+  ! Generate at least 12 seeds according to system clock
+  call system_clock(time64)
+  do i = 1, seedsize
+    iseed(i) = lcg(time64)
+    print*,'time64,iseed(',int(i,1),')=',time64,iseed(i)
+  enddo
+  ! Input iseed to system
+  call random_seed(put=iseed)
+  print*, 'iseed', iseed
+  ! Write iseed into file
+  open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='replace',access='stream')
+  write(11) iseed
+  close(11)
+#endif
 
 call random_number(cube)
 
@@ -203,7 +216,7 @@ enddo
 enddo
 enddo
 
-#ifdef FIXED_IC
+#ifdef READ_NOISE
   !!!!! test only
   open(11,file='initnoise.dat',access='stream')
   read(11) cube
