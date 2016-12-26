@@ -1,6 +1,9 @@
+#define linear_kbin
+
 !#define remove_ny
 program displacement
 use penfft_fine
+use powerspectrum
 implicit none
 save
 

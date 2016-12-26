@@ -1,5 +1,19 @@
-subroutine cross_power(xi,cube1,cube2)
+#define linear_kbin
+
+module powerspectrum
 use penfft_fine
+
+real,parameter :: pi=2*asin(1.)
+integer,parameter :: nk_ny=ng*nn/2 ! Nyquist wave number
+#ifdef linear_kbin
+  integer,parameter :: nbin=nint(nk_ny*sqrt(3.))
+#else
+  integer,parameter :: nbin=floor(4*log(nk_ny*sqrt(3.)/0.95)/log(2.))
+#endif
+
+contains
+
+subroutine cross_power(xi,cube1,cube2)
 implicit none
 
 integer i,j,k,ig,jg,kg,ibin
@@ -40,10 +54,12 @@ real,parameter :: nexp=4.0 ! CIC kernel
     sincy=merge(1.0,sin(pi*kx(2)/ng/nn)/(pi*kx(2)/ng/nn),kx(2)==0.0)
     sincz=merge(1.0,sin(pi*kx(3)/ng/nn)/(pi*kx(3)/ng/nn),kx(3)==0.0)
     sinc=sincx*sincy*sincz
-
-    rbin=4.0/log(2.)*log(kr/0.95)
-    ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
-
+#ifdef linear_kbin
+      ibin=nint(kr)
+#else
+      rbin=4.0/log(2.)*log(kr/0.95)
+      ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
+#endif
     xi(1,ibin)=xi(1,ibin)+1 ! number count
     xi(2,ibin)=xi(2,ibin)+kr ! k count
     amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**0.0)*4*pi*kr**3 ! linear density field
@@ -90,7 +106,12 @@ real,parameter :: nexp=4.0 ! CIC kernel
     kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
     if (ig==1.and.jg==1.and.kg==1) cycle ! zero frequency
     kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
-    rbin=4.0/log(2.)*log(kr/0.95)
+#ifdef linear_kbin
+      ibin=nint(kr)
+#else
+      rbin=4.0/log(2.)*log(kr/0.95)
+      ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
+#endif
     ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
     cx(i,j,k)=cx1(i,j,k)*xi(8,ibin)**2
   enddo
@@ -119,7 +140,12 @@ real,parameter :: nexp=4.0 ! CIC kernel
     kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
     if (ig==1.and.jg==1.and.kg==1) cycle ! zero frequency
     kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
-    rbin=4.0/log(2.)*log(kr/0.95)
+#ifdef linear_kbin
+      ibin=nint(kr)
+#else
+      rbin=4.0/log(2.)*log(kr/0.95)
+      ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
+#endif
     ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
     cx(i,j,k)=cx2(i,j,k)*xi_input(8,ibin)**2
   enddo
@@ -132,3 +158,5 @@ real,parameter :: nexp=4.0 ! CIC kernel
   close(15)
   
 endsubroutine
+
+endmodule

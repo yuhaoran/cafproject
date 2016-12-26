@@ -3,10 +3,6 @@ use penfft_config
 implicit none
 save
 
-real,parameter :: pi=2*asin(1.)
-integer,parameter :: nk_ny=ng*nn/2 ! Nyquist wave number
-integer,parameter :: nbin=floor(4*log(nk_ny*sqrt(3.)/0.95)/log(2.))
-
 ! FFT plans
 integer(8) planx_fine,plany_fine,planz_fine,iplanx_fine,iplany_fine,iplanz_fine
 
