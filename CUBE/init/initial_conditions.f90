@@ -6,6 +6,7 @@
 
 program initial_conditions
 use penfft_fine
+use powerspectrum
 use iso_fortran_env , only : int64
 implicit none
 save
