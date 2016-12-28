@@ -45,7 +45,7 @@ character (10) :: img_s, z_s
 character (200) :: fn0,fn1,fn2,fn3,fn4
 integer,parameter :: nexp=4
 
-!complex cphi(ng*nn/2+1,ng,ngpen)
+complex cphi(ng*nn/2+1,ng,ngpen)
 complex cdiv(ng*nn/2+1,ng,ngpen)
 complex pdim, ekx(3)
 
@@ -96,7 +96,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
     close(12)
     stop
   endif
-  read(12) rhoc
+  read(12) rhoc ! coarse grid density
   close(12)
 
   mass_p=sim%mass_p
@@ -107,17 +107,17 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   if (head) print*, 'nplocal =',nplocal
 
   open(10,file=fn0,status='old',action='read',access='stream')
-  read(10) x(:,:nplocal)
+  read(10) x(:,:nplocal) ! particle Eulerian positions
   close(10)
 
   open(14,file=fn4,status='old',action='read',access='stream')
-  read(14) pid(:,:nplocal)
+  read(14) pid(:,:nplocal) ! particle Lagrangian positions
   close(14)
 
   ! mesh dsp and rho
-  rho_0=0
-  rho_grid=0
-  dsp=0
+  rho_0=0 ! CIC number count
+  rho_grid=0 ! CIC final density
+  dsp=0 ! CIC disp
   !dsp_e=0
   nlast=0
   do itz=1,nnt
@@ -146,7 +146,8 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
 !#ifdef remove_ny
 !      pos0=pos0-0.5
 !#else
-      pos0=pos0-0.5 +0.5 ! dsp- "+0.5" assigns particle to the half-left grid
+      pos0=pos0-0.5 +0.5 ! dsp- "+0.5" assigns particle to the half-right grid
+                         ! then the divergence will be done between current- and right-grid.
 !#endif
       idx1=floor(pos0)+1
       idx2=idx1+1
@@ -256,7 +257,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   close(15)
 
   if (head) print*,'Start reconstructing delta_R'
-  !cphi=0
+  cphi=0
   cdiv=0
   do i_dim=1,3
     if (head) print*,'Start working on dim',int(i_dim,1)
@@ -280,14 +281,14 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
       dim_2=mod(dim_1,3)+1
       dim_3=mod(dim_2,3)+1
       pdim=(ekx(dim_1)-1)*(ekx(dim_2)+1)*(ekx(dim_3)+1)/4
-      !cphi(i,j,k)=cphi(i,j,k)+cx(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
+      cphi(i,j,k)=cphi(i,j,k)+cx(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
       cdiv(i,j,k)=cdiv(i,j,k)+cx(i,j,k)*pdim
     enddo
     enddo
     enddo
   enddo ! i_dim
   if (head) then
-    !cphi(1,1,1)=0
+    cphi(1,1,1)=0
     cdiv(1,1,1)=0
   endif
   sync all
@@ -302,6 +303,18 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cube1=-cube
   if (head) print*,'Write delta_R into file'
   open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_reco.dat',status='replace',access='stream')
+  write(15) cube1
+  close(15)
+  sync all
+
+  cx=cphi
+  if (head) print*,'start backward tran'
+  call trans_xyz2zxy_fine
+  if (head) print*,'start transpose'
+  call ifft_pencil2cube_fine
+  cube1=cube
+  if (head) print*,'Write delta_R into file'
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/phi_E.dat',status='replace',access='stream')
   write(15) cube1
   close(15)
   sync all
