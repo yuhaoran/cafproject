@@ -1,7 +1,7 @@
 ##!/bin/bash
 
-n1=101  # first universe to submit
-n2=102 # last universe to submit
+n1=1001  # first universe to submit
+n2=1001 # last universe to submit
 
 mkdir -p many
 mkdir -p init/many
@@ -23,6 +23,8 @@ do
   mv a.out many/ic_universe$i.x
   source compile_disp_scinet_gcc5.sh
   mv a.out many/dsp_universe$i.x
+  source compile_voronoi_scinet.sh
+  mv a.out many/vor_universe$i.x
 
   cd ..
   module purge
