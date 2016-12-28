@@ -1,7 +1,7 @@
 #!/bin/bash
 # MOAB/Torque submission script for SciNet GPC
 #
-#PBS -l nodes=1:ppn=8,walltime=1:00:00 
+#PBS -l nodes=1:ppn=8,walltime=8:00:00 
 #PBS -N test
 
 # DIRECTORY TO RUN - $PBS_O_WORKDIR is directory job was submitted from

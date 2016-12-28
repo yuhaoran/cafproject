@@ -47,7 +47,7 @@ real,parameter :: z_i=50 ! initial redshift
 real,parameter :: z_i_nu=5 ! initial redshift for neutrinos
 real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-real,parameter :: box=400 ! simulation scale /dim, in unit of Mpc/h
+real,parameter :: box=600 ! simulation scale /dim, in unit of Mpc/h
 real,parameter :: h0=68 ! Hubble constant
 real,parameter :: s8=0.83 ! \sigma_8
 real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
