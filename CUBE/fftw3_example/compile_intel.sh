@@ -4,4 +4,4 @@ module list
 
 rm -f *.o *.out
 
-ifort -O3 -xHost -fpp -mcmodel=medium test.f90 -lfftw3f -I -L -lm -ldl
+ifort -i8 -O3 -xHost -fpp -mcmodel=medium test.f90 -lfftw3f -I -L -lm -ldl
