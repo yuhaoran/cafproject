@@ -1,3 +1,5 @@
+#define write_xp
+
 program rhof
 use parameters
 implicit none
@@ -7,7 +9,7 @@ integer i,j,k,l
 integer nplocal
 integer,parameter :: ng=nf/8
 integer,parameter :: npnode=nf**3
-real,parameter :: density_buffer=1.5
+real,parameter :: density_buffer=1.2
 integer,parameter :: npmax=npnode*density_buffer
 integer ind,dx,dxy,kg,mg,jg,ig,i0,j0,k0,itx,ity,itz,idx,imove,nf_shake,ibin
 integer nshift,ifrom,ileft,iright,nlen,nlast,g(3)
@@ -16,7 +18,7 @@ real kr,kx(3), sincx,sincy,sincz,sinc, rbin
 integer rhoc(nt,nt,nt,nnt,nnt,nnt)
 real rho_f(0:ng+1,0:ng+1,0:ng+1)[*]
 integer idx1(3),idx2(3),ip,np
-real mass_p,dx1(3),dx2(3),tempx(3)
+real mass_p,dx1(3),dx2(3),xp(3)
 
 integer(izipx) x(3,npmax)[*]
 
@@ -52,12 +54,12 @@ sync all
 do cur_checkpoint=n_checkpoint,n_checkpoint
   fn0='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
   //'zip0_'//image2str(this_image()-1)//'.dat'
-  fn1='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zip1_'//image2str(this_image()-1)//'.dat'
+  !fn1='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
+  !//'zip1_'//image2str(this_image()-1)//'.dat'
   fn2='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
   //'zip2_'//image2str(this_image()-1)//'.dat'
-  fn3='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zip3_'//image2str(this_image()-1)//'.dat'
+  !fn3='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
+  !//'zip3_'//image2str(this_image()-1)//'.dat'
   
   open(12,file=fn2,status='old',action='read',access='stream')
   read(12) sim
@@ -79,6 +81,10 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   read(10) x(:,:nplocal)
   close(10)
 
+# ifdef write_xp
+    open(16,file='.'//opath//'node'//image2str(this_image()-1)//'/xp.dat',access='stream')
+# endif
+
   ! particle mesh
   rho_f=0
   nlast=0
@@ -91,11 +97,14 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
     np=rhoc(i,j,k,itx,ity,itz)
     do l=1,np
       ip=nlast+l
-      tempx = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution
-      tempx = tempx * real(ng)/real(nc) - 0.5
-      idx1=floor(tempx)+1
+      xp = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution ! in unit of nc
+#     ifdef write_xp
+        write(16) xp * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
+#     endif
+      xp = xp * real(ng)/real(nc) - 0.5
+      idx1=floor(xp)+1
       idx2=idx1+1
-      dx1=idx1-tempx
+      dx1=idx1-xp
       dx2=1-dx1
 
       rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p
@@ -133,9 +142,13 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   print*, sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3
   rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
 
-  open(15,file='delta_cdm.dat',access='stream')
+  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_cdm_cic.dat',access='stream')
   write(15) rho_f(1:ng,1:ng,1:ng)
   close(15)
+
+# ifdef write_xp
+    close(16)
+# endif
 
 enddo !cur_checkpoint
 
