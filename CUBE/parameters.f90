@@ -37,7 +37,7 @@ integer,parameter :: nf_cutoff=16 ! beyond this length, fine force is zero
 
 integer,parameter :: nfe=nft+2*nfb ! 96
 
-integer,parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
+integer,parameter :: np_nc=ncell ! number of particles / coarse cell / dim
 
 real,parameter :: rsoft=0.1 ! PP softening length
 logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
@@ -47,7 +47,7 @@ real,parameter :: z_i=50 ! initial redshift
 real,parameter :: z_i_nu=5 ! initial redshift for neutrinos
 real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-real,parameter :: box=600 ! simulation scale /dim, in unit of Mpc/h
+real,parameter :: box=300 ! simulation scale /dim, in unit of Mpc/h
 real,parameter :: h0=68 ! Hubble constant
 real,parameter :: s8=0.83 ! \sigma_8
 real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim

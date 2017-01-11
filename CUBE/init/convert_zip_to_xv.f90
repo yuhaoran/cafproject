@@ -1,13 +1,15 @@
 #define write_xp
-
-program rhof
+!#define write_rho
+! convert zip format into xv format (for DTFE & Voronoi)
+! comput CIC density fields
+program convert_zip_to_xv
 use parameters
 implicit none
 save
 
 integer i,j,k,l
 integer nplocal
-integer,parameter :: ng=nf/8
+integer,parameter :: ng=nf ! number of grids = number of fine cells
 integer,parameter :: npnode=nf**3
 real,parameter :: density_buffer=1.2
 integer,parameter :: npmax=npnode*density_buffer
@@ -60,7 +62,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   //'zip2_'//image2str(this_image()-1)//'.dat'
   !fn3='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
   !//'zip3_'//image2str(this_image()-1)//'.dat'
-  
+
   open(12,file=fn2,status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
@@ -99,7 +101,8 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
       ip=nlast+l
       xp = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution ! in unit of nc
 #     ifdef write_xp
-        write(16) xp * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
+        !write(16) xp * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
+        write(16) xp / real(sim%nt*sim%nnt*sim%nn) ! in unit of box size
 #     endif
       xp = xp * real(ng)/real(nc) - 0.5
       idx1=floor(xp)+1
@@ -124,7 +127,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   enddo
   enddo
   enddo
-  
+
   print*, sum(rho_f*1d0)
 
   sync all
@@ -142,18 +145,17 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   print*, sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3
   rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
 
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_cdm_cic.dat',access='stream')
-  write(15) rho_f(1:ng,1:ng,1:ng)
-  close(15)
+# ifdef write_rho
+    open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_cdm_cic.dat',access='stream')
+    write(15) rho_f(1:ng,1:ng,1:ng)
+    close(15)
+#endif
 
 # ifdef write_xp
     close(16)
 # endif
 
 enddo !cur_checkpoint
-
-
-
 
 contains
 

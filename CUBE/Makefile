@@ -10,7 +10,7 @@ OPTIONS=$(OPT)
 FFTWINC=/usr/local/include/
 FFTWLIB=/usr/local/lib/
 
-XFLAG=-O3 -cpp -fno-range-check -mcmodel=medium -fcoarray=single -fopenmp -lfftw3f -I$(FFTWINC) -L$(FFTWLIB) $(OPTIONS)
+XFLAG=-O3 -cpp -mcmodel=medium -fcoarray=single -fopenmp -lfftw3f -I$(FFTWINC) -L$(FFTWLIB) $(OPTIONS)
 
 #XFLAG=-O3 -fpp -shared-intel -openmp -mcmodel=medium -traceback -xHost -coarray=distributed
 OFLAG=$(XFLAG) -c
