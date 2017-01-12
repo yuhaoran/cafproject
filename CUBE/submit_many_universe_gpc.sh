@@ -1,7 +1,7 @@
 ##!/bin/bash
 
-n1=11  # first universe to submit
-n2=20  # last universe to submit
+n1=1001  # first universe to submit
+n2=1001  # last universe to submit
 
 #for i in {1..2}; do # submit many universes
 
