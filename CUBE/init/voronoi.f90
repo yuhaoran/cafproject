@@ -1,9 +1,8 @@
-! read zip format checkpoint, and write xv files
 ! generate Voronoi density fields
 program voronoi
+use parameters
 implicit none
 integer,parameter :: np=223479 ! total number of particles
-integer,parameter :: nf=4608 ! number of fine cells per dim
 integer,parameter :: ng=128 ! number of grids per dim in output resolution
 
 integer i,j,k,ip,ig,pp
@@ -11,7 +10,7 @@ integer i_s,j_s,k_s,ii_s,jj_s,kk_s,r
 integer wp(np),pp_s
 integer hoc_g(ng,ng,ng),ll_p(np) ! linked list
 integer hoc_p(np),ll_g(ng**3) ! inverse linked list
-real xp(3,np),den(ng,ng,ng),den_ngp(ng,ng,ng)
+real xp(3,np),den(ng,ng,ng)
 real r2,r2min,gpos(3),hpos(3),dpos(3)
 
 logical search
@@ -29,7 +28,6 @@ do ip=1,np
   i=floor(xp(1,ip))+1
   j=floor(xp(2,ip))+1
   k=floor(xp(3,ip))+1
-  den_ngp(i,j,k)=den(i,j,k)+1
   ll_p(ip)=hoc_g(i,j,k)
   hoc_g(i,j,k)=ip
 enddo
