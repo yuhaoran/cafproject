@@ -1,3 +1,5 @@
+! to be optimized - check algorithm, transpose, image1d,
+! equivalence, ctransfer more than one slab, parallel
 program test
   use iso_fortran_env, only : int64
   implicit none
@@ -20,24 +22,24 @@ program test
   integer(int64) time64
   integer,allocatable :: iseed(:)
 
-  real r3(nc,nc,nc)![*]
-  complex c3(nc/2,nc,nc)
+  real        r3(nc,nc,nc)
+  complex     c3(nc/2,nc,nc)
   equivalence(r3,c3)
 
-  complex ctransfer1(nc/2,nc,npen)[*]!,rtemp2(npen/2,nc,nc)[*]
-  !real rxlong(nc*nn+2,nc,npen)[*]
-  real    rx(nc*nn+2  ,nc,npen)
-  complex cx(nc*nn/2+1,nc,npen)![*]
+  real        rx(nc*nn+2  ,nc,npen)
+  complex     cx(nc*nn/2+1,nc,npen)
   equivalence(rx,cx)
 
-  complex ctransfer2(nc,nc/2+1,npen)[*]
-  real crho_c(nc*nn+2,nc,npen)
-  complex cy(npen,nn,nn,nc/2+1,npen)[*]
-  complex cz(npen,nn,nn,nc/2+1,npen)[*]
-  complex cyxz(npen*nn,npen*nn/2+1,npen)
-  complex cyyxz(npen,nn,npen*nn/2+1,npen)
-  !equivalence(rx,cx)
-  equivalence(cyxz,cyyxz)
+  complex     cyyyxz(npen,nn,nn,nc/2+1,npen)
+  complex     cyyxz(nc,     nn,nc/2+1,npen)
+  equivalence(cyyyxz,cyyxz)
+
+  complex     cz(npen,nn,nn,nc/2+1,npen)
+
+  complex ctransfer1(nc/2,nc,nn)[*]
+  complex ctransfer2(nc,nc/2+1,nn)[*]
+  complex ctransfer3(npen,npen,nn,nn)[*]
+  complex ctransfer4(nc/2+1,nc,nn)[*]
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   print*, 'ilp64 test: default integer'
@@ -88,7 +90,6 @@ program test
   call ifft_pencil2cube
 
   print*, r3(1:10,1,1)
-!stop
   call destroy_penfft_plan
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -102,6 +103,121 @@ program test
     implicit none
     save
     integer m,m1,m2,m3,i0,i1,i2
+    m1=icx
+    m2=icy
+    m3=icz
+    m=num_images()
+    !new cube->x loop
+    do l=1,npen ! loop over cells in z, extract slabs
+      ctransfer1(:,:,1:nn)=c3(:,:,l::npen) ! nn slabs of c3 copied to ctransfer1
+      do i1=1,nn ! loop over parts in x, get slabs from each y node
+        ! i1=mod()
+        cx(nc*(i1-1)/2+1:nc*i1/2,:,l)=ctransfer1(:,:,m2)[image1d(i1,m1,m3)]
+      enddo
+    enddo
+    ! cx(nc*nn/2+1,:,:) are left zeros.
+
+    call sfftw_execute(planx)
+
+    !new x->y loop
+    do l=1,npen ! loop over z
+      do i1=1,nn ! loop over squares in x direction
+        ctransfer2(:,:,i1)=transpose(cx(nc/2*(i1-1)+1:nc/2*i1+1,:,l))
+      enddo
+      sync all
+      do i1=1,nn
+        cyyxz(:,i1,:,l)=ctransfer2(:,:,m1)[image1d(i1,m2,m3)]
+      enddo
+    enddo
+
+    call sfftw_execute(plany)
+
+    !new y->z loop
+    do l=1,nc/2+1 ! loop over slices in x direction
+      do i2=1,nn
+      do i1=1,nn
+        ctransfer3(:,:,i1,i2)=transpose(cyyyxz(:,i1,i2,l,:))
+      enddo
+      enddo
+      sync all
+      do i2=1,nn
+      do i1=1,nn
+        cz(:,i1,i2,l,:)=ctransfer3(:,:,m2,m3)[image1d(m1,i1,i2)]
+      enddo
+      enddo
+    enddo
+
+    call sfftw_execute(planz)
+
+  endsubroutine fft_cube2pencil
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  subroutine ifft_pencil2cube
+    !use variables
+    implicit none
+    save
+    integer m,m1,m2,m3,i0,i1,i2
+    m1=icx
+    m2=icy
+    m3=icz
+    m=num_images()
+
+    call sfftw_execute(iplanz)
+    !new z->y loop
+    do l=1,nc/2+1 ! loop over slices in x direction
+      do i2=1,nn
+      do i1=1,nn
+        ctransfer3(:,:,i1,i2)=transpose(cz(:,i1,i2,l,:))
+      enddo
+      enddo
+      sync all
+      do i2=1,nn
+      do i1=1,nn
+        cyyyxz(:,i1,i2,l,:)=ctransfer3(:,:,m2,m3)[image1d(m1,i1,i2)]
+      enddo
+      enddo
+    enddo
+
+    call sfftw_execute(iplany)
+
+    !new y->x loop
+    do l=1,npen ! loop over z
+      do i1=1,nn ! loop over squares in x direction
+        ctransfer4(:,:,i1)=transpose(cyyxz(:,i1,:,l))
+      enddo
+      sync all
+      do i1=1,nn
+        cx(nc/2*(i1-1)+1:nc/2*i1+1,:,l)=ctransfer4(:,:,m1)[image1d(i1,m2,m3)]
+      enddo
+    enddo
+
+    call sfftw_execute(iplanx)
+
+    !new x->cube loop
+    do l=1,npen
+      do i1=1,nn
+        ctransfer1(:,:,i1)=cx(nc*(i1-1)/2+1:nc*i1/2,:,l)
+      enddo
+      sync all
+      do i1=1,nn
+        c3(:,:,l+(i1-1)*npen)=ctransfer1(:,:,m2)[image1d(i1,m1,m3)]
+      enddo
+    enddo
+
+    r3=r3/(nc*nn)**3
+  endsubroutine ifft_pencil2cube
+
+
+
+
+  subroutine trans_zxy2xyz
+    !use variables
+    implicit none
+    save
+    integer m,m1,m2,m3,i0,i1,i2
 
     m1=icx
     m2=icy
@@ -109,195 +225,19 @@ program test
 
     m=num_images()
 
-    do i0=1,nn ! cube->x
-      i1=mod(m2+i0-2,nn)+1
-      !print*, i1,m1,m3,image1d(i1,m1,m3)
-      !! rxlong(npen*nn*(i1-1)+1:npen*nn*i1,:,:)=r3(:,:,npen*(m2-1)+1:npen*m2)[image1d(i1,m1,m3)]
-      ctransfer1=c3(:,:,npen*(m2-1)+1:npen*m2)![image1d(i1,m1,m3)]
-
-      ! cx(npen*nn*(i1-1)/2+1:npen*nn*i1/2,:,:)=cmplx(rtemp1(:,:,:)[image1d(i1,m1,m3)],rtemp2(:,:,:)[image1d(i1,m1,m3)])
-      cx(nc*(i1-1)/2+1:nc*i1/2,:,:)=ctransfer1(:,:,:)[image1d(i1,m1,m3)]
-    enddo
-
-    !print*, 'got here'
-    sync all
-    !cx=cmplx(rxlong(::2,:,:),rxlong(2::2,:,:)) ! added
-    call sfftw_execute(planx)
-    sync all
-
-    !print*,'called x'
-
-    ! removed cx=cmplx(rxlong(::2,:,:),rxlong(2::2,:,:))
-
-
-    sync all
-
-    do i0=1,nn ! x->y
-      i1=mod(m1+i0-2,nn)+1
-      !cyxz=trans12(cx(npen*nn/2*(m1-1)+1:npen*nn/2*m1+1,:,:)[image1d(i1,m2,m3)],npen*nn/2+1,npen*nn,npen)
-      ctransfer2=trans12(cx(npen*nn/2*(m1-1)+1:npen*nn/2*m1+1,:,:),nc/2+1,nc,npen)
-      cyxz=ctransfer2(:,:,:)[image1d(i1,m2,m3)] !!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      ! for m1/=nn, two more redundant layers
-      cy(:,:,i1, :, :)=cyyxz
-    enddo
-
-    sync all
-
-    call sfftw_execute(plany)
-
-    sync all
-
-    !print*, 'called y'
-
-    do i0=1,nn**2 ! y->z
-      i1=mod(i0+m-2,nn)+1
-      i2=mod((i0+m-2)/nn,nn)+1
-    !print*, i1,i2,image1d(m1,i1,i2)
-      cz(:,i1,i2,:,:)=trans13(cy(:,m2,m3, :, :)[image1d(m1,i1,i2)],npen,npen*nn/2+1,npen)
-    !print*,'here'
-    enddo
-
-
-    sync all
-
-    call sfftw_execute(planz)
-
-    !print*, 'called z'
-
-    sync all
-  endsubroutine fft_cube2pencil
-
-
-
-
-
-
-  subroutine ifft_pencil2cube
-  !use variables
-  implicit none
-  save
-  integer m,m1,m2,m3,i0,i1,i2
-
-  m1=icx
-  m2=icy
-  m3=icz
-
-  m=num_images()
-
-  call sfftw_execute(iplanz)
-
-  sync all
-
-  do i0=1,nn**2
-    i1=mod(i0+m-2,nn)+1
-    i2=mod((i0+m-2)/nn,nn)+1
-    cy(:,i1,i2,:,:)=trans13(cz(:,m2,m3, :, :)[image1d(m1,i1,i2)],npen,npen*nn/2+1,npen)
-  enddo
-
-  sync all
-
-  call sfftw_execute(iplany)
-
-  sync all
-
-  do i0=1,nn
-    i1=mod(m1+i0-2,nn)+1
-    cyyxz=cy(:,:,m1, :, :)[image1d(i1,m2,m3)]
-    cx(npen*nn/2*(i1-1)+1:npen*nn/2*i1+1,:,:)=trans12(cyxz,npen*nn,npen*nn/2+1,npen)
-  enddo
-
-  sync all
-
-  ! removed rxlong(::2,:,:)=real(cx); rxlong(2::2,:,:)=imag(cx)
-
-  call sfftw_execute(iplanx)
-
-  !rxlong(::2,:,:)=real(cx); rxlong(2::2,:,:)=imag(cx) ! added
-  !rtemp1=real(cx(:nc*nn/2,:,:)) ! added
-  !rtemp2=imag(cx(:nc*nn/2,:,:)) ! added
-  sync all
-  do i0=1,nn
-    i1=mod(m2+i0-2,nn)+1
-    ctransfer1=cx(nc*(i1-1)/2+1:nc*i1/2,:,:)
-    !r3(:,:,npen*(i1-1)+1:npen*i1)=rxlong(npen*nn*(m1-1)+1:npen*nn*m1,:,:)[image1d(m2,i1,m3)]
-    !r3(::2,:,npen*(i1-1)+1:npen*i1)=rtemp1(npen*nn*(m1-1)+1:npen*nn*m1,:,:)[image1d(m2,i1,m3)]
-    !r3(2::2,:,npen*(i1-1)+1:npen*i1)=rtemp2(npen*nn*(m1-1)+1:npen*nn*m1,:,:)[image1d(m2,i1,m3)]
-    c3(:,:,npen*(i1-1)+1:npen*i1)=ctransfer1(:,:,:)[image1d(m2,i1,m3)]
-  enddo
-
-  sync all
-
-  r3=r3/(nc*nn)**3
-
-  endsubroutine ifft_pencil2cube
-
-
-
-
-  subroutine trans_zxy2xyz
-  !use variables
-  implicit none
-  save
-  integer m,m1,m2,m3,i0,i1,i2
-
-  m1=icx
-  m2=icy
-  m3=icz
-
-  m=num_images()
-
-  do i0=1,nn**2
-    i1=mod(i0+m-2,nn)+1
-    i2=mod((i0+m-2)/nn,nn)+1
-    cy(:,i1,i2,:,:)=trans13(cz(:,m2,m3, :, :)[image1d(m1,i1,i2)],npen,npen*nn/2+1,npen)
-  enddo
-
-  sync all
-
-  do i0=1,nn
-    i1=mod(m1+i0-2,nn)+1
-    cyyxz=cy(:,:,m1, :, :)[image1d(i1,m2,m3)]
-    cx(npen*nn/2*(i1-1)+1:npen*nn/2*i1+1,:,:)=trans12(cyxz,npen*nn,npen*nn/2+1,npen)
-  enddo
-
-  !rxlong(::2,:,:)=real(cx); rxlong(2::2,:,:)=imag(cx)
-
   endsubroutine trans_zxy2xyz
 
   subroutine trans_xyz2zxy
-  !use variables
-  implicit none
-  save
-  integer m,m1,m2,m3,i0,i1,i2
+    !use variables
+    implicit none
+    save
+    integer m,m1,m2,m3,i0,i1,i2
 
-  m1=icx
-  m2=icy
-  m3=icz
+    m1=icx
+    m2=icy
+    m3=icz
 
-  m=num_images()
-
-  sync all
-  do i0=1,nn
-    i1=mod(m1+i0-2,nn)+1
-    !cyxz=trans12(cx(npen*nn/2*(m1-1)+1:npen*nn/2*m1+1,:,:)[image1d(i1,m2,m3)],npen*nn/2+1,npen*nn,npen)
-    ctransfer2=trans12(cx(npen*nn/2*(m1-1)+1:npen*nn/2*m1+1,:,:),nc/2+1,nc,npen)
-    cyxz=ctransfer2(:,:,:)[image1d(i1,m2,m3)]
-    ! for m1/=nn, two more redundant layers
-    cy(:,:,i1, :, :)=cyyxz
-  enddo
-
-  sync all
-
-  do i0=1,nn**2
-    i1=mod(i0+m-2,nn)+1
-    i2=mod((i0+m-2)/nn,nn)+1
-    cz(:,i1,i2,:,:)=trans13(cy(:,m2,m3, :, :)[image1d(m1,i1,i2)],npen,nc/2+1,npen)
-  enddo
-
-  sync all
+    m=num_images()
 
   endsubroutine trans_xyz2zxy
 
@@ -306,12 +246,10 @@ program test
     implicit none
     save
     include 'fftw3.f'
-    !call sfftw_plan_many_dft_r2c(planx,1,nc*nn,nc*npen,rxlong,NULL,1,nc*nn+2,rxlong,NULL,1,nc*nn/2+1,FFTW_MEASURE)
-    !call sfftw_plan_many_dft_c2r(iplanx,1,nc*nn,nc*npen,rxlong,NULL,1,nc*nn/2+1,rxlong,NULL,1,nc*nn+2,FFTW_MEASURE)
-    call sfftw_plan_many_dft_r2c(planx,1,nc*nn,nc*npen,cx(1,1,1),NULL,1,nc*nn+2,cx(1,1,1),NULL,1,nc*nn/2+1,FFTW_MEASURE)
-    call sfftw_plan_many_dft_c2r(iplanx,1,nc*nn,nc*npen,cx(1,1,1),NULL,1,nc*nn/2+1,cx(1,1,1),NULL,1,nc*nn+2,FFTW_MEASURE)
-    call sfftw_plan_many_dft(plany,1,nc*nn,(nc/2+1)*npen,cy,NULL,1,nc*nn,cy,NULL,1,nc*nn,FFTW_FORWARD,FFTW_MEASURE)
-    call sfftw_plan_many_dft(iplany,1,nc*nn,(nc/2+1)*npen,cy,NULL,1,nc*nn,cy,NULL,1,nc*nn,FFTW_BACKWARD,FFTW_MEASURE)
+    call sfftw_plan_many_dft_r2c(planx,1,nc*nn,nc*npen,cx,NULL,1,nc*nn+2,cx,NULL,1,nc*nn/2+1,FFTW_MEASURE)
+    call sfftw_plan_many_dft_c2r(iplanx,1,nc*nn,nc*npen,cx,NULL,1,nc*nn/2+1,cx,NULL,1,nc*nn+2,FFTW_MEASURE)
+    call sfftw_plan_many_dft(plany,1,nc*nn,(nc/2+1)*npen,cyyxz,NULL,1,nc*nn,cyyxz,NULL,1,nc*nn,FFTW_FORWARD,FFTW_MEASURE)
+    call sfftw_plan_many_dft(iplany,1,nc*nn,(nc/2+1)*npen,cyyxz,NULL,1,nc*nn,cyyxz,NULL,1,nc*nn,FFTW_BACKWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(planz,1,nc*nn,(nc/2+1)*npen,cz,NULL,1,nc*nn,cz,NULL,1,nc*nn,FFTW_FORWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(iplanz,1,nc*nn,(nc/2+1)*npen,cz,NULL,1,nc*nn,cz,NULL,1,nc*nn,FFTW_BACKWARD,FFTW_MEASURE)
   endsubroutine create_penfft_plan
@@ -329,43 +267,11 @@ program test
     call sfftw_destroy_plan(iplanz)
   endsubroutine destroy_penfft_plan
 
-  pure function trans12(cmatrix,m,n,h)
-    implicit none
-    integer :: i
-    integer, intent(in) :: m,n,h
-    complex, intent(in) :: cmatrix(m,n,h)
-    complex :: trans12(n,m,h)
-    do i=1,h
-      trans12(:,:,i)=transpose(cmatrix(:,:,i))
-    enddo
-  endfunction
-
-  pure function trans13(cmatrix,m,h,n)
-  implicit none
-  integer :: i
-  integer, intent(in) :: m,n,h
-  complex, intent(in) :: cmatrix(m,h,n)
-  complex :: trans13(n,h,m)
-  do i=1,h
-    trans13(:,i,:)=transpose(cmatrix(:,i,:))
-  enddo
-  endfunction
-
   function image1d(cx,cy,cz)
   integer image1d,cx,cy,cz
   image1d=cx+nn*(cy-1)+nn**2*(cz-1)
   endfunction
 
-  !pure function trans23(cmatrix,h,m,n)
-  !implicit none
-  !integer :: i
-  !integer, intent(in) :: m,n,h
-  !complex, intent(in) :: cmatrix(h,m,n)
-  !complex :: trans23(h,n,m)
-  !do i=1,h
-  !  trans23(i,:,:)=transpose(cmatrix(i,:,:))
-  !enddo
-  !endfunction
   function lcg(s) !// Linear congruential generator
     implicit none
     integer :: lcg
