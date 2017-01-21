@@ -17,7 +17,7 @@ real,parameter :: rshift=0.5-ishift
 integer,parameter :: nn=1 ! number of imgages (nodes) /dim
 integer,parameter :: ncell=4 ! number of nf in each nc, /dim
 integer,parameter :: nnt=2 ! number of tiles /image/dim
-integer,parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
+integer,parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
 integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 integer,parameter :: npen=nc/nn ! nc /dim in shorter side of the pencil, for pencil decomposition
 
@@ -43,47 +43,38 @@ real,parameter :: rsoft=0.1 ! PP softening length
 logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
 
 ! cosmological parameters
-real,parameter :: z_i=100.0   ! initial redshift
-real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
+real,parameter :: z_i=50 ! initial redshift
+real,parameter :: z_i_nu=5 ! initial redshift for neutrinos
 real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-real,parameter :: box=1024.0  ! simulation scale /dim, in unit of Mpc/h
-real,parameter :: h0=67.74    ! Hubble constant
-real,parameter :: s8=0.8276   ! \sigma_8
+real,parameter :: box=300 ! simulation scale /dim, in unit of Mpc/h
+real,parameter :: h0=68 ! Hubble constant
+real,parameter :: s8=0.83 ! \sigma_8
 real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
 real,parameter :: m_neu=0.05 ! neutrino mass
 real,parameter :: omega_nu=m_neu/93.14/(h0/100.)**2
 
-!!real,parameter :: omega_c=0.27
-!!real,parameter :: omega_b=0.05
-!!real,parameter :: omega_m=omega_c+omega_b+omega_nu
-!!real,parameter :: omega_l=1-omega_m
-!!real,parameter :: omega_l=0.73
-!!real,parameter :: omega_m=1-omega_l
+!real,parameter :: omega_c=0.27
+!real,parameter :: omega_b=0.05
+!real,parameter :: omega_m=omega_c+omega_b+omega_nu
+!real,parameter :: omega_l=1-omega_m
+real,parameter :: omega_l=0.73
+real,parameter :: omega_m=1-omega_l
 
-real,parameter :: omega_c=0.2588964265232328
-real,parameter :: omega_b=0.048597561544344206
-real,parameter :: omega_m=omega_c+omega_b !+omega_nu
-real,parameter :: omega_l=1-omega_m
-
-real,parameter :: omega_ch=0.
+real,parameter :: omega_ch=0.7
 real,parameter :: bias=1
 real,parameter :: power_index=2
 real,parameter :: wde=-1
 
 real,parameter :: f_nl=0
 real,parameter :: g_nl=0
-real,parameter :: n_s=0.9667
-real,parameter :: scalar_amp=2.142e-9
+real,parameter :: n_s=0.96
+real,parameter :: scalar_amp=2.46e-9
 
 integer,parameter :: nts=400 ! maximum number of timesteps
 real,parameter :: ra_max=0.1
 real,parameter :: v_resolution=2.1/(2**(izipv*8))
 real,parameter :: x_resolution=1.0/2**(izipx*8)
-
-
-! transfer function 
-integer, parameter      :: nk_tf=2000
 
 !! MPI images !!
 integer,parameter :: rank=0                         ! MPI_rank
@@ -116,7 +107,7 @@ type sim_header
   integer(4) rank
   integer(2) nn,nnt,nt,ncell,ncb
   integer(1) izipx,izipv
-  
+
   ! cosmology
   real h0
   real omega_m

@@ -2,8 +2,7 @@
 #define mkdir
 #define PID
 !#define READ_NOISE
-
-#define READ_SEED
+!#define READ_SEED
 
 program initial_conditions
 use penfft_fine
@@ -16,10 +15,10 @@ save
 ! nf: fine grid per node per dim
 real,parameter :: a=1/(1+z_i)
 real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf)
-integer,parameter :: nk=nk_tf   !1000
+integer,parameter :: nk=1000
 integer i,j,k,l,seedsize
 real kmax,temp_r,temp_theta,pow,phi8
-real(8) v8, norm
+real(8) v8
 integer(int64) :: time64
 
 integer nplocal
@@ -142,19 +141,13 @@ print*,'Creating FFT plans'
 call create_penfft_fine_plan
 
 ! transferfnc
-open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
+open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
 read(11,*) tf
 close(11)
-
-! normalization 
-norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1)
-write(*,*) 'norm:', norm
-
-
 !Delta^2
-tf(2,:)=tf(2,:)**2 * tf(1,:)**(3+n_s) * norm / (2*pi**2)
-tf(3,:)=tf(3,:)**2 * tf(1,:)**(3+n_s) * norm / (2*pi**2)
-tf(6,:)=tf(6,:)**2 * tf(1,:)**(3+n_s) * norm / (2*pi**2)
+tf(2,:)=tf(2,:)**2 * tf(1,:)**(3+n_s) / (2*pi**2)
+tf(3,:)=tf(3,:)**2 * tf(1,:)**(3+n_s) / (2*pi**2)
+tf(6,:)=tf(6,:)**2 * tf(1,:)**(3+n_s) / (2*pi**2)
 !dk
 tf(4,1)=tf(1,2)/2
 do k=2,nk-1
@@ -162,17 +155,13 @@ do k=2,nk-1
 enddo
 tf(4,nk)=tf(1,nk)-tf(1,nk-1)
 
-
 v8=0
 kmax=2*pi*sqrt(3.)*nf/2/box
 do k=1,nk
   if (tf(1,k)>kmax) exit
   v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
 enddo
-write(*,*) 's8**2/v8:', v8, s8**2/v8
-
-!!tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
-tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2
+tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
 
 ! noisemap
 print*,'Generating random noise'
@@ -186,10 +175,6 @@ allocate(rseed_all(seedsize,nn**3))
 
 #ifdef READ_SEED
   ! Read seeds
-
-  call system('cp ../configs/seed.dat .'//opath//'node'//image2str(this_image()-1)) ! for Xin
-  ! need to use seed[image_number].dat for parallel
-
   open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='old',access='stream')
   read(11) iseed
   close(11)
