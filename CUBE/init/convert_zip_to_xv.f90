@@ -18,8 +18,9 @@ real kr,kx(3), sincx,sincy,sincz,sinc, rbin
 integer rhoc(nt,nt,nt,nnt,nnt,nnt)
 real rho_f(0:ng+1,0:ng+1,0:ng+1)
 integer idx1(3),idx2(3),ip,np
-real mass_p,dx1(3),dx2(3),xp(3,npmax),xpos(3)
+real mass_p,dx1(3),dx2(3),xv(6,npmax),xpos(3)
 integer(izipx) x(3,npmax)
+integer(izipv) v(3,npmax)
 
 ! checkpoint variables
 integer,parameter :: nmax_redshift=100
@@ -57,6 +58,7 @@ endif
 
 do cur_checkpoint=n_checkpoint,n_checkpoint
   fn0='.'//opath//'/node0/'//z2str(z_checkpoint(cur_checkpoint))//'zip0_0.dat'
+  fn1='.'//opath//'/node0/'//z2str(z_checkpoint(cur_checkpoint))//'zip1_0.dat'
   fn2='.'//opath//'/node0/'//z2str(z_checkpoint(cur_checkpoint))//'zip2_0.dat'
   open(12,file=fn2,status='old',action='read',access='stream')
   read(12) sim
@@ -72,10 +74,14 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   mass_p=sim%mass_p
   print*, 'nplocal =', sim%nplocal
   nplocal=sim%nplocal
+  print*, 'v_r2i =', sim%v_r2i
 
   open(10,file=fn0,status='old',action='read',access='stream')
   read(10) x(:,:nplocal)
   close(10)
+  open(11,file=fn1,status='old',action='read',access='stream')
+  read(11) v(:,:nplocal)
+  close(11)
 
   ! particle mesh
   rho_f=0
@@ -89,8 +95,9 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
     np=rhoc(i,j,k,itx,ity,itz)
     do l=1,np
       ip=nlast+l
-      xp(:,ip) = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution ! in unit of nc
-      xpos = xp(:,ip) * real(ng)/real(nc) - 0.5
+      xv(1:3,ip) = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution ! in unit of nc
+      xv(4:6,ip) = v(:,ip)/sim%v_r2i
+      xpos = xv(1:3,ip) * real(ng)/real(nc) - 0.5
       idx1=floor(xpos)+1
       idx2=idx1+1
       dx1=idx1-xpos
@@ -132,22 +139,25 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   close(15)
   print*, 'wrote file delta_nbody.dat'
 
-  !write(16) xp * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
-  open(16,file='.'//opath//'node0/'//z2str(z_checkpoint(cur_checkpoint))//'xp.dat',status='replace',access='stream')
-  write(16) xp(:,:nplocal) / real(nc) ! in unit of box size
+  !write(16) xv(1:3,:nplocal) * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
+
+  print*, 'v_r2i =',sim%v_r2i
+
+  open(16,file='.'//opath//'node0/'//z2str(z_checkpoint(cur_checkpoint))//'xv.dat',status='replace',access='stream')
+  write(16) xv(:,:nplocal) / real(nc) ! in unit of box size
   close(16)
-  print*, 'complete writing xp.dat'
+  print*, 'complete writing xv.dat'
 
   ! Voronoi
   print*, 'Voronoi'
-  xp=xp*ng/nc ! in unit of required grid
+  xv(1:3,:nplocal)=xv(1:3,:nplocal)*ng/nc ! in unit of required grid
   wp=1 ! weight -- number of grids assigned to the particle
 
   print*,  '  assign particles to grids'
   do ip=1,nplocal
-    i=floor(xp(1,ip))+1
-    j=floor(xp(2,ip))+1
-    k=floor(xp(3,ip))+1
+    i=floor(xv(1,ip))+1
+    j=floor(xv(2,ip))+1
+    k=floor(xv(3,ip))+1
     ll_p(ip)=hoc_g(i,j,k)
     hoc_g(i,j,k)=ip
   enddo
@@ -190,7 +200,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
           do
             if (pp==0) exit ! find next cell
             search=.false. ! found particle
-            hpos=xp(:,pp)
+            hpos=xv(1:3,pp)
             dpos=hpos-gpos
             dpos=modulo(dpos+ng/2,real(ng))-ng/2
             r2=sum(dpos**2)
