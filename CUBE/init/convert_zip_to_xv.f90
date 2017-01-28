@@ -38,6 +38,8 @@ real r2,r2min,gpos(3),hpos(3),dpos(3)
 real(8) rho_tot
 logical search
 
+call geometry
+
 if (head) print*, 'rho_f'
 
 

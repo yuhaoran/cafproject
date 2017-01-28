@@ -49,6 +49,8 @@ complex cphi(ng*nn/2+1,ng,ngpen)
 complex cdiv(ng*nn/2+1,ng,ngpen)
 complex pdim, ekx(3)
 
+call geometry
+
 if (head) then
   print*, 'Displacement field analysis on resolution:'
   print*, 'ng=',ng

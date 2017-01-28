@@ -11,7 +11,7 @@ real delta_nbody(ng,ng,ng)
 real delta_voronoi(ng,ng,ng)
 
 print*, 'ng =',ng
-
+call geometry
 call create_penfft_fine_plan
 
 open(11,file='../output/universe1/node0/0.000delta_nbody.dat',status='old',action='read',access='stream')

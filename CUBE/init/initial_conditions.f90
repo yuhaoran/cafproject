@@ -1,9 +1,8 @@
 #define ZA
 #define mkdir
 #define PID
-!#define READ_NOISE
-
 #define READ_SEED
+!#define READ_NOISE
 
 program initial_conditions
 use penfft_fine
@@ -66,11 +65,14 @@ character (200) :: fn0,fn1,fn2,fn3,fn4
 !equivalence(phiyy,phiyz)
 !equivalence(phizz,phizx)
 
+call geometry
+
 if (head) then
   print*, 'Initial conditions on resolution', nf
   print*, 'Number of particles per side', np_nc*nc
   print*, 'np_2n3 =',np_2n3
   print*, 'output: ', opath
+  print*, 'head image number',icx,icy,icz
 endif
 
 
@@ -146,7 +148,7 @@ open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! f
 read(11,*) tf
 close(11)
 
-! normalization 
+! normalization
 norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1)
 write(*,*) 'norm:', norm
 
@@ -310,7 +312,7 @@ enddo
 if (head) cx(1,1,1)=0 ! DC frequency
 
 !print*, cx(1:2,1,1)
-!print*, cx_temp(1:2,1,1) 
+!print*, cx_temp(1:2,1,1)
 !stop
 
 sync all
@@ -319,7 +321,7 @@ if (correct_kernel) then
 
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
-  
+
   !open(11,file='laplace.dat',status='replace',access='stream')
   !write(11) cube
   !close(11)

@@ -16,6 +16,9 @@ real r2,r2min,gpos(3),hpos(3),dpos(3)
 logical search
 
 ! read in particle positions
+
+call geometry
+
 open(11,file='xhalo.dat',status='old',access='stream')
 read(11) xp
 close(11)

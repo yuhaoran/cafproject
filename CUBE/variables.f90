@@ -104,21 +104,43 @@ character (200) :: fn0,fn1,fn2,fn3,fn4
 
 contains
 
-function cumsum3(input)
-implicit none
-integer input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-integer cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-integer nsum,igx,igy,igz
-nsum=0
-do igz=1-2*ncb,nt+2*ncb
-do igy=1-2*ncb,nt+2*ncb
-do igx=1-2*ncb,nt+2*ncb
-	nsum=nsum+input(igx,igy,igz)
-	cumsum3(igx,igy,igz)=nsum
-enddo
-enddo
-enddo
-endfunction cumsum3
+  function cumsum3(input)
+    implicit none
+    integer input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer nsum,igx,igy,igz
+    nsum=0
+    do igz=1-2*ncb,nt+2*ncb
+    do igy=1-2*ncb,nt+2*ncb
+    do igx=1-2*ncb,nt+2*ncb
+    	nsum=nsum+input(igx,igy,igz)
+    	cumsum3(igx,igy,igz)=nsum
+    enddo
+    enddo
+    enddo
+  endfunction cumsum3
+
+  function cumsum6(input)
+    implicit none
+    integer input(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
+    integer cumsum6(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
+    integer nsum,ihx,ihy,ihz,igx,igy,igz
+    nsum=0
+    do ihz=1,nnt
+    do ihy=1,nnt
+    do ihx=1,nnt
+    do igz=1-ncb,nt+ncb
+    do igy=1-ncb,nt+ncb
+    do igx=1-ncb,nt+ncb
+      nsum=nsum+input(igx,igy,igz,ihx,ihy,ihz)
+      cumsum6(igx,igy,igz,ihx,ihy,ihz)=nsum
+    enddo
+    enddo
+    enddo
+    enddo
+    enddo
+    enddo
+  endfunction
 
 
 endmodule
