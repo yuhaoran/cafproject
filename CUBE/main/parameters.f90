@@ -3,7 +3,7 @@ module parameters
   save
 
   ! output directory for both IC and snapshots
-  character(*),parameter :: opath='./output/universe1/'
+  character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
   integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
@@ -17,7 +17,7 @@ module parameters
   integer,parameter :: nn=1 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
   integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
   integer,parameter :: npen=nc/nn ! nc /dim in shorter side of the pencil, for pencil decomposition
 
@@ -87,6 +87,11 @@ module parameters
   !! MPI image variables !!
   integer(4) :: rank,icx,icy,icz,inx,iny,inz,ipx,ipy,ipz
   logical head
+  ! checkpoint variables
+  integer,parameter :: nmax_redshift=100
+  integer cur_checkpoint, n_checkpoint[*]
+  real z_checkpoint(nmax_redshift)[*]
+  logical checkpoint_step[*], final_step[*]
 
   ! 128 byte (equivalent 32 4-byte variables) header in zip2
   type sim_header
@@ -189,5 +194,41 @@ module parameters
       z2str=trim(adjustl(str))
     endfunction
 
+    function output_dir()
+      character(:),allocatable :: output_dir
+      character(20) :: str_z,str_i
+      write(str_i,'(i6)') rank
+      write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
+      output_dir=opath//'node'//trim(adjustl(str_i))//'/'
+    endfunction
 
+    function output_prefix()
+      character(:),allocatable :: output_prefix
+      character(20) :: str_z,str_i
+      write(str_i,'(i6)') rank
+      write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
+      output_prefix=opath//'node'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))
+    endfunction
+
+    function output_suffix()
+      character(:),allocatable :: output_suffix
+      character(20) :: str_i
+      write(str_i,'(i6)') rank
+      output_suffix='_'//trim(adjustl(str_i))//'.dat'
+    endfunction
+
+    function output_name(zipname)
+      character(*) ::  zipname
+      character(:),allocatable :: output_name
+      output_name=output_prefix()//zipname//output_suffix()
+    endfunction
+
+    function ic_name(zipname)
+      character(*) ::  zipname
+      character(:),allocatable :: ic_name
+      character(20) :: str_z,str_i
+      write(str_i,'(i6)') rank
+      write(str_z,'(f7.3)') z_i
+      ic_name=opath//'node'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//zipname//output_suffix()
+    endfunction
 endmodule

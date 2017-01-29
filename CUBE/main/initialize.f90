@@ -12,6 +12,11 @@ include 'fftw3.f'
 
 call geometry
 
+if (head) then
+  print*,'CUBE started'
+  print*,'called geometry'
+endif
+
 call create_cubefft_plan
 
 call create_penfft_plan
@@ -70,6 +75,9 @@ n_checkpoint=n_checkpoint[1]
 z_checkpoint(:)=z_checkpoint(:)[1]
 sync all
 
+!if (head) print*, output_name('blablabla')
+!if (head) print*, ic_name('blablabla')
+!stop
 
 #ifdef mkdir
   call system('mkdir -p '//opath//'/node'//image2str(this_image()-1))

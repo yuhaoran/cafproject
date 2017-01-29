@@ -45,19 +45,13 @@ sim%m_neu(1:3)=0
 sim%vsim2phys=1.0/(300.*sqrt(omega_m)*box/a/2./ nf/nn)
 sim%z_i=z_i
 
-fn0=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint))//'zip0_'//image2str(this_image()-1)//'.dat'
-fn1=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint))//'zip1_'//image2str(this_image()-1)//'.dat'
-fn2=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint))//'zip2_'//image2str(this_image()-1)//'.dat'
-fn3=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint))//'zip3_'//image2str(this_image()-1)//'.dat'
-fn4=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint))//'zipid_'//image2str(this_image()-1)//'.dat'
-
-open(12,file=fn2,status='replace',access='stream')
+open(12,file=output_name('zip2'),status='replace',access='stream')
 write(12) sim
 write(12) rhoc(1:nt,1:nt,1:nt,:,:,:)
 close(12)
 
-open(10,file=fn0,status='replace',access='stream')
-open(11,file=fn1,status='replace',access='stream')
+open(10,file=output_name('zip0'),status='replace',access='stream')
+open(11,file=output_name('zip1'),status='replace',access='stream')
 !do itz=1,nnt ! loop over tile
 !do ity=1,nnt
 !do itx=1,nnt
@@ -79,7 +73,7 @@ close(10)
 close(11)
 
 #ifdef PID
-open(14,file=fn4,status='replace',access='stream')
+open(14,file=output_name('zipid'),status='replace',access='stream')
 write(14) pid(:,:nplocal)
 close(14)
 #endif

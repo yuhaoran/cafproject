@@ -59,7 +59,6 @@ integer(izipv) v(3,npmax)
 real grad_max(3),vmax(3),v_i2r(3),vf
 
 character (10) :: img_s, z_s
-character (200) :: fn0,fn1,fn2,fn3,fn4
 
 !equivalence(phixx,phixy)
 !equivalence(phiyy,phiyz)
@@ -78,13 +77,6 @@ endif
 
 #ifdef mkdir
   call system('mkdir -p '//'.'//opath//'node'//image2str(this_image()-1))
-#endif
-fn0='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip0_'//image2str(this_image()-1)//'.dat'
-fn1='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip1_'//image2str(this_image()-1)//'.dat'
-fn2='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip2_'//image2str(this_image()-1)//'.dat'
-fn3='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip3_'//image2str(this_image()-1)//'.dat'
-#ifdef PID
-  fn4='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zipid_'//image2str(this_image()-1)//'.dat'
 #endif
 
 sim%nplocal=1 ! will be overwritten
@@ -192,7 +184,7 @@ allocate(rseed_all(seedsize,nn**3))
   call system('cp ../configs/seed.dat .'//opath//'node'//image2str(this_image()-1)) ! for Xin
   ! need to use seed[image_number].dat for parallel
 
-  open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='old',access='stream')
+  open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
   read(11) iseed
   close(11)
   ! Input iseed
@@ -209,7 +201,7 @@ allocate(rseed_all(seedsize,nn**3))
   call random_seed(put=iseed)
   print*, 'iseed', iseed
   ! Write iseed into file
-  open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/seed.dat',status='replace',access='stream')
+  open(11,file=output_dir()//'seed'//output_suffix(),status='replace',access='stream')
   write(11) iseed
   close(11)
 #endif
@@ -286,7 +278,7 @@ call ifft_pencil2cube_fine
 
 ! write initial overdensity
 print*,'Write delta_L into file'
-open(11,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_L.dat',status='replace',access='stream')
+open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
 write(11) cube/Dgrow(a)
 close(11)
 ! potential field
@@ -632,11 +624,11 @@ print*, 'vmax',vmax
 
 print*, 'phi', phi(1:4,1,1)
 
-open(10,file=fn0,status='replace',access='stream')
-open(11,file=fn1,status='replace',access='stream')
-open(12,file=fn2,status='replace',access='stream')
+open(10,file=ic_name('zip0'),status='replace',access='stream')
+open(11,file=ic_name('zip1'),status='replace',access='stream')
+open(12,file=ic_name('zip2'),status='replace',access='stream')
 #ifdef PID
-open(14,file=fn4,status='replace',access='stream')
+open(14,file=ic_name('zipid'),status='replace',access='stream')
 #endif
 
 write(12) sim ! occupying 128 bytes

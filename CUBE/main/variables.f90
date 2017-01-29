@@ -17,12 +17,6 @@ integer,parameter :: NULL=0
 real,parameter :: pi=3.141592654
 real,parameter :: GG=1.0/6.0/pi
 
-! checkpoint variables
-integer,parameter :: nmax_redshift=100
-integer cur_checkpoint[*], n_checkpoint[*]
-real z_checkpoint(nmax_redshift)[*]
-logical checkpoint_step[*], final_step[*]
-
 ! variables
 integer its[*]
 real dt[*],dt_old[*],dt_mid[*]
@@ -98,7 +92,6 @@ real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
 !integer,dimension(1-ncb:nt+ncb,1-ncb:nt+ncb,ncb,nnt,nnt,nnt) :: rhotilez1,rhotilez2
 
 character (10) :: img_s, z_s
-character (200) :: fn0,fn1,fn2,fn3,fn4
 
 !equivalence(rhoce,rhoce1d)
 

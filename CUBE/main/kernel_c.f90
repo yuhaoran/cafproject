@@ -8,7 +8,7 @@ implicit none
 save
 include 'fftw3.f'
 
-character(*),parameter :: dir_kern='./kernels/'
+character(*),parameter :: dir_kern='../kernels/'
 integer hc1
 integer il,ih,jl,jh,kl,kh,kx,ky,kz
 integer i1,j1,k1

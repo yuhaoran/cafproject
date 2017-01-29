@@ -86,12 +86,7 @@ print*, 'vmax',vmax
   print*,  nptile
   print*,  sum(nptile)
 #else
-  fn0=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip0_'//image2str(this_image()-1)//'.dat'
-  fn1=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip1_'//image2str(this_image()-1)//'.dat'
-  fn2=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip2_'//image2str(this_image()-1)//'.dat'
-  fn3=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zip3_'//image2str(this_image()-1)//'.dat'
-  fn4=opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_i)//'zipid_'//image2str(this_image()-1)//'.dat'
-  open(12,file=fn2,access='stream')
+  open(12,file=ic_name('zip2'),status='old',access='stream')
   !open(13,file='./init/2lpt/z_50_ZA/zip3.dat',status='old',access='stream')
 
   read(12) sim ! 128 bytes header
@@ -111,14 +106,14 @@ print*, 'vmax',vmax
   !  read(13) rhoc_i4(:count(rhoc_i1==-1))
   !endif
   !close(13)
-  open(10,file=fn0,status='old',access='stream')
-  open(11,file=fn1,status='old',access='stream')
+  open(10,file=ic_name('zip0'),status='old',access='stream')
+  open(11,file=ic_name('zip1'),status='old',access='stream')
   read(10) x(:,:nplocal)
   read(11) v(:,:nplocal)
   close(10)
   close(11)
 #ifdef PID
-  open(14,file=fn4,status='old',access='stream')
+  open(14,file=ic_name('zipid'),status='old',access='stream')
   read(14) pid(:,:nplocal)
   close(14)
 #endif

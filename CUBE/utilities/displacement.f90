@@ -36,13 +36,7 @@ real mass_p,dx1(3),dx2(3),pos0(3),pos1(3),dpos(3)
 integer(izipx) x(3,npmax)
 integer(2)   pid(4,npmax)
 
-! checkpoint variables
-integer,parameter :: nmax_redshift=100
-integer cur_checkpoint, n_checkpoint[*]
-real z_checkpoint(nmax_redshift)[*]
-
 character (10) :: img_s, z_s
-character (200) :: fn0,fn1,fn2,fn3,fn4
 integer,parameter :: nexp=4
 
 complex cphi(ng*nn/2+1,ng,ngpen)
@@ -62,7 +56,7 @@ call create_penfft_fine_plan
 
 if (head) then
   print*, 'checkpoint at:'
-  open(16,file='../redshifts.txt',status='old')
+  open(16,file='../main/redshifts.txt',status='old')
   do i=1,nmax_redshift
     read(16,end=71,fmt='(f8.4)') z_checkpoint(i)
     print*, z_checkpoint(i)
@@ -77,20 +71,8 @@ z_checkpoint(:)=z_checkpoint(:)[1]
 sync all
 
 do cur_checkpoint= n_checkpoint,n_checkpoint
-  fn0='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zip0_'//image2str(this_image()-1)//'.dat'
-  fn1='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zip1_'//image2str(this_image()-1)//'.dat'
-  fn2='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zip2_'//image2str(this_image()-1)//'.dat'
-  fn3='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zip3_'//image2str(this_image()-1)//'.dat'
-  fn4='.'//opath//'/node'//image2str(this_image()-1)//'/'//z2str(z_checkpoint(cur_checkpoint)) &
-  //'zipid_'//image2str(this_image()-1)//'.dat'
-
   if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
-
-  open(12,file=fn2,status='old',action='read',access='stream')
+  open(12,file=output_name('zip2'),status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
   if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
@@ -108,11 +90,11 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   nplocal=sim%nplocal
   if (head) print*, 'nplocal =',nplocal
 
-  open(10,file=fn0,status='old',action='read',access='stream')
+  open(10,file=output_name('zip0'),status='old',action='read',access='stream')
   read(10) x(:,:nplocal) ! particle Eulerian positions
   close(10)
 
-  open(14,file=fn4,status='old',action='read',access='stream')
+  open(14,file=output_name('zipid'),status='old',action='read',access='stream')
   read(14) pid(:,:nplocal) ! particle Lagrangian positions
   close(14)
 
@@ -197,9 +179,9 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   enddo
   enddo
   enddo
-  
+
   print*, 'sum of rho_grid',sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
-  print*, 'Start sync from buffer regions'  
+  print*, 'Start sync from buffer regions'
   print*, '  dsp'
   sync all
   ! buffer dsp
@@ -234,14 +216,14 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   rho_grid(:,:,1)=rho_grid(:,:,1)+rho_grid(:,:,ng+1)[image1d(icx,icy,inz)]
   rho_grid(:,:,ng)=rho_grid(:,:,ng)+rho_grid(:,:,0)[image1d(icx,icy,ipz)]
   sync all
-  
+
   print*, 'sum of rho_grid = '
   print*, sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
   rho_grid=rho_grid/(sum(rho_grid(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
   cube2=rho_grid(1:ng,1:ng,1:ng)
 
   if (head) print*,'Write delta_N into file'
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_nbody.dat',access='stream')
+  open(15,file=output_name('delta_nbody'),access='stream')
   write(15) cube2
   close(15)
 
@@ -250,9 +232,9 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
     print*, 'dsp: dim',int(i_dim,1),'min,max values ='
     print*, minval(dsp(i_dim,1:ng,1:ng,1:ng)), maxval(dsp(i_dim,1:ng,1:ng,1:ng))
   enddo
-  
+
   if (head) print*,'Write dsp into file'
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/dsp.dat',access='stream')
+  open(15,file=output_name('dsp'),access='stream')
   write(15) dsp(1,1:ng,1:ng,1:ng)
   write(15) dsp(2,1:ng,1:ng,1:ng)
   write(15) dsp(3,1:ng,1:ng,1:ng)
@@ -295,8 +277,8 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   endif
   sync all
 
-
   !! reconstructed delta
+  ! divergence
   cx=cdiv
   if (head) print*,'start backward tran'
   call trans_xyz2zxy_fine
@@ -304,26 +286,27 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   call ifft_pencil2cube_fine
   cube1=-cube
   if (head) print*,'Write delta_R into file'
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_reco.dat',status='replace',access='stream')
+  open(15,file=output_name('delta_E'),status='replace',access='stream')
   write(15) cube1
   close(15)
   sync all
 
+  ! potential
   cx=cphi
   if (head) print*,'start backward tran'
   call trans_xyz2zxy_fine
   if (head) print*,'start transpose'
   call ifft_pencil2cube_fine
   cube1=cube
-  if (head) print*,'Write delta_R into file'
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/phi_E.dat',status='replace',access='stream')
+  if (head) print*,'Write phi_E into file'
+  open(15,file=output_name('phi_E'),status='replace',access='stream')
   write(15) cube1
   close(15)
   sync all
 
   if (head) print*,'Read delta_L from file'
   !! linear delta
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/delta_L.dat',status='old',access='stream')
+  open(15,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
   read(15) cube0
   close(15)
   sync all
@@ -331,7 +314,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   if (head) print*,'Main: call cross_power LR____________________'
   xi=0 ! force cross_power use generated Wiener filter
   call cross_power(xi,cube0,cube1)
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/xi_LR.dat',status='replace',access='stream')
+  open(15,file=output_name('xi_LR'),status='replace',access='stream')
   write(15) xi
   close(15)
   call system('mv power_fields.dat delta_wiener_LR.dat')
@@ -339,7 +322,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   if (head) print*,'Main: call cross_power LN____________________'
   ! xi from last step is input to cross_power for filtering delta_N
   call cross_power(xi,cube0,cube2)
-  open(15,file='.'//opath//'node'//image2str(this_image()-1)//'/xi_LN.dat',status='replace',access='stream')
+  open(15,file=output_name('xi_LN'),status='replace',access='stream')
   write(15) xi
   close(15)
   call system('mv power_fields.dat delta_wiener_LN.dat')

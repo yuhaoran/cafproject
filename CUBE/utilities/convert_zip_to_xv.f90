@@ -22,13 +22,7 @@ real mass_p,dx1(3),dx2(3),xv(6,npmax),xpos(3)
 integer(izipx) x(3,npmax)
 integer(izipv) v(3,npmax)
 
-! checkpoint variables
-integer,parameter :: nmax_redshift=100
-integer cur_checkpoint, n_checkpoint
-real z_checkpoint(nmax_redshift)
-
 character (10) :: img_s, z_s
-character (200) :: fn0,fn1,fn2,fn3,fn4
 integer,parameter :: nexp=4
 
 integer pp,i_s,j_s,k_s,ii_s,jj_s,kk_s,r
@@ -46,7 +40,7 @@ if (head) print*, 'rho_f'
 
 if (head) then
   print*, 'checkpoint at:'
-  open(16,file='../redshifts.txt',status='old')
+  open(16,file='../main/redshifts.txt',status='old')
   do i=1,nmax_redshift
     read(16,end=71,fmt='(f8.4)') z_checkpoint(i)
     print*, z_checkpoint(i)
@@ -57,10 +51,7 @@ endif
 
 
 do cur_checkpoint=n_checkpoint,n_checkpoint
-  fn0='.'//opath//'/node0/'//z2str(z_checkpoint(cur_checkpoint))//'zip0_0.dat'
-  fn1='.'//opath//'/node0/'//z2str(z_checkpoint(cur_checkpoint))//'zip1_0.dat'
-  fn2='.'//opath//'/node0/'//z2str(z_checkpoint(cur_checkpoint))//'zip2_0.dat'
-  open(12,file=fn2,status='old',action='read',access='stream')
+  open(12,file=output_name('zip2'),status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
   if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
@@ -76,10 +67,10 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   nplocal=sim%nplocal
   print*, 'v_r2i =', sim%v_r2i
 
-  open(10,file=fn0,status='old',action='read',access='stream')
+  open(10,file=output_name('zip0'),status='old',action='read',access='stream')
   read(10) x(:,:nplocal)
   close(10)
-  open(11,file=fn1,status='old',action='read',access='stream')
+  open(11,file=output_name('zip1'),status='old',action='read',access='stream')
   read(11) v(:,:nplocal)
   close(11)
 
@@ -134,7 +125,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   print*, sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3
   !rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
 
-  open(15,file='.'//opath//'node0/'//z2str(z_checkpoint(cur_checkpoint))//'delta_nbody.dat',status='replace',access='stream')
+  open(15,file=output_name('delta_nbody'),status='replace',access='stream')
   write(15) rho_f(1:ng,1:ng,1:ng)
   close(15)
   print*, 'wrote file delta_nbody.dat'
@@ -143,7 +134,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
 
   print*, 'v_r2i =',sim%v_r2i
 
-  open(16,file='.'//opath//'node0/'//z2str(z_checkpoint(cur_checkpoint))//'xv.dat',status='replace',access='stream')
+  open(16,file=output_name('xv'),status='replace',access='stream')
   write(16) xv(:,:nplocal) / real(nc) ! in unit of box size
   close(16)
   print*, 'complete writing xv.dat'
@@ -243,7 +234,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   print*, 'sum =',rho_tot
   print*, 'minval =',minval(rho_f(1:ng,1:ng,1:ng))
   rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(rho_tot/ng**3)-1
-  open(11,file='.'//opath//'node0/'//z2str(z_checkpoint(cur_checkpoint))//'delta_voronoi.dat',status='replace',access='stream')
+  open(11,file=output_name('delta_voronoi'),status='replace',access='stream')
   write(11) rho_f(1:ng,1:ng,1:ng)
   close(11)
   print*, 'wrote into file delta_voronoi.dat'

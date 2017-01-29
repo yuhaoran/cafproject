@@ -65,18 +65,18 @@ real,parameter :: nexp=4.0 ! CIC kernel
     amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**0.0)*4*pi*kr**3 ! linear density field
     amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! CIC'ed density field
     amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**2.0)*4*pi*kr**3 ! cross
-    
+
     xi(3,ibin)=xi(3,ibin)+amp11 ! auto power 1
     xi(4,ibin)=xi(4,ibin)+amp22 ! auto power 2
     xi(5,ibin)=xi(5,ibin)+amp12 ! cross power
     xi(6,ibin)=xi(6,ibin)+1/sinc**2.0 ! kernel
     xi(7,ibin)=xi(7,ibin)+1/sinc**4.0 ! kernel
-    
+
   enddo
   enddo
   enddo
   sync all
-  
+
   if (head) then
     do i=2,nn**3
       xi=xi+xi(:,:)[i]
@@ -118,7 +118,7 @@ real,parameter :: nexp=4.0 ! CIC kernel
   enddo
   enddo
   call trans_xyz2zxy_fine
-  call ifft_pencil2cube_fine  
+  call ifft_pencil2cube_fine
   write(15) cube ! Wiener filtered delta_L
 
   if (xi_input(1,1)/=0) then
@@ -127,7 +127,7 @@ real,parameter :: nexp=4.0 ! CIC kernel
     xi_input(9,:)=1
   else
     print*,'Input filter is zero, use computed filter for delta_R.'
-    xi_input=xi ! 
+    xi_input=xi !
   endif
 
   cx=0
@@ -154,9 +154,9 @@ real,parameter :: nexp=4.0 ! CIC kernel
   call trans_xyz2zxy_fine
   call ifft_pencil2cube_fine
   write(15) cube ! Wiener filtered delta
-  
+
   close(15)
-  
+
 endsubroutine
 
 endmodule

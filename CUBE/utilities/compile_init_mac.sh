@@ -5,7 +5,7 @@ XFLAG='-O3 -cpp -fcoarray=single -mcmodel=medium'
 OFLAG=${XFLAG}' -c'
 FFTFLAG='-lfftw3f -lm -ldl'
 
-$FC $OFLAG ../parameters.f90
+$FC $OFLAG ../main/parameters.f90
 
 $FC $OFLAG $FFTFLAG -Dpenfft_4x penfft_config.f90
 

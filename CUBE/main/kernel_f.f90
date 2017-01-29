@@ -5,7 +5,7 @@ implicit none
 save
 include 'fftw3.f'
 
-character(*),parameter :: dir_kern='./kernels/'
+character(*),parameter :: dir_kern='../kernels/'
 integer itemp(3)
 real rtemp(2)
 #ifdef debug
