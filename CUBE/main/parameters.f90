@@ -214,7 +214,7 @@ module parameters
       character(:),allocatable :: output_suffix
       character(20) :: str_i
       write(str_i,'(i6)') rank
-      output_suffix='_'//trim(adjustl(str_i))//'.dat'
+      output_suffix='_'//trim(adjustl(str_i))//'.bin'
     endfunction
 
     function output_name(zipname)
