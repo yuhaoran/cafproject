@@ -7,8 +7,8 @@ program test_penfft
   integer,parameter :: NULL=0
   real,parameter :: pi=3.14159
 
-  integer,parameter :: nn=2
-  integer,parameter :: nc=512 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nn=1
+  integer,parameter :: nc=768 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: npen=nc/nn ! nc /dim in shorter side of the pencil, for pencil decomposition
 
   !! MPI images !!
@@ -79,7 +79,7 @@ program test_penfft
   enddo
   !r3=this_image()
   r0=r3(:,:,nc)
-  !print*, r3(1,1,1)
+  print*, r3(1,1,1),r3(nc,nc,nc)!,nc*nc*nc
 
   sync all
 
@@ -235,7 +235,7 @@ program test_penfft
 !if (this_image()==8) print*, c3
 !stop
 
-    r3=r3/(nc*nn)**3
+    r3=r3/(nc*nn)/(nc*nn)/(nc*nn)
   endsubroutine ifft_pencil2cube
 
 

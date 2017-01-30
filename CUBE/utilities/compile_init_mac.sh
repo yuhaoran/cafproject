@@ -1,4 +1,4 @@
-rm *.o *.out
+rm -f *.mod *.o *.out
 
 FC=mpif90
 XFLAG='-O3 -cpp -fcoarray=single -mcmodel=medium'
