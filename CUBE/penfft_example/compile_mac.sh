@@ -2,7 +2,7 @@ rm -f *.o *.out
 
 #mpif90 -O3 -cpp -fcoarray=single -mcmodel=medium test.f90 -lfftw3f -lm -ldl
 
-mpif90 -O3 -cpp -fcoarray=single test.f90 -lfftw3f -lm -ldl
+mpif90 -O3 -cpp -fcoarray=single pencil_fft.f90 -lfftw3f -lm -ldl
 
 # work at least for nc=768
 

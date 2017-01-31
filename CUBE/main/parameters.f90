@@ -19,11 +19,17 @@ module parameters
   integer,parameter :: nnt=2 ! number of tiles /image/dim
   integer,parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
-  integer,parameter :: npen=nc/nn ! nc /dim in shorter side of the pencil, for pencil decomposition
 
   integer,parameter :: nf=nc*ncell ! >=96
   integer,parameter :: nft=nt*ncell ! >=48
-  integer,parameter :: nfpen=npen*ncell
+
+  ! ngrid /image/dim for pencil-fft
+#ifdef FFTFINE
+  integer,parameter :: ng=nf
+#else
+  integer,parameter :: ng=nc
+#endif
+  integer,parameter :: npen=ng/nn ! ng /dim in shorter side of the pencil, for pencil decomposition
 
   integer,parameter :: ncore=1 ! number of cores per image
   integer,parameter :: n_nest=4 ! number of nested threads
@@ -53,6 +59,8 @@ module parameters
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
   real,parameter :: m_neu=0.05 ! neutrino mass
   real,parameter :: omega_nu=m_neu/93.14/(h0/100.)**2
+  real,parameter :: pi=4*atan(1d0)
+
 
   !!real,parameter :: omega_c=0.27
   !!real,parameter :: omega_b=0.05
@@ -121,6 +129,7 @@ module parameters
   endtype
 
   type(sim_header) sim
+  integer m1,m2,m3,m
 
   contains
     subroutine geometry
@@ -128,6 +137,11 @@ module parameters
       icz=rank/(nn**2)+1             ! image_z
       icy=(rank-nn**2*(icz-1))/nn+1  ! image_y
       icx=mod(rank,nn)+1             ! image_x
+
+      m1=icx ! pencil_fft convension
+      m2=icy
+      m3=icz
+      m=num_images()
 
       ! adjacent images
       inx=modulo(icx-2,nn)+1

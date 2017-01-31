@@ -14,7 +14,6 @@ real,parameter :: dt_max=1
 real,parameter :: dt_scale=1
 integer(8),parameter :: unit8=1
 integer,parameter :: NULL=0
-real,parameter :: pi=3.141592654
 real,parameter :: GG=1.0/6.0/pi
 
 ! variables
@@ -34,7 +33,6 @@ real mass_p
 
 ! FFT plans
 integer(8) plan_fft_fine,plan_ifft_fine
-integer(8) planx,plany,planz,iplanx,iplany,iplanz
 
 real v_i2r(3)[*],v_i2r_new(3)[*]
 real vmax(3)[*],vmax_new(3)[*]
@@ -64,17 +62,6 @@ real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ncore)
 integer rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 integer cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
-! coarse fft arrays
-real r3(nc,nc,nc)[*]
-real rxlong(nc*nn+2,nc,npen)[*]
-complex cx(nc*nn/2+1,nc,npen)[*]
-real crho_c(nc*nn+2,nc,npen)
-complex cy(npen,nn,nn,nc/2+1,npen)[*]
-complex cz(npen,nn,nn,nc/2+1,npen)[*]
-complex cyxz(npen*nn,npen*nn/2+1,npen)
-complex cyyxz(npen,nn,npen*nn/2+1,npen)
-equivalence(cyxz,cyyxz)
-
 
 ! coarse kernel arrays
 real ck(3,nc,nc,nc)
@@ -84,12 +71,6 @@ real kern_c(3,nc*nn/2+1,nc,npen)
 real tmp_kern_c(3,nc*nn+2,nc,npen)
 
 real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
-
-
-! n^2
-!integer,dimension(ncb,nt,nt,nnt,nnt,nnt) :: rhotilex1[*],rhotilex2[*]
-!integer,dimension(1-ncb:nt+ncb,ncb,nt,nnt,nnt,nnt) :: rhotiley1[*],rhotiley2[*]
-!integer,dimension(1-ncb:nt+ncb,1-ncb:nt+ncb,ncb,nnt,nnt,nnt) :: rhotilez1,rhotilez2
 
 character (10) :: img_s, z_s
 
