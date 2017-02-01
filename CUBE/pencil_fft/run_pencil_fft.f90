@@ -1,4 +1,3 @@
-! to be optimized - transpose, image1d, ctransfer more than one slab
 program run_pencil_fft
   use iso_fortran_env, only : int64
   use parameters
@@ -32,9 +31,9 @@ program run_pencil_fft
   deallocate(iseed)
 
   if (this_image()==1) print*,'Box-Muller transform'
-  do k=1,nc
-  do j=1,nc
-  do i=1,nc,2
+  do k=1,ng
+  do j=1,ng
+  do i=1,ng,2
     temp_theta=2*pi*r3(i,j,k)
     temp_r=sqrt(-2*log(1-r3(i+1,j,k)))
     r3(i,j,k)=temp_r*cos(temp_theta)
@@ -43,35 +42,17 @@ program run_pencil_fft
   enddo
   enddo
   !r3=this_image()
-  r0=r3(:,:,nc)
-  print*, r3(1,1,1),r3(nc,nc,nc)!,nc*nc*nc
+  r0=r3(:,:,ng)
+  print*, r3(1,1,1),r3(ng,ng,ng)
 
   sync all
 
-  if (this_image()==1) print*, 'call ftran'
-
-  !call fft_cube2pencil
-  call c2x
-  call sfftw_execute(planx)
-  call x2y
-  call sfftw_execute(plany)
-  call y2z
-  call sfftw_execute(planz)
-  call z2y
-  call y2x
-
-  call x2y
-  call y2z
-  call sfftw_execute(iplanz)
-  call z2y
-  call sfftw_execute(iplany)
-  call y2x
-  call sfftw_execute(iplanx)
-  call x2c
-  r3=r3/(nc*nn)/(nc*nn)/(nc*nn)
-
+  if (head) print*, 'call ftran'
+  call pencil_fft_forward
+  if (head) print*, 'call btran'
+  call pencil_fft_backward
   sync all
-  print*, 'precision on image',this_image(),maxval(abs(r3(:,:,nc)-r0))
+  print*, 'precision on image',this_image(),maxval(abs(r3(:,:,ng)-r0))
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

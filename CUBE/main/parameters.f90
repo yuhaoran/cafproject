@@ -17,7 +17,7 @@ module parameters
   integer,parameter :: nn=1 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
   integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer,parameter :: nf=nc*ncell ! >=96

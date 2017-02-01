@@ -1,9 +1,13 @@
+!! module for power spectrum analysis
+! uses pencil_fft however work for single image only
+! cx1,cx2 can be memory optimized
+! auto-power can be memory optimized
+! check nexp frequently
 #define linear_kbin
 
 module powerspectrum
-use penfft_fine
+use pencil_fft
 
-real,parameter :: pi=2*asin(1.)
 integer,parameter :: nk_ny=ng*nn/2 ! Nyquist wave number
 #ifdef linear_kbin
   integer,parameter :: nbin=nint(nk_ny*sqrt(3.))
@@ -22,27 +26,39 @@ real kr,kx(3),sincx,sincy,sincz,sinc,rbin
 real cube1(ng,ng,ng),cube2(ng,ng,ng)
 real xi(10,nbin)[*], xi_input(10,nbin)
 real amp11,amp12,amp22
-complex cx1(ng*nn/2+1,ng,ngpen),cx2(ng*nn/2+1,ng,ngpen)
+complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
 real,parameter :: nexp=4.0 ! CIC kernel
   xi_input=xi
   xi=0
 
-  cube=cube1
-  call fft_cube2pencil_fine
-  call trans_zxy2xyz_fine
-  cx1=cx
+  r3=cube1
+  call c2x
+  call sfftw_execute(planx)
+  call x2y
+  call sfftw_execute(plany)
+  call y2z
+  call sfftw_execute(planz)
+  call z2y
+  call y2x
+  cx1=cxyz
 
-  cube=cube2
-  call fft_cube2pencil_fine
-  call trans_zxy2xyz_fine
-  cx2=cx
+  r3=cube2
+  call c2x
+  call sfftw_execute(planx)
+  call x2y
+  call sfftw_execute(plany)
+  call y2z
+  call sfftw_execute(planz)
+  call z2y
+  call y2x
+  cx2=cxyz
 
   xi=0
-  do k=1,ngpen
+  do k=1,npen
   do j=1,ng
   do i=1,ng*nn/2+1
-    kg=(nn*(icz-1)+icy-1)*ngpen+k
+    kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*ng+j
     ig=i
     kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
@@ -96,11 +112,11 @@ real,parameter :: nexp=4.0 ! CIC kernel
 
   !! Wiener
   print*, 'Wiener filter delta_L'
-  cx=0
-  do k=1,ngpen
+  cxyz=0
+  do k=1,npen
   do j=1,ng
   do i=1,ng*nn/2+1
-    kg=(nn*(icz-1)+icy-1)*ngpen+k
+    kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*ng+j
     ig=i
     kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
@@ -113,13 +129,20 @@ real,parameter :: nexp=4.0 ! CIC kernel
       ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
 #endif
     ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
-    cx(i,j,k)=cx1(i,j,k)*xi(8,ibin)**2
+    cxyz(i,j,k)=cx1(i,j,k)*xi(8,ibin)**2
   enddo
   enddo
   enddo
-  call trans_xyz2zxy_fine
-  call ifft_pencil2cube_fine
-  write(15) cube ! Wiener filtered delta_L
+  call x2y
+  call y2z
+  call sfftw_execute(iplanz)
+  call z2y
+  call sfftw_execute(iplany)
+  call y2x
+  call sfftw_execute(iplanx)
+  call x2c
+  r3=r3/(nc*nn)/(nc*nn)/(nc*nn)
+  write(15) r3 ! Wiener filtered delta_L
 
   if (xi_input(1,1)/=0) then
     print*, 'xi_input(1,1) =',xi_input(1,1)
@@ -130,11 +153,11 @@ real,parameter :: nexp=4.0 ! CIC kernel
     xi_input=xi !
   endif
 
-  cx=0
-  do k=1,ngpen
+  cxyz=0
+  do k=1,npen
   do j=1,ng
   do i=1,ng*nn/2+1
-    kg=(nn*(icz-1)+icy-1)*ngpen+k
+    kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*ng+j
     ig=i
     kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
@@ -147,13 +170,20 @@ real,parameter :: nexp=4.0 ! CIC kernel
       ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
 #endif
     ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
-    cx(i,j,k)=cx2(i,j,k)*xi_input(8,ibin)**2
+    cxyz(i,j,k)=cx2(i,j,k)*xi_input(8,ibin)**2
   enddo
   enddo
   enddo
-  call trans_xyz2zxy_fine
-  call ifft_pencil2cube_fine
-  write(15) cube ! Wiener filtered delta
+  call x2y
+  call y2z
+  call sfftw_execute(iplanz)
+  call z2y
+  call sfftw_execute(iplany)
+  call y2x
+  call sfftw_execute(iplanx)
+  call x2c
+  r3=r3/(nc*nn)/(nc*nn)/(nc*nn)
+  write(15) r3 ! Wiener filtered delta
 
   close(15)
 

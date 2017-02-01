@@ -9,7 +9,7 @@ subroutine particle_mesh
 use omp_lib
 use variables
 use cubefft
-use penfft
+use pencil_fft
 implicit none
 save
 
@@ -122,16 +122,7 @@ do itx=1,nnt
     rho_f=rho_f/real(nfe)**3
     force_f(i_dim,:,:,:,ithread)=rho_f(nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ithread)
   enddo
-
-  print*, 'force1'
-  print*, 'maxf', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
-
-
-#ifdef  write_file
-  open(10,file='testforcef.dat',status='replace',access='stream')
-  write(10) force_f
-  close(10)
-#endif
+  print*, 'max force_f', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
 
   ! max force
   f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:,ithread)**2,1))
@@ -373,21 +364,19 @@ enddo
 !r3(12,12,12)=1000
 !#endif
 
-#ifdef write_file
-open(10,file='testrhoc.dat',status='replace',access='stream')
-write(10) r3
-close(10)
-#endif
+call pencil_fft_forward
 
-call fft_cube2pencil ! r3 -> cz
-call trans_zxy2xyz ! cz -> cx
-crho_c(::2,:,:)=real(cx)
-crho_c(2::2,:,:)=imag(cx)
+!call fft_cube2pencil ! r3 -> cz
+!call trans_zxy2xyz ! cz -> cx
+
+! save complex rho_c into crho_c
+crho_c(::2,:,:)=real(cxyz)
+crho_c(2::2,:,:)=imag(cxyz)
 
 do i_dim=1,3
-  cx=cmplx(-crho_c(2::2,:,:)*kern_c(i_dim,:,:,:),crho_c(::2,:,:)*kern_c(i_dim,:,:,:))
-  call trans_xyz2zxy ! cx -> cz
-  call ifft_pencil2cube ! cz -> r3
+  cxyz=cmplx(-crho_c(2::2,:,:)*kern_c(i_dim,:,:,:),crho_c(::2,:,:)*kern_c(i_dim,:,:,:))
+  !cxyz=cmplx(-imag(cxyz)*kern_c(i_dim,:,:,:), real(cxyz)*kern_c(i_dim,:,:,:))
+  call pencil_fft_backward
   force_c(i_dim,1:nc,1:nc,1:nc)=r3
 enddo
 
@@ -403,13 +392,6 @@ sync all
 force_c(:,:,:,0)=force_c(:,:,:,nc)[image1d(icx,icy,inz)]
 force_c(:,:,:,nc+1)=force_c(:,:,:,1)[image1d(icx,icy,ipz)]
 sync all
-
-#ifdef write_file
-open(10,file='testforcec.dat',status='replace',access='stream')
-write(10) force_c
-close(10)
-!stop
-#endif
 
 ! coarse_max_dt
 f2_max_coarse=maxval(sum(force_c**2,1))

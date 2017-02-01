@@ -1,5 +1,4 @@
-! to be optimized - modularize, 
-! image1d, ctransfer more than one slab
+! to be optimized - image1d, ctransfer more than one slab
 module pencil_fft
   use parameters
   implicit none
@@ -7,7 +6,7 @@ module pencil_fft
 
   integer,parameter :: NULL=0
   integer(8) planx,plany,planz,iplanx,iplany,iplanz
-  integer i0,i1,i2,il
+  !integer i0,i1,i2,islab
 
   ! fft arrays
   real        r3(ng,ng,ng),r0(ng,ng)
@@ -30,15 +29,43 @@ module pencil_fft
 
   contains
 
+  subroutine pencil_fft_forward
+    implicit none
+    save
+    call c2x
+    call sfftw_execute(planx)
+    call x2y
+    call sfftw_execute(plany)
+    call y2z
+    call sfftw_execute(planz)
+    call z2y
+    call y2x
+  endsubroutine
+
+  subroutine pencil_fft_backward
+    implicit none
+    save
+    call x2y
+    call y2z
+    call sfftw_execute(iplanz)
+    call z2y
+    call sfftw_execute(iplany)
+    call y2x
+    call sfftw_execute(iplanx)
+    call x2c
+    r3=r3/(ng*nn)/(ng*nn)/(ng*nn)
+  endsubroutine
+
   subroutine c2x
     implicit none
     save
-    do il=1,npen ! loop over cells in z, extract slabs
-      ctransfer1(:,:,1:nn)=c3(:,:,il::npen) ! nn slabs of c3 copied to ctransfer1
+    integer i0,i1,i2,islab
+    do islab=1,npen ! loop over cells in z, extract slabs
+      ctransfer1(:,:,1:nn)=c3(:,:,islab::npen) ! nn slabs of c3 copied to ctransfer1
       sync all
       do i1=1,nn ! loop over parts in x, get slabs from each y node
         ! i1=mod()
-        cxyz(ng*(i1-1)/2+1:ng*i1/2,:,il)=ctransfer1(:,:,m2)[image1d(i1,m1,m3)]
+        cxyz(ng*(i1-1)/2+1:ng*i1/2,:,islab)=ctransfer1(:,:,m2)[image1d(i1,m1,m3)]
       enddo
       sync all
     enddo
@@ -47,13 +74,14 @@ module pencil_fft
   subroutine x2y
     implicit none
     save
-    do il=1,npen ! loop over z
+    integer i0,i1,i2,islab
+    do islab=1,npen ! loop over z
       do i1=1,nn ! loop over squares in x direction
-        ctransfer2(:,:,i1)=transpose(cxyz(ng/2*(i1-1)+1:ng/2*i1+1,:,il))
+        ctransfer2(:,:,i1)=transpose(cxyz(ng/2*(i1-1)+1:ng/2*i1+1,:,islab))
       enddo
       sync all
       do i1=1,nn
-        cyyxz(:,i1,:,il)=ctransfer2(:,:,m1)[image1d(i1,m2,m3)]
+        cyyxz(:,i1,:,islab)=ctransfer2(:,:,m1)[image1d(i1,m2,m3)]
       enddo
       sync all
     enddo
@@ -62,16 +90,17 @@ module pencil_fft
   subroutine y2z
     implicit none
     save
-    do il=1,ng/2+1 ! loop over slices in x direction
+    integer i0,i1,i2,islab
+    do islab=1,ng/2+1 ! loop over slices in x direction
       do i2=1,nn
       do i1=1,nn
-        ctransfer3(:,:,i1,i2)=transpose(cyyyxz(:,i1,i2,il,:))
+        ctransfer3(:,:,i1,i2)=transpose(cyyyxz(:,i1,i2,islab,:))
       enddo
       enddo
       sync all
       do i2=1,nn
       do i1=1,nn
-        czzzxy(:,i1,i2,il,:)=ctransfer3(:,:,m2,m3)[image1d(m1,i1,i2)]
+        czzzxy(:,i1,i2,islab,:)=ctransfer3(:,:,m2,m3)[image1d(m1,i1,i2)]
       enddo
       enddo
       sync all
@@ -81,16 +110,17 @@ module pencil_fft
   subroutine z2y
     implicit none
     save
-    do il=1,ng/2+1 ! loop over slices in x direction
+    integer i0,i1,i2,islab
+    do islab=1,ng/2+1 ! loop over slices in x direction
       do i2=1,nn
       do i1=1,nn
-        ctransfer3(:,:,i1,i2)=transpose(czzzxy(:,i1,i2,il,:))
+        ctransfer3(:,:,i1,i2)=transpose(czzzxy(:,i1,i2,islab,:))
       enddo
       enddo
       sync all
       do i2=1,nn
       do i1=1,nn
-        cyyyxz(:,i1,i2,il,:)=ctransfer3(:,:,m2,m3)[image1d(m1,i1,i2)]
+        cyyyxz(:,i1,i2,islab,:)=ctransfer3(:,:,m2,m3)[image1d(m1,i1,i2)]
       enddo
       enddo
       sync all
@@ -100,13 +130,14 @@ module pencil_fft
   subroutine y2x
     implicit none
     save
-    do il=1,npen ! loop over z
+    integer i0,i1,i2,islab
+    do islab=1,npen ! loop over z
       do i1=1,nn ! loop over squares in x direction
-        ctransfer4(:,:,i1)=transpose(cyyxz(:,i1,:,il))
+        ctransfer4(:,:,i1)=transpose(cyyxz(:,i1,:,islab))
       enddo
       sync all
       do i1=1,nn
-        cxyz(ng/2*(i1-1)+1:ng/2*i1+1,:,il)=ctransfer4(:,:,m1)[image1d(i1,m2,m3)]
+        cxyz(ng/2*(i1-1)+1:ng/2*i1+1,:,islab)=ctransfer4(:,:,m1)[image1d(i1,m2,m3)]
       enddo
       sync all
     enddo
@@ -115,15 +146,16 @@ module pencil_fft
   subroutine x2c
     implicit none
     save
-    do il=1,npen
+    integer i0,i1,i2,islab
+    do islab=1,npen
       do i1=1,nn
-        ctransfer1(:,:,i1)=cxyz(ng*(i1-1)/2+1:ng*i1/2,:,il)
+        ctransfer1(:,:,i1)=cxyz(ng*(i1-1)/2+1:ng*i1/2,:,islab)
       enddo
 !if (this_image()==5) print*,ctransfer1
 !stop
       sync all
       do i1=1,nn
-        c3(:,:,il+(i1-1)*npen)=ctransfer1(:,:,m1)[image1d(m2,i1,m3)]
+        c3(:,:,islab+(i1-1)*npen)=ctransfer1(:,:,m1)[image1d(m2,i1,m3)]
       enddo
       sync all
     enddo

@@ -3,7 +3,7 @@
 
 subroutine kernel_c
 use variables
-use penfft
+use pencil_fft
 implicit none
 save
 include 'fftw3.f'
@@ -194,38 +194,35 @@ if (head) print*, 'finished octants'
 
 #else
 r3=ck(1,:,:,:)
-call fft_cube2pencil
-call trans_zxy2xyz
-!kern_c(1,:,:,:)=imag(cx)
+call pencil_fft_forward
+!kern_c(1,:,:,:)=imag(cxyz)
 do k=1,npen
 do j=1,nc
 do i=1,nc*nn/2+1
   ! or: kern_c(1,i,j,k)=rxlong(2*i,j,k)
-  kern_c(1,i,j,k)=imag(cx(i,j,k))
+  kern_c(1,i,j,k)=imag(cxyz(i,j,k))
 enddo
 enddo
 enddo
 ! or: kern_c(1,:,:)=rxlong(2::2,:,:)
-! or: kern_c(1,:,:)=imag(cx)
+! or: kern_c(1,:,:)=imag(cxyz)
 
 r3=ck(2,:,:,:)
-call fft_cube2pencil
-call trans_zxy2xyz
-do k=1,npen 
-do j=1,nc 
+call pencil_fft_backward
+do k=1,npen
+do j=1,nc
 do i=1,nc*nn/2+1
-  kern_c(2,i,j,k)=imag(cx(i,j,k))
+  kern_c(2,i,j,k)=imag(cxyz(i,j,k))
 enddo
 enddo
 enddo
 
 r3=ck(3,:,:,:)
-call fft_cube2pencil
-call trans_zxy2xyz
+call pencil_fft_forward
 do k=1,npen
 do j=1,nc
 do i=1,nc*nn/2+1
-  kern_c(3,i,j,k)=imag(cx(i,j,k))
+  kern_c(3,i,j,k)=imag(cxyz(i,j,k))
 enddo
 enddo
 enddo

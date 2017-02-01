@@ -5,7 +5,7 @@
 subroutine initialize
 use variables
 use cubefft
-use penfft
+use pencil_fft
 implicit none
 save
 include 'fftw3.f'
@@ -25,10 +25,8 @@ call create_penfft_plan
 
 #ifdef penffttest
   call random_number(r3)
-  call fft_cube2pencil
-  call trans_zxy2xyz
-  call trans_xyz2zxy
-  call ifft_pencil2cube
+  call pencil_fft_forward
+  call pencil_fft_backward
   if (head) print*, 'penfft test done.'
 #endif
 

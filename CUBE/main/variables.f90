@@ -69,7 +69,7 @@ real ck(3,nc,nc,nc)
 real kern_c(3,nc*nn/2+1,nc,npen)
 !real tmp_kern_c(3,nc*nn,nc,npen+2)
 real tmp_kern_c(3,nc*nn+2,nc,npen)
-
+real crho_c(nc*nn+2,nc,npen) !!! temp
 real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
 
 character (10) :: img_s, z_s
