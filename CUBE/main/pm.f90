@@ -14,8 +14,8 @@ implicit none
 save
 
 ! force settings
-logical,parameter :: fine_force=.true.
-logical,parameter :: coarse_force=.true.
+logical,parameter :: fine_force=.false.
+logical,parameter :: coarse_force=.false.
 logical,parameter :: pp_force=.false.
 logical,parameter :: ext_pp_force=.false.
 

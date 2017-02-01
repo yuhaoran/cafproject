@@ -9,7 +9,7 @@ character(*),parameter :: dir_kern='../kernels/'
 integer itemp(3)
 real rtemp(2)
 #ifdef debug
-  real rho_f0(nfe+2,nfe,nfe,ncore)     
+  real rho_f0(nfe+2,nfe,nfe,ncore)
 #endif
 
 if (head) print*, 'fine kernel initialization'

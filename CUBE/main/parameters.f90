@@ -43,13 +43,13 @@ module parameters
 
   integer,parameter :: nfe=nft+2*nfb ! 96
 
-  integer,parameter :: np_nc=ncell ! number of particles / coarse cell / dim
+  integer,parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
 
   ! cosmological parameters
-  real,parameter :: z_i=100.0   ! initial redshift
+  real,parameter :: z_i=10.0   ! initial redshift
   real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 

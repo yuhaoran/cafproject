@@ -171,7 +171,7 @@ module pencil_fft
     call sfftw_plan_many_dft(iplany,1,ng*nn,(ng/2+1)*npen,cyyxz,NULL,1,ng*nn,cyyxz,NULL,1,ng*nn,FFTW_BACKWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(planz,1,ng*nn,(ng/2+1)*npen,czzzxy,NULL,1,ng*nn,czzzxy,NULL,1,ng*nn,FFTW_FORWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(iplanz,1,ng*nn,(ng/2+1)*npen,czzzxy,NULL,1,ng*nn,czzzxy,NULL,1,ng*nn,FFTW_BACKWARD,FFTW_MEASURE)
-  endsubroutine create_penfft_plan
+  endsubroutine
 
   subroutine destroy_penfft_plan
     implicit none
@@ -183,5 +183,5 @@ module pencil_fft
     call sfftw_destroy_plan(iplany)
     call sfftw_destroy_plan(planz)
     call sfftw_destroy_plan(iplanz)
-  endsubroutine destroy_penfft_plan
+  endsubroutine
 endmodule

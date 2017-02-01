@@ -1,12 +1,14 @@
-rm *.o *.out
-mpif90 -O3 -cpp -fcoarray=single   -c ../main/parameters.f90 -o parameters.o
+rm -f *.mod *.o *.out
 
-mpif90 -O3 -cpp -fcoarray=single   -Dpenfft_4x -c penfft_config.f90
+FC=mpif90
+#XFLAG='-O3 -cpp -fcoarray=single -mcmodel=medium -DFFTFINE'
+XFLAG='-O3 -cpp -fcoarray=single -DFFTFINE'
+OFLAG=${XFLAG}' -c'
+FFTFLAG='-lfftw3f -lm -ldl'
 
-mpif90 -O3 -cpp -fcoarray=single   -c penfft_fine.f90 -o penfft_fine.o -lfftw3f -I/usr/local/include/ -L/usr/local/lib/ -lm -ldl
+$FC $OFLAG ../main/parameters.f90
+$FC $OFLAG ../main/pencil_fft.f90 $FFTFLAG
+$FC $OFLAG powerspectrum.f90 $FFTFLAG
+$FC $OFLAG displacement.f90 $FFTFLAG
 
-mpif90 -O3 -cpp -fcoarray=single  -c cross_power.f90 -lfftw3f -I/usr/local/include/ -L/usr/local/lib/ -lm -ldl
-
-mpif90 -O3 -cpp -fcoarray=single  -c displacement.f90 -o displacement.o  -lfftw3f -I/usr/local/include/ -L/usr/local/lib/ -lm -ldl
-
-mpif90 -O3 -cpp -fcoarray=single displacement.o parameters.o penfft_config.o penfft_fine.o cross_power.o -o a.out  -lfftw3f -I/usr/local/include/ -L/usr/local/lib/ -lm -ldl
+$FC $XFLAG parameters.o pencil_fft.o powerspectrum.o displacement.o $FFTFLAG

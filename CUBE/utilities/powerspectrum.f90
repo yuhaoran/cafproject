@@ -33,25 +33,11 @@ real,parameter :: nexp=4.0 ! CIC kernel
   xi=0
 
   r3=cube1
-  call c2x
-  call sfftw_execute(planx)
-  call x2y
-  call sfftw_execute(plany)
-  call y2z
-  call sfftw_execute(planz)
-  call z2y
-  call y2x
+  call pencil_fft_forward
   cx1=cxyz
 
   r3=cube2
-  call c2x
-  call sfftw_execute(planx)
-  call x2y
-  call sfftw_execute(plany)
-  call y2z
-  call sfftw_execute(planz)
-  call z2y
-  call y2x
+  call pencil_fft_forward
   cx2=cxyz
 
   xi=0
@@ -133,15 +119,7 @@ real,parameter :: nexp=4.0 ! CIC kernel
   enddo
   enddo
   enddo
-  call x2y
-  call y2z
-  call sfftw_execute(iplanz)
-  call z2y
-  call sfftw_execute(iplany)
-  call y2x
-  call sfftw_execute(iplanx)
-  call x2c
-  r3=r3/(nc*nn)/(nc*nn)/(nc*nn)
+  call pencil_fft_backward
   write(15) r3 ! Wiener filtered delta_L
 
   if (xi_input(1,1)/=0) then
@@ -174,15 +152,7 @@ real,parameter :: nexp=4.0 ! CIC kernel
   enddo
   enddo
   enddo
-  call x2y
-  call y2z
-  call sfftw_execute(iplanz)
-  call z2y
-  call sfftw_execute(iplany)
-  call y2x
-  call sfftw_execute(iplanx)
-  call x2c
-  r3=r3/(nc*nn)/(nc*nn)/(nc*nn)
+  call pencil_fft_backward
   write(15) r3 ! Wiener filtered delta
 
   close(15)

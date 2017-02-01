@@ -2,7 +2,7 @@
 
 !#define remove_ny
 program displacement
-use penfft_fine
+use pencil_fft
 use powerspectrum
 implicit none
 save
@@ -39,8 +39,8 @@ integer(2)   pid(4,npmax)
 character (10) :: img_s, z_s
 integer,parameter :: nexp=4
 
-complex cphi(ng*nn/2+1,ng,ngpen)
-complex cdiv(ng*nn/2+1,ng,ngpen)
+complex cphi(ng*nn/2+1,ng,npen)
+complex cdiv(ng*nn/2+1,ng,npen)
 complex pdim, ekx(3)
 
 call geometry
@@ -52,7 +52,7 @@ endif
 
 sync all
 
-call create_penfft_fine_plan
+call create_penfft_plan
 
 if (head) then
   print*, 'checkpoint at:'
@@ -245,17 +245,15 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cdiv=0
   do i_dim=1,3
     if (head) print*,'Start working on dim',int(i_dim,1)
-    cube=dsp(i_dim,1:ng,1:ng,1:ng)
+    r3=dsp(i_dim,1:ng,1:ng,1:ng)
     if (head) print*,'start forward tran'
-    call fft_cube2pencil_fine
-    if (head) print*,'start transpose'
-    call trans_zxy2xyz_fine
+    call pencil_fft_forward
     if (head) print*,'loop over k'
     ! cx is the fourier of dsp(i_dim,1:ng,1:ng,1:ng)
-    do k=1,ngpen
+    do k=1,npen
     do j=1,ng
     do i=1,ng*nn/2+1
-      kg=(nn*(icz-1)+icy-1)*ngpen+k
+      kg=(nn*(icz-1)+icy-1)*npen+k
       jg=(icx-1)*ng+j
       ig=i
       kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
@@ -265,8 +263,8 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
       dim_2=mod(dim_1,3)+1
       dim_3=mod(dim_2,3)+1
       pdim=(ekx(dim_1)-1)*(ekx(dim_2)+1)*(ekx(dim_3)+1)/4
-      cphi(i,j,k)=cphi(i,j,k)+cx(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
-      cdiv(i,j,k)=cdiv(i,j,k)+cx(i,j,k)*pdim
+      cphi(i,j,k)=cphi(i,j,k)+cxyz(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
+      cdiv(i,j,k)=cdiv(i,j,k)+cxyz(i,j,k)*pdim
     enddo
     enddo
     enddo
@@ -279,12 +277,10 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
 
   !! reconstructed delta
   ! divergence
-  cx=cdiv
+  cxyz=cdiv
   if (head) print*,'start backward tran'
-  call trans_xyz2zxy_fine
-  if (head) print*,'start transpose'
-  call ifft_pencil2cube_fine
-  cube1=-cube
+  call pencil_fft_backward
+  cube1=-r3
   if (head) print*,'Write delta_R into file'
   open(15,file=output_name('delta_E'),status='replace',access='stream')
   write(15) cube1
@@ -292,12 +288,10 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   sync all
 
   ! potential
-  cx=cphi
+  cxyz=cphi
   if (head) print*,'start backward tran'
-  call trans_xyz2zxy_fine
-  if (head) print*,'start transpose'
-  call ifft_pencil2cube_fine
-  cube1=cube
+  call pencil_fft_backward
+  cube1=r3
   if (head) print*,'Write phi_E into file'
   open(15,file=output_name('phi_E'),status='replace',access='stream')
   write(15) cube1
@@ -329,7 +323,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
 
 enddo !cur_checkpoint
 if (head) print*, 'destroying fft plans'
-call destroy_penfft_fine_plan
+call destroy_penfft_plan
 print*,'displacement done'
 
 endprogram

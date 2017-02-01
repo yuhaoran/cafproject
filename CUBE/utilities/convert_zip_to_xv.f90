@@ -7,7 +7,6 @@ implicit none
 
 integer i,j,k,l
 integer nplocal
-integer,parameter :: ng=nf ! number of grids = number of fine cells
 integer,parameter :: npnode=nf**3
 real,parameter :: density_buffer=1.1
 integer,parameter :: npmax=npnode*density_buffer
