@@ -7,7 +7,7 @@ module list
 rm -f *.o *.out *.mod *~
 
 FC=ifort
-XFLAG='-O3 -xHost -fpp -mcmodel=medium -coarray=shared -qopenmp'
+XFLAG='-O3 -xHost -fpp -mcmodel=medium -coarray=shared -qopenmp -DFFTFINE'
 OFLAG=${XFLAG}' -c'
 FFTFLAG='-I'${SCINET_FFTW_INC}' ''-L'${SCINET_FFTW_LIB}' -lfftw3f -lm -ldl'
 

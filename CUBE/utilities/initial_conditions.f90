@@ -76,7 +76,8 @@ program initial_conditions
 
 
 #ifdef mkdir
-    call system('mkdir -p '//'.'//opath//'node'//image2str(this_image()-1))
+    call system('mkdir -p '//opath//'node'//image2str(this_image()-1))
+    !print*, 'mkdir -p '//opath//'node'//image2str(this_image()-1)
 #endif
 
   sim%nplocal=1 ! will be overwritten
@@ -181,7 +182,8 @@ program initial_conditions
 #ifdef READ_SEED
     ! Read seeds
 
-    call system('cp ../configs/seed_'//image2str(this_image()-1)//'.bin .'//opath//'node'//image2str(this_image()-1)) ! for Xin
+    call system('cp ../configs/seed_'//image2str(this_image()-1)//'.bin '//opath//'node'//image2str(this_image()-1)) ! for Xin
+
     ! need to use seed[image_number].dat for parallel
 
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')

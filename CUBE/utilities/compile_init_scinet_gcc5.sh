@@ -6,7 +6,7 @@ module list
 rm -f *.o *.out *.mod *~
 
 FC=caf
-XFLAG='-O3 -cpp -march=native -mcmodel=medium'
+XFLAG='-O3 -cpp -march=native -mcmodel=medium -DFFTFINE'
 OFLAG=${XFLAG}' -c'
 FFTFLAG='-I'${SCINET_FFTW_INC}' ''-L'${SCINET_FFTW_LIB}' -lfftw3f -lm -ldl'
 
