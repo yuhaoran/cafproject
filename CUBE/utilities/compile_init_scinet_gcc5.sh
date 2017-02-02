@@ -1,7 +1,6 @@
 module purge
 module load gcc/5.2.0 openmpi/gcc/1.8.3 use.experimental caf/gcc/5.2.0-openmpi
 module load fftw/3.3.0-gcc-openmpi
-
 module list
 
 rm -f *.o *.out *.mod *~
@@ -11,17 +10,11 @@ XFLAG='-O3 -cpp -march=native -mcmodel=medium'
 OFLAG=${XFLAG}' -c'
 FFTFLAG='-I'${SCINET_FFTW_INC}' ''-L'${SCINET_FFTW_LIB}' -lfftw3f -lm -ldl'
 
+echo FFTFLAG:
 echo $FFTFLAG
 
-$FC $OFLAG ../parameters.f90
+$FC $OFLAG ../main/parameters.f90
+$FC $OFLAG ../main/pencil_fft.f90 $FFTFLAG
+$FC $OFLAG initial_conditions.f90 $FFTFLAG
 
-$FC $OFLAG $FFTFLAG -Dpenfft_4x penfft_config.f90
-
-$FC $OFLAG $FFTFLAG penfft_fine.f90
-
-$FC $OFLAG $FFTFLAG powerspectrum.f90
-
-$FC $OFLAG $FFTFLAG initial_conditions.f90
-
-$FC $XFLAG $FFTFLAG initial_conditions.o parameters.o penfft_config.o powerspectrum.o penfft_fine.o
-
+$FC $XFLAG parameters.o pencil_fft.o initial_conditions.o $FFTFLAG

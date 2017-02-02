@@ -121,8 +121,9 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   rho_f(:,:,1)=rho_f(:,:,1)+rho_f(:,:,ng+1)
   rho_f(:,:,ng)=rho_f(:,:,ng)+rho_f(:,:,0)
 
-  print*, sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3
-  !rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(sum(rho_f(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
+  rho_tot=sum(rho_f(1:ng,1:ng,1:ng)*1.d0)
+  print*, 'mean density =',rho_tot/ng/ng/ng
+  rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(rho_tot/ng/ng/ng)-1
 
   open(15,file=output_name('delta_nbody'),status='replace',access='stream')
   write(15) rho_f(1:ng,1:ng,1:ng)
@@ -230,9 +231,9 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
 
   print*, 'Voronoi done'
   print*, 'nplocal =',nplocal
-  print*, 'sum =',rho_tot
+  print*, 'mean density =',rho_tot/ng/ng/ng
   print*, 'minval =',minval(rho_f(1:ng,1:ng,1:ng))
-  rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(rho_tot/ng**3)-1
+  rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(rho_tot/ng/ng/ng)-1
   open(11,file=output_name('delta_voronoi'),status='replace',access='stream')
   write(11) rho_f(1:ng,1:ng,1:ng)
   close(11)

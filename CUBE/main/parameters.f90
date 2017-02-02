@@ -17,18 +17,18 @@ module parameters
   integer,parameter :: nn=1 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
   integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer,parameter :: nf=nc*ncell ! >=96
   integer,parameter :: nft=nt*ncell ! >=48
 
   ! ngrid /image/dim for pencil-fft
-#ifdef FFTFINE
-  integer,parameter :: ng=nf
-#else
-  integer,parameter :: ng=nc
-#endif
+# ifdef FFTFINE
+    integer,parameter :: ng=nf ! fine grid fft, for IC, dsp, convert_zip_to_xv
+# else
+    integer,parameter :: ng=nc ! coarse grid fft, for N-body main code
+# endif
   integer,parameter :: npen=ng/nn ! ng /dim in shorter side of the pencil, for pencil decomposition
 
   integer,parameter :: ncore=1 ! number of cores per image
@@ -43,13 +43,13 @@ module parameters
 
   integer,parameter :: nfe=nft+2*nfb ! 96
 
-  integer,parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
+  integer,parameter :: np_nc=ncell ! number of particles / coarse cell / dim
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
 
   ! cosmological parameters
-  real,parameter :: z_i=10.0   ! initial redshift
+  real,parameter :: z_i=100.0   ! initial redshift
   real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 

@@ -28,23 +28,26 @@ cafcube.x: $(OBJFILE)
 ## For addtional subroutines, add its dependency on variables.o, and dependency of cafcube.o on it.
 
 variables.o: parameters.o
-initialize.o: variables.o cubefft.o penfft.o redshifts.txt
-finalize.o: variables.o cubefft.o penfft.o
-cafcube.o: variables.o cubefft.o penfft.o
-cubefft.o: variables.o
-penfft.o: variables.o
-kernel_f.o: variables.o
-kernel_c.o: variables.o
-timestep.o: variables.o
-particle_initialization.o: variables.o
-buffer_density.o: variables.o
+pencil_fft.o: parameters.o
+
 buffer_x.o: variables.o
 buffer_v.o: variables.o
-pm.o: variables.o cubefft.o penfft.o
-update_particle.o: variables.o
+buffer_density.o: variables.o
 checkpoint.o: variables.o
+cubefft.o: variables.o
+kernel_f.o: variables.o
+kernel_c.o: variables.o
+particle_initialization.o: variables.o
+timestep.o: variables.o
+update_particle.o: variables.o
 projection.o: variables.o
-cafcube.o: parameters.o variables.o initialize.o cubefft.o penfft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_density.o buffer_x.o buffer_v.o pm.o update_particle.o checkpoint.o projection.o finalize.o
+
+initialize.o: variables.o cubefft.o pencil_fft.o redshifts.txt
+finalize.o: variables.o cubefft.o pencil_fft.o
+cafcube.o: variables.o cubefft.o pencil_fft.o
+pm.o: variables.o cubefft.o pencil_fft.o
+
+cafcube.o: parameters.o variables.o initialize.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_density.o buffer_x.o buffer_v.o pm.o update_particle.o checkpoint.o projection.o finalize.o
 
 %.o: %.f90
 	@echo "Files to be linked:"

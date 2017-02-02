@@ -4,17 +4,20 @@ module list
 #/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/lib/
 #/opt/fftw/3.3.5-gcc-5.4.0-openmpi-2.0.0/include/
 
-rm -f *.o *.out
-ifort -O3 -xHost -fpp -coarray=shared -mcmodel=medium -c ../parameters.f90 -o parameters.o
+rm -f *.o *.out *.mod *~
 
-ifort -O3 -xHost -fpp -coarray=shared -mcmodel=medium -Dpenfft_4x -c penfft_config.f90
+FC=ifort
+XFLAG='-O3 -xHost -fpp -mcmodel=medium -coarray=shared -qopenmp'
+OFLAG=${XFLAG}' -c'
+FFTFLAG='-I'${SCINET_FFTW_INC}' ''-L'${SCINET_FFTW_LIB}' -lfftw3f -lm -ldl'
 
-ifort -O3 -xHost -fpp -coarray=shared -mcmodel=medium -c penfft_fine.f90 -o penfft_fine.o -lfftw3f -I -L -lm -ldl
+echo FFTFLAG:
+echo $FFTFLAG
 
-ifort -O3 -xHost -fpp -coarray=shared -mcmodel=medium -c powerspectrum.f90 -lfftw3f -I -L -lm -ldl
+$FC $OFLAG ../main/parameters.f90
+$FC $OFLAG ../main/pencil_fft.f90 $FFTFLAG
+$FC $OFLAG initial_conditions.f90 $FFTFLAG
 
-ifort -O3 -xHost -fpp -coarray=shared -mcmodel=medium -c initial_conditions.f90 -o initial_conditions.o  -lfftw3f -I -L -lm -ldl
-
-ifort -O3 -xHost -fpp -coarray=shared -mcmodel=medium initial_conditions.o parameters.o penfft_config.o powerspectrum.o penfft_fine.o -o a.out  -lfftw3f -I -L -lm -ldl
+$FC $XFLAG parameters.o pencil_fft.o initial_conditions.o $FFTFLAG
 
 export FOR_COARRAY_NUM_IMAGES=1

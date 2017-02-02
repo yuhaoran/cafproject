@@ -208,6 +208,15 @@ program initial_conditions
 
   call random_number(r3)
 
+#ifdef READ_NOISE
+      !!!!! test only
+      open(11,file='initnoise.bin',access='stream')
+      read(11) r3
+      close(11)
+      print*, 'READ IN NOISE MAP:', r3(1,1,1), r3(ng,ng,ng)
+      !!!!! test only
+#endif
+
   deallocate(iseed)
   deallocate(rseed_all)
 
@@ -225,15 +234,6 @@ program initial_conditions
   enddo
   enddo
   enddo
-
-#ifdef READ_NOISE
-    !!!!! test only
-    open(11,file='initnoise.dat',access='stream')
-    read(11) r3
-    close(11)
-    print*, 'READ IN NOISE MAP:', r3(1,1,1), r3(nf,nf,nf)
-    !!!!! test only
-#endif
 
   !call cross_power(xi,r3,r3)
   !open(11,file='initpower.dat',access='stream')
@@ -313,7 +313,6 @@ program initial_conditions
     !close(11)
 
     sync all
-
     temp8=0
     if (rank==0) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
     sync all
@@ -328,6 +327,7 @@ program initial_conditions
       phi8=phi8+temp8[i]
     enddo
     sync all
+    phi8=phi8/6
     !phi8=0.0
 
     !phi8=r3(9,1,1)[image1d(1,1,1)]+r3(1,9,1)[image1d(1,1,1)]+r3(1,1,9)[image1d(1,1,1)]
@@ -343,7 +343,7 @@ program initial_conditions
   !print*, r3(nf-7,1,1)[image1d(nn,1,1)]
   !print*, r3(1,nf-7,1)[image1d(1,nn,1)]
   !print*, r3(1,1,nf-7)[image1d(1,1,nn)]
-
+print*,'phi8 =',phi8
     do k=1,nf
     do j=1,nf
     do i=1,nf

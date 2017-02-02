@@ -208,7 +208,7 @@ enddo
 ! or: kern_c(1,:,:)=imag(cxyz)
 
 r3=ck(2,:,:,:)
-call pencil_fft_backward
+call pencil_fft_forward
 do k=1,npen
 do j=1,nc
 do i=1,nc*nn/2+1
