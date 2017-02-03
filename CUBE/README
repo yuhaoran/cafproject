@@ -1,9 +1,9 @@
--------------------------------
++++++++++++++++++++++++++++++++
 Cosmological N-body CUBE Manual
--------------------------------
++++++++++++++++++++++++++++++++
 
-Lines start with a ">" are commands.
-------------------------------------
+Lines start with a ">" are commands
+___________________________________
 
 Download the code CUBE from github:
 > git clone https://github.com/yuhaoran/cafproject.git
@@ -12,31 +12,47 @@ Download the code CUBE from github:
 (You are doing this step.)
 
 Requirements for laptop: see appendix
-
 Clean up data files: source clean_up.sh
 
-Set your parameters
-> vim parameters.f90
+Set your parameters:
+> vim main/parameters.f90
 Set checkpoints
-> vim redshifts.txt
+> vim main/redshifts.txt
 
-Compile
-> source compile_many_mac.sh
-by default it compiles 2 universes
+Set up environments and load modules:
+> source module_load_mac.sh (on MacOS, using gcc compiler)
+> source module_load_intel.sh (on SciNet GPC, using intel compiler (recommended))
+> source module_load_gcc.sh (on SciNet GPC, using gcc compiler)
 
-Initial condition generator (works in folder cafcube_code/init/):
-> cd init
-Compile:
-> source compile_init_mac.sh
-Execute by:
-> ./a.out
+Compile some utilities:
+> cd utilities
+> make
+This will compile
+(1) initial condition generator
+(2) displacement field analysis
+(3) conversion of results into traditional floating number checkpoints
 
+Run initial conditions:
+> ./ic.x
+> cafrun -np 1 ./ic.x (on SciNet GPC, using gcc compiler)
 
-Main N-body code (work in the folder cafcube_code/):
-Compile by:
-> source compile_caf_mac.sh
-Execute by:
+Compile main code:
+> cd ../main/
+> make
+This will compile the main N-body code
+
+Run main code:
 > ./cafcube.x
+> cafrun -np 1 ./cafcube.x (on SciNet GPC, using gcc compiler)
+
+Batch compile and submit:
+> cd ../batch
+> compile_many_universe_gpc.sh
+> submit_many_universe_gpc.sh
+
+by default it compiles 3 universes 1001 to 1003
+
+
 
 
 More details see this paper:
@@ -45,15 +61,13 @@ or ask:
 haoran@cita.utoronto.ca
 
 
-Appendix
+==================== Appendix ====================
 
 I gfortran
-
 https://gcc.gnu.org/wiki/GFortranBinaries
 
 
 II Open MPI
-
 https://www.open-mpi.org
 https://wiki.helsinki.fi/display/HUGG/Open+MPI+install+on+Mac+OS+X
 https://www.open-mpi.org/doc/current/
@@ -62,7 +76,6 @@ make all
 sudo make install
 
 III FFTW
-
 http://fftw.org
 http://www.fftw.org/fftw2_doc/fftw_6.html
 #./configure CFLAGS="-mcmodel=medium" --enable-float --enable-threads --with-openmp
