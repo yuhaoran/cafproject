@@ -28,11 +28,11 @@ sim%shake_offset=0
 
 sim%box=box
 sim%rank=this_image()-1
-sim%nn=int(nn,1)
-sim%nnt=int(nnt,1)
-sim%nt=int(nt,1)
-sim%ncell=int(ncell,1)
-sim%ncb=int(ncb,1)
+sim%nn=int(nn,2)
+sim%nnt=int(nnt,2)
+sim%nt=int(nt,2)
+sim%ncell=int(ncell,2)
+sim%ncb=int(ncb,2)
 sim%izipx=int(izipx,1)
 sim%izipv=int(izipv,1)
 
