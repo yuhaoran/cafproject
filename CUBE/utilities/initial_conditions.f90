@@ -1,7 +1,7 @@
 #define ZA
 #define mkdir
 #define PID
-#define READ_SEED
+!#define READ_SEED
 !#define READ_NOISE
 
 program initial_conditions
@@ -180,7 +180,7 @@ program initial_conditions
   allocate(rseed_all(seedsize,nn**3))
 
 #ifdef READ_SEED
-    ! Read seeds
+    ! Read seeds from ../configs
 
     call system('cp ../configs/seed_'//image2str(this_image()-1)//'.bin '//opath//'node'//image2str(this_image()-1)) ! for Xin
 
