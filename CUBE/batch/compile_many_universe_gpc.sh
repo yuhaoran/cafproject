@@ -22,14 +22,14 @@ do
   source module_load_intel.sh
   make clean
   make
-  mv ic.x ../batch/many/ic$i.x
-  mv dsp.x ../batch/many/dsp$i.x
-  mv convert.x ../batch/many/convert$i.x
+  mv ic.x ../batch/many/ic_universe$i.x
+  mv dsp.x ../batch/many/dsp_universe$i.x
+  mv convert.x ../batch/many/convert_universe$i.x
 
   cd ../main/
   make clean
   make
-  mv cafcube.x ../batch/many/cube$i.x
+  mv cafcube.x ../batch/many/cube_universe$i.x
 
   # change file parameter.f90 to next version ('sed' has system dependency)
   sed -i 's/universe'"$i"'/universe'"$((i+1))"'/g' ../main/parameters.f90
