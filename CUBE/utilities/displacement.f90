@@ -276,17 +276,6 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   sync all
 
   !! reconstructed delta
-  ! divergence
-  cxyz=cdiv
-  if (head) print*,'start backward tran'
-  call pencil_fft_backward
-  cube1=-r3
-  if (head) print*,'Write delta_R into file'
-  open(15,file=output_name('delta_E'),status='replace',access='stream')
-  write(15) cube1
-  close(15)
-  sync all
-
   ! potential
   cxyz=cphi
   if (head) print*,'start backward tran'
@@ -294,6 +283,17 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cube1=r3
   if (head) print*,'Write phi_E into file'
   open(15,file=output_name('phi_E'),status='replace',access='stream')
+  write(15) cube1
+  close(15)
+  sync all
+
+  ! divergence
+  cxyz=cdiv
+  if (head) print*,'start backward tran'
+  call pencil_fft_backward
+  cube1=-r3
+  if (head) print*,'Write delta_R into file'
+  open(15,file=output_name('delta_E'),status='replace',access='stream')
   write(15) cube1
   close(15)
   sync all
