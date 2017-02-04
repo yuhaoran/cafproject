@@ -1,4 +1,3 @@
-make clean
 rm -fr output/*
 rm -f batch/many/*
 rm -f main/*.o

@@ -223,7 +223,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cube2=rho_grid(1:ng,1:ng,1:ng)
 
   if (head) print*,'Write delta_N into file'
-  open(15,file=output_name('delta_nbody'),access='stream')
+  open(15,file=output_name('delta_nbody'),status='replace',access='stream')
   write(15) cube2
   close(15)
 
@@ -234,7 +234,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   enddo
 
   if (head) print*,'Write dsp into file'
-  open(15,file=output_name('dsp'),access='stream')
+  open(15,file=output_name('dsp'),status='replace',access='stream')
   write(15) dsp(1,1:ng,1:ng,1:ng)
   write(15) dsp(2,1:ng,1:ng,1:ng)
   write(15) dsp(3,1:ng,1:ng,1:ng)
@@ -305,6 +305,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   close(15)
   sync all
 
+print*,ng
   if (head) print*,'Main: call cross_power LR____________________'
   xi=0 ! force cross_power use generated Wiener filter
   call cross_power(xi,cube0,cube1)
