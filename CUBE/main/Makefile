@@ -1,5 +1,6 @@
 OPTIONS=
 OPTIONS+=-DPID
+#OPTIONS+=-Wall
 
 MODFILE:=$(wildcard *.f90)
 OBJFILE:=$(addprefix ,$(notdir $(MODFILE:.f90=.o)))

@@ -37,7 +37,8 @@ cum=cumsum6(rhoc)
 !idx2max=5
 
 nthread=1
-ithread=omp_get_thread_num()+1
+!ithread=omp_get_thread_num()+1
+ithread=1
 !print*,'ithread',ithread
 
 vmax_new=0

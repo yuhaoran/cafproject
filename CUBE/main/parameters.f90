@@ -50,7 +50,7 @@ module parameters
 
   ! cosmological parameters
   real,parameter :: z_i=100.0   ! initial redshift
-  real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
+  real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
   real,parameter :: box=1024.0  ! simulation scale /dim, in unit of Mpc/h
@@ -59,7 +59,7 @@ module parameters
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
   real,parameter :: m_neu=0.05 ! neutrino mass
   real,parameter :: omega_nu=m_neu/93.14/(h0/100.)**2
-  real,parameter :: pi=4*atan(1d0)
+  real,parameter :: pi=4*atan(1.)
 
 
   !!real,parameter :: omega_c=0.27

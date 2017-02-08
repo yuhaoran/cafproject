@@ -12,11 +12,12 @@ save
 integer istep, hostnm,ierr
 character(100) :: myhost
 
+if (this_image()==1) print*, 'CUBE start'
+if (this_image()==1) print*, 'call initialize'
 call initialize
 call particle_initialization
-
 sync all
-print*,'buffer density'
+
 call buffer_density
 call buffer_x
 call buffer_v

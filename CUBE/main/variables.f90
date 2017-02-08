@@ -6,7 +6,7 @@ save
 
 ! parameters
 integer,parameter :: npnode=nf**3
-real,parameter :: density_buffer=2.0
+real,parameter :: density_buffer=1.05
 integer,parameter :: npmax=npnode*(nte*1./nt)**3*density_buffer
 integer,parameter ::  nseedmax=200
 real,parameter :: vbuf=0.9
@@ -78,25 +78,25 @@ character (10) :: img_s, z_s
 
 contains
 
-  function cumsum3(input)
+  function cumsum3(rho_input)
     implicit none
-    integer input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer rho_input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
     integer cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
     integer nsum,igx,igy,igz
     nsum=0
     do igz=1-2*ncb,nt+2*ncb
     do igy=1-2*ncb,nt+2*ncb
     do igx=1-2*ncb,nt+2*ncb
-    	nsum=nsum+input(igx,igy,igz)
-    	cumsum3(igx,igy,igz)=nsum
+      nsum=nsum+rho_input(igx,igy,igz)
+      cumsum3(igx,igy,igz)=nsum
     enddo
     enddo
     enddo
   endfunction cumsum3
 
-  function cumsum6(input)
+  function cumsum6(rho_input)
     implicit none
-    integer input(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
+    integer rho_input(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
     integer cumsum6(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
     integer nsum,ihx,ihy,ihz,igx,igy,igz
     nsum=0
@@ -106,7 +106,7 @@ contains
     do igz=1-ncb,nt+ncb
     do igy=1-ncb,nt+ncb
     do igx=1-ncb,nt+ncb
-      nsum=nsum+input(igx,igy,igz,ihx,ihy,ihz)
+      nsum=nsum+rho_input(igx,igy,igz,ihx,ihy,ihz)
       cumsum6(igx,igy,igz,ihx,ihy,ihz)=nsum
     enddo
     enddo

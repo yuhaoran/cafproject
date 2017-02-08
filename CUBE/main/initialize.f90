@@ -1,5 +1,5 @@
 !#define readkernel
-#define penffttest
+!#define penffttest
 #define mkdir
 
 subroutine initialize
@@ -10,20 +10,19 @@ implicit none
 save
 include 'fftw3.f'
 
+if (this_image()==1) print*, 'call geometry'
 call geometry
 
-if (head) then
-  print*,'CUBE started'
-  print*,'called geometry'
-endif
-
+if (head) print*, 'call create_cubefft_plan'
 call create_cubefft_plan
 
+if (head) print*, 'call create_penfft_plan'
 call create_penfft_plan
 
 ! omp_init
 
 #ifdef penffttest
+  if (head) print*, 'pencil_fft test...'
   call random_number(r3)
   call pencil_fft_forward
   call pencil_fft_backward
@@ -31,7 +30,9 @@ call create_penfft_plan
 #endif
 
 #ifndef readkernel
+  if (head) print*, 'call kernel_f'
   call kernel_f
+  if (head) print*, 'call kernel_c'
   call kernel_c
 #else
 ! now works only for single node
@@ -72,10 +73,6 @@ sync all
 n_checkpoint=n_checkpoint[1]
 z_checkpoint(:)=z_checkpoint(:)[1]
 sync all
-
-!if (head) print*, output_name('blablabla')
-!if (head) print*, ic_name('blablabla')
-!stop
 
 #ifdef mkdir
   call system('mkdir -p '//opath//'/node'//image2str(this_image()-1))

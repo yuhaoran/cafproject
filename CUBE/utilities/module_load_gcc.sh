@@ -4,6 +4,6 @@ module load fftw/3.3.0-gcc-openmpi
 #module list
 
 export FC='caf'
-export XFLAG='-O3 -cpp -march=native -mcmodel=medium -fopenmp'
+export XFLAG='-O3 -cpp -march=native -mcmodel=medium'
 export OFLAG=${XFLAG}' -c'
 export FFTFLAG='-I'${SCINET_FFTW_INC}' ''-L'${SCINET_FFTW_LIB}' -lfftw3f -lm -ldl'

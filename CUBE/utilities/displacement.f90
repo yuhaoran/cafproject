@@ -65,6 +65,7 @@ if (head) then
   close(16)
   print*,''
 endif
+
 sync all
 n_checkpoint=n_checkpoint[1]
 z_checkpoint(:)=z_checkpoint(:)[1]
@@ -104,6 +105,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   dsp=0 ! CIC disp
   !dsp_e=0
   nlast=0
+
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -224,8 +226,10 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
 
   if (head) print*,'Write delta_N into file'
   open(15,file=output_name('delta_nbody'),status='replace',access='stream')
-  write(15) cube2
+  write(15) sum(cube2,3)/ng
   close(15)
+  print*,'cube2',cube2(:10,1,1)
+
 
   do i_dim=1,3
     dsp(i_dim,1:ng,1:ng,1:ng)=dsp(i_dim,1:ng,1:ng,1:ng)/rho_0(1:ng,1:ng,1:ng)
@@ -277,15 +281,15 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
 
   !! reconstructed delta
   ! potential
-  cxyz=cphi
-  if (head) print*,'start backward tran'
-  call pencil_fft_backward
-  cube1=r3
-  if (head) print*,'Write phi_E into file'
-  open(15,file=output_name('phi_E'),status='replace',access='stream')
-  write(15) cube1
-  close(15)
-  sync all
+!  cxyz=cphi
+!  if (head) print*,'start backward tran'
+!  call pencil_fft_backward
+!  cube1=r3
+!  if (head) print*,'Write phi_E into file'
+!  open(15,file=output_name('phi_E'),status='replace',access='stream')
+!  write(15) sum(cube1,3)/ng
+!  close(15)
+!  sync all
 
   ! divergence
   cxyz=cdiv
@@ -294,7 +298,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cube1=-r3
   if (head) print*,'Write delta_R into file'
   open(15,file=output_name('delta_E'),status='replace',access='stream')
-  write(15) cube1
+  write(15) sum(cube1,3)/ng
   close(15)
   sync all
 
@@ -305,22 +309,20 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   close(15)
   sync all
 
-print*,ng
-  if (head) print*,'Main: call cross_power LR____________________'
-  xi=0 ! force cross_power use generated Wiener filter
-  call cross_power(xi,cube0,cube1)
-  open(15,file=output_name('xi_LR'),status='replace',access='stream')
-  write(15) xi
-  close(15)
-  call system('mv power_fields.dat delta_wiener_LR.dat')
-
   if (head) print*,'Main: call cross_power LN____________________'
   ! xi from last step is input to cross_power for filtering delta_N
   call cross_power(xi,cube0,cube2)
   open(15,file=output_name('xi_LN'),status='replace',access='stream')
   write(15) xi
   close(15)
-  call system('mv power_fields.dat delta_wiener_LN.dat')
+  !call system('mv power_fields.dat delta_wiener_LN.dat')
+
+  if (head) print*,'Main: call cross_power LR____________________'
+  call cross_power(xi,cube0,cube1)
+  open(15,file=output_name('xi_LR'),status='replace',access='stream')
+  write(15) xi
+  close(15)
+  !call system('mv power_fields.dat delta_wiener_LR.dat')
 
 enddo !cur_checkpoint
 if (head) print*, 'destroying fft plans'

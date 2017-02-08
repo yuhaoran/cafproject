@@ -26,12 +26,13 @@ integer i,j,k,ig,jg,kg,ibin
 real kr,kx(3),sincx,sincy,sincz,sinc,rbin
 
 real cube1(ng,ng,ng),cube2(ng,ng,ng)
-real xi(10,nbin)
+real xi(10,nbin)[*], xi_input(10,nbin)
 real amp11,amp12,amp22
 !complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
 real,parameter :: nexp=4.0 ! CIC kernel
 
+  xi_input=xi
   xi=0
 
   r3=cube1
@@ -79,16 +80,84 @@ real,parameter :: nexp=4.0 ! CIC kernel
   enddo
   enddo
   enddo
+  sync all
 
-  xi(2,:)=xi(2,:)/xi(1,:)*(2*pi)/box ! k_phy
-  xi(3,:)=xi(3,:)/xi(1,:) ! Delta_LL
-  xi(4,:)=xi(4,:)/xi(1,:) ! Delta_RR
-  xi(5,:)=xi(5,:)/xi(1,:) ! Delta_LR ! cross power
-  xi(6,:)=xi(6,:)/xi(1,:) ! kernel
-  xi(7,:)=xi(7,:)/xi(1,:) ! kernel
-  xi(8,:)=xi(5,:)/sqrt(xi(3,:)*xi(4,:)) ! r
-  xi(9,:)=sqrt(xi(4,:)/xi(3,:)) ! b
-  xi(10,:)=xi(8,:)**4/xi(9,:)**2 * xi(4,:) ! P_RR*r^4/b^2 reco power
+  if (head) then
+    do i=2,nn**3
+      xi=xi+xi(:,:)[i]
+    enddo
+    xi(2,:)=xi(2,:)/xi(1,:)*(2*pi)/box ! k_phy
+    xi(3,:)=xi(3,:)/xi(1,:) ! Delta_LL
+    xi(4,:)=xi(4,:)/xi(1,:) ! Delta_RR
+    xi(5,:)=xi(5,:)/xi(1,:) ! Delta_LR ! cross power
+    xi(6,:)=xi(6,:)/xi(1,:) ! kernel
+    xi(7,:)=xi(7,:)/xi(1,:) ! kernel
+    xi(8,:)=xi(5,:)/sqrt(xi(3,:)*xi(4,:)) ! r
+    xi(9,:)=sqrt(xi(4,:)/xi(3,:)) ! b
+    xi(10,:)=xi(8,:)**4/xi(9,:)**2 * xi(4,:) ! P_RR*r^4/b^2 reco power
+  endif
+
+  open(15,file='power_fields.dat',status='replace',access='stream')
+
+  !! Wiener
+  print*, 'Wiener filter delta_L'
+  cxyz=0
+  do k=1,npen
+  do j=1,ng
+  do i=1,ng*nn/2+1
+    kg=(nn*(icz-1)+icy-1)*npen+k
+    jg=(icx-1)*ng+j
+    ig=i
+    kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
+    if (ig==1.and.jg==1.and.kg==1) cycle ! zero frequency
+    kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
+#ifdef linear_kbin
+      ibin=nint(kr)
+#else
+      rbin=4.0/log(2.)*log(kr/0.95)
+      ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
+#endif
+    cxyz(i,j,k)=cx1(i,j,k)*xi(8,ibin)**2
+  enddo
+  enddo
+  enddo
+  call pencil_fft_backward
+  write(15) r3 ! Wiener filtered delta_L
+
+  if (xi_input(1,1)/=0) then
+    print*, 'xi_input(1,1) =',xi_input(1,1)
+    print*,'Detected nonzero input filter, use delta_R filter for delta_L.'
+    xi_input(9,:)=1
+  else
+    print*,'Input filter is zero, use computed filter for delta_R.'
+    xi_input=xi !
+  endif
+
+  cxyz=0
+  do k=1,npen
+  do j=1,ng
+  do i=1,ng*nn/2+1
+    kg=(nn*(icz-1)+icy-1)*npen+k
+    jg=(icx-1)*ng+j
+    ig=i
+    kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
+    if (ig==1.and.jg==1.and.kg==1) cycle ! zero frequency
+    kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
+#ifdef linear_kbin
+      ibin=nint(kr)
+#else
+      rbin=4.0/log(2.)*log(kr/0.95)
+      ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
+#endif
+    cxyz(i,j,k)=cx2(i,j,k)*xi_input(8,ibin)**2
+  enddo
+  enddo
+  enddo
+  call pencil_fft_backward
+  write(15) r3 ! Wiener filtered delta
+
+  close(15)
+
 endsubroutine
 
 endmodule

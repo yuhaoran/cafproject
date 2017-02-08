@@ -16,7 +16,7 @@ program initial_conditions
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf)
   integer,parameter :: nk=nk_tf   !1000
-  integer i,j,k,l,seedsize
+  integer i,j,k,seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
   real(8) v8, norm
   integer(int64) :: time64
@@ -147,9 +147,9 @@ program initial_conditions
 
 
   !Delta^2
-  tf(2,:)=tf(2,:)**2 * tf(1,:)**(3+n_s) * norm / (2*pi**2)
-  tf(3,:)=tf(3,:)**2 * tf(1,:)**(3+n_s) * norm / (2*pi**2)
-  tf(6,:)=tf(6,:)**2 * tf(1,:)**(3+n_s) * norm / (2*pi**2)
+  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
   !dk
   tf(4,1)=tf(1,2)/2
   do k=2,nk-1
@@ -275,6 +275,7 @@ program initial_conditions
 
   ! write initial overdensity
   print*,'Write delta_L into file'
+  print*,'Growth factor Dgrow(a) =',Dgrow(a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
@@ -299,10 +300,6 @@ program initial_conditions
   enddo
   enddo
   if (head) cxyz(1,1,1)=0 ! DC frequency
-
-  !print*, cxyz(1:2,1,1)
-  !print*, cx_temp(1:2,1,1)
-  !stop
 
   sync all
 

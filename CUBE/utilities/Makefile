@@ -1,4 +1,5 @@
-OPTIONS=-DFFTFINE
+#OPTIONS=-DFFTFINE
+#OPTIONS+=-Wall
 #OPTIONS+=-DPID
 
 all: ic.x dsp.x convert.x

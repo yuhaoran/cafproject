@@ -5,7 +5,7 @@ use variables
 implicit none
 save
 !integer ntemp
-integer nshift,nlen,nlast,ifrom,mlast
+integer nshift,nlen,nlast,ifrom
 
 print*, 'buffer_density'
 
@@ -86,23 +86,23 @@ ifrom=nshift ! ifrom is the index of shifted particles, contiuous
 do itz=1,nnt
 do ity=1,nnt
 do itx=1,nnt ! loop over tiles
-	do iz=1,nt ! loop over z slab
-	do iy=1,nt ! loog over y slot
-		! nlast is the last particle's index
-		nlast=cum(nt,iy,iz,itx,ity,itz)
-		! nlen is the number of particle in this x-slot
-		nlen=nlast-cum(0,iy,iz,itx,ity,itz)
-		x(:,nlast-nlen+1:nlast)=x(:,ifrom+1:ifrom+nlen)
-		v(:,nlast-nlen+1:nlast)=v(:,ifrom+1:ifrom+nlen)
+  do iz=1,nt ! loop over z slab
+  do iy=1,nt ! loog over y slot
+    ! nlast is the last particle's index
+    nlast=cum(nt,iy,iz,itx,ity,itz)
+    ! nlen is the number of particle in this x-slot
+    nlen=nlast-cum(0,iy,iz,itx,ity,itz)
+    x(:,nlast-nlen+1:nlast)=x(:,ifrom+1:ifrom+nlen)
+    v(:,nlast-nlen+1:nlast)=v(:,ifrom+1:ifrom+nlen)
 #   ifdef PID
       pid(:,nlast-nlen+1:nlast)=pid(:,ifrom+1:ifrom+nlen)
 #   endif
 #   ifdef redundant
       x(:,ifrom+1:ifrom+nlen)=0 ! only when (npmax>>nplocal) so won't overwrite
 #   endif
-		ifrom=ifrom+nlen
-	enddo
-	enddo
+    ifrom=ifrom+nlen
+  enddo
+  enddo
 enddo
 enddo
 enddo
