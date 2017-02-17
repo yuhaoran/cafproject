@@ -21,7 +21,7 @@
 
 \addtolength{\hoffset}{-0.525cm}
 \addtolength{\textwidth}{1.05cm}
-\title{Nonlinear ${\bs E}$-mode clustering in Lagrangian Space}
+\title{Nonlinear ${\bs E}$-mode clustering in Lagrangian space}
 
 \author{Hao-Ran~Yu}\email{haoran@cita.utoronto.ca}
 \affiliation{Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China}
@@ -42,16 +42,16 @@
 
 \begin{abstract}
 We study the nonlinear $E$-mode clustering in Lagrangian space
-by using large scale structure (LSS) $N$-body simulations
+by using large scale structure $N$-body simulations
 and use the displacement field information in Lagrangian space
 to recover the primordial linear density field.
 We find that, compared to Eulerian nonlinear density fields,
 the $E$-mode displacement fields
 in Lagrangian space improves the cross-correlation scale $k$ with
-initial density field by factor of 6 $\sim$ 7,
-containing 2 orders of magnitude more primordial information.
+initial density field by a factor of 6-7,
+containing two orders of magnitude more primordial information.
 This illustrates ability of potential density reconstruction algorithms,
-to improve the baryonic acoustic oscillation (BAO) measurements
+to improve the baryonic acoustic oscillation measurements
 from current and future large scale structure surveys.
 
 
@@ -62,7 +62,7 @@ from current and future large scale structure surveys.
 \maketitle
 
 \section{Introduction}\label{sec.intro}
-Our universe starts from primordial Gaussian perturbations at a very early stage, 
+Our Universe starts from primordial Gaussian perturbations at a very early stage, 
 and from those fluctuations, the gravitational instability drives the formation of 
 the large scale structure (LSS) distribution of matter
 \citep{1970A&A.....5...84Z,1985ApJ...292..371D}.
@@ -92,8 +92,8 @@ linear scale ($\sim$10 Mpc$/h$) and reverse the large
 scale bulk flows by a negative Zel'dovich linear displacement
 \citep{2007ApJ...664..675E,2009PhRvD..80l3501N,2009PhRvD..79f3523P}.
 In the linear Lagrangian perturbation theory (LPT), the 
-negative divergence of the the displacement field
-$-\nabla_q\cdot\bs\Psi(\bs q)$ respect to Lagrangian coordinates $\bs q$
+negative divergence of the displacement field
+$-\nabla_q\cdot\bs\Psi(\bs q)$ with respect to Lagrangian coordinates $\bs q$
 gives the linear density field \citep{2010PhDT.........4J},
 and in many literatures
 \cite{2013MNRAS.428..141N,2014PhRvD..89h3515C,2016JCAP...03..017B}
@@ -109,18 +109,18 @@ there are techniques to estimate the displacement field from a final
 distribution of matter.
 For example, when a homogeneous initial matter distribution 
 is assumed, there is a unique solution of curl-less displacement field to relate 
-the initial and final distributions without shell-crossing. This solution can be 
+the initial and final distributions without shell crossing. This solution can be 
 solved by a metric transformation equation
 \citep{1995ApJS..100..269P,1998ApJS..115...19P}.
-In 1-dimensional (1D) case, this solution 
+In the one-dimensional (1D) case, this solution 
 simplifies to an ordering of mass elements by their final, Eulerian coordinates.
 Zhu {\it et al.} \cite{2016arXiv160907041Z} apply this algorithm to the result
-of an 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
+of a 1D simulation \citep{2016JCAP...01..043M} and obtain an estimated
 displacement field $\tilde\Psi(q)$, and find
 that this new method well recovers the linear
-information and reconstructs 1D BAO peak in correlation function.
+information and reconstructs 1D BAO peak in the correlation function.
 In 3D and more realistic cases, one needs to
-carefully consider effects of curl, shell-crossing, 
+carefully consider effects of curl, shell crossing, 
 complicated baryonic physics and biased tracers (galaxies).
 
 \begin{figure}
@@ -141,24 +141,22 @@ requires $\bs\Psi(\bs q)$ from $N$-body simulations, while
 $-\nabla_q\cdot\tilde{\bs \Psi}(\bs q)$ is called the
 reconstructed density field, which uses the estimated displacement field.}
 from the full nonlinear displacement field $\bs\Psi(\bs q)$,
-\tcb{which is the limit of all possible Lagrangian reconstruction
-formulations.}
-The displacement field can be decomposed into a curl-less ``$E$-mode'' component
-and a divergence-less ``$B$-mode'' component, $\bs\Psi=\bs\Psi_E+\bs\Psi_B$,
+This field can be decomposed into a curl-less ``$E$-mode'' component
+and a divergence less ``$B$-mode'' component, $\bs\Psi=\bs\Psi_E+\bs\Psi_B$,
 where the $B$-mode is raised by late stage non-Gaussianities and is not
 dominant in $\bs\Psi$ \citep{2014PhRvD..89h3515C}.
 In $\bs\Psi(\bs q)$ from $N$-body simulations,
 (1) $E$-mode displacement field is used for recovering the linear information
-(although $B$-mode is also present); (2) shell-crossing effects are fully considered;
+(although $B$-mode is also present); (2) shell crossing effects are fully considered;
 (3) the setup is clean in absence of baryons and realistic
 observables. Further reconstructions by $\tilde{\bs \Psi}(\bs q)$
 can be compared with this result.
-Further more, we study the scale dependent cross-correlation
+Furthermore, we study the scale dependent cross correlation
 between $-\nabla_q\cdot\bs\Psi(\bs q)$ and linear density field
 and construct optimal Wiener filters to get the optimal filtered
 recovered linear density field and recovered linear power spectrum.
 
-In the rest part of the paper, we describe the simulation,
+In the rest of the paper, we describe the simulation,
 density recovery algorithm and Wiener filter setups in section
 \ref{sec.method}. We show results in section \ref{sec.results}.
 Discussion and conclusion are in section \ref{sec.discussion}.
@@ -186,7 +184,7 @@ $N_p=512^3$ $N$-body particles are evolved via
 their mutual gravitational interactions to $z=0$, in a periodic box with $L=400$ 
 Mpc$/h$ per side. The code is set to use standard a particle-mesh (PM) algorithm 
 \cite{1988csup.book.....H} on a two-level mesh grids
-(details see \cite{2013MNRAS.436..540H}) and cloud-in-cell
+(for details see \cite{2013MNRAS.436..540H}) and cloud-in-cell
 (CIC) is used in particle interpolations in force 
 calculation and obtaining the density field $\rho({\bs x})$ in Eulerian coordinates 
 ${\bs x}$ at late stages. We use density contrast $\delta\equiv\rho/\lb\rho\rb-1$ 
@@ -218,7 +216,7 @@ recovered ($R$), or noise ($n$) density
 fields. When $i=j$ it reduces to the auto power spectrum $P_{ii}(k)$ or $P(k)$. We 
 usually plot the dimensionless power spectrum $\Delta^2(k)\equiv k^3P(k)/2\pi^2$. 
 
-\subsection{Density Recovery}\label{ss.reco}
+\subsection{Density recovery}\label{ss.reco}
 In the simulation, we use particle-ID (PID) to record the initial (Lagrangian) location ${\bs 
 q}$ of particles, and the information is tracked until the $z=0$ and we can get the 
 Lagrangian displacement vector ${\bs \Psi}\equiv{\bs x}-{\bs q}$ for every 
@@ -228,9 +226,8 @@ coordinates ${\bs q}$ of particles and we get the displacement field ${\bs \Psi}
 To visualize the $\bs\Psi$ field, we draw a 3D uniform mesh over the volume,
 and use the given $\bs\Psi$ field to deform the mesh according to the direction
 and physical amplitude of $\bs\Psi$. In the top panel of Fig.\ref{fig.projection},
-The resulting mesh illustrates a pseudo
-``curvilinear coordinate'' similar to \cite{1995ApJS..100..269P},
-however the mesh can be overlapped due to shell-crossing. The densest mesh grids
+The resulting mesh illustrates a ``pseudocurvilinear coordinate'' similar to \cite{1995ApJS..100..269P},
+however the mesh can be overlapped due to shell crossing. The densest mesh grids
 trace the densest structures of $\delta_N$, whereas the undeformed grid positions
 are the Lagrangian coordinates in which we do the density recovery.
 The raw recovered density field is given by the differential motion of matter 
@@ -321,8 +318,8 @@ scales of our interest.
   \includegraphics[width=1.0\linewidth]{pdfs.pdf}
   \caption{Probability distribution functions (PDFs)
   $f(\delta_L,\delta_N)$ and $f(\delta_L,\delta_R)$, showing in the upper
-  and lower panels respectively. Both red curves on $x$-axes show $f(\delta_L)$, following
-  a Gaussian distribution. The two curves on $y$-axes in upper and lower panel
+  and lower panels respectively. Both red curves on the $x$-axes show $f(\delta_L)$, following
+  a Gaussian distribution. The two curves on the $y$-axes in the upper and the lower panel
   show respectively $f(\delta_N)$ and $f(\delta_R)$.}
   \label{fig.pdfs}
 \end{figure}
@@ -340,8 +337,8 @@ by ``$_N$'' equation (\ref{eq.power})), on small
 scales $k\gtrsim 0.1h/$Mpc, $P_{LL}$ is dominated by
 uncorrelated, nonlinear noise, shown in the green
 dotted line. In the case of $\delta_R$, however, $P_{LL}$
-is decomposed into orange dash-dotted correlated
-part and purple dotted uncorrelated part according to
+is decomposed into the orange dash-dotted correlated
+part and the purple dotted uncorrelated part according to
 equation (\ref{eq.power}). The correlated power spectrum
 is dominated on BAO scales of our interest.
 
@@ -369,9 +366,9 @@ fields. Since $\delta_n$ in equation (\ref{eq.decompose}) is
 uncorrelated, we use Wiener filtered fields. To keep the
 consistency over $\delta_L$, $\delta_N$ and $\delta_R$, we
 use the $W(k)=r^2_{LR}$ as the Wiener filter.
-The grey-scaled plots in the center of both panels show the 2-variable PDFs,
+The grey-scaled plots in the center of both panels show the two-variable PDFs,
 whereas their projections onto each variable are just
-1-variable PDFs -- $f(\delta_L)$, $f(\delta_N)$ and $f(\delta_R)$, shown
+one-variable PDFs -- $f(\delta_L)$, $f(\delta_N)$ and $f(\delta_R)$, shown
 as red/blue curves on the axes of Fig.\ref{fig.pdfs}.
 In the top panel, $\delta_N$ shows an approximate log-normal
 distribution (blue curve) and $\delta_L$ follows an expected
@@ -404,17 +401,11 @@ This is achieved by implementing differential movement information
 of matter elements on Lagrangian coordinates, rather than on
 Eulerian coordinates. This result illustrates the feasibility
 of using estimated displacement field $\tilde{\bs \Psi}(\bs q)$
-to reconstruct primordial linear density field,
-\tcb{and this Lagrangian $E$-mode recovery
- quantifies the upper limit of Lagrangian reconstruction methods.}
+to reconstruct primordial linear density field.
 A straightforward example of a estimation of $\tilde{\bs \Psi}(\bs q)$
 is given by \cite{1995ApJS..100..269P,1998ApJS..115...19P}.
-%\tcr{More complicated reconstruction algorithms, e.g., least action
-%algorithms \cite{1989ApJ...344L..53P,2000ApJ...544...21G} can give
-%the exact $\delta_L$}, where
-%shell-crossing effects are also considered.
 In reality, one needs
-to consider all aspects including vorticity, shell-crossing, bias, noise
+to consider all aspects including vorticity, shell crossing, bias, noise
 and data complexities. The impact of these factors can be quantitatively
 compared with the impact of different estimation methods, and with
 the exact solution by $N$-body simulations.
@@ -422,18 +413,18 @@ the exact solution by $N$-body simulations.
 The advantage of using displacement field in reconstruction is
 its insensitive response from highly nonlinearities.
 Nonlinear densities $\delta_N$ can be arbitrarily large -- 
-one expect virialized regions to be observable, where nonlinear
+one expects virialized regions to be observable, where nonlinear
 density is given by the inverse determinant of the Jacobian
 $\delta_N=|\bs J|^{-1}\gtrsim 200$.
-However, reconstructed densities $\delta_R$ is given by
+However, reconstructed densities $\delta_R$ are given by
 the trace $\rm{tr}(\bs J)$ and saturates at 3.
 Actually, the displacement fields are dominated by early stage linear processes,
 which is the Lagrangian-Eulerian coordinate transform,
-while late stage shell-crossing, nonlinear and baryonic processes
-only fine-tunes the final position $\bs x$
+while late stage shell crossing, nonlinear and baryonic processes
+only fine-tune the final position $\bs x$
 \citep{2014PhRvD..89h3515C}. Compared with estimated displacement fields $\tilde{\bs \Psi}(\bs q)$
 by \cite{1995ApJS..100..269P}, which do not have shell crossing,
-the additional shell-crossing information in $\bs\Psi(\bs q)$
+the additional shell crossing information in $\bs\Psi(\bs q)$
 is uncorrelated with $\delta_L$. This insensitive response from
 nonlinearities enables the stability of reconstruction algorithms,
 which are expected to give similar results of this paper. 
@@ -444,11 +435,11 @@ of magnitude due to nonlinear/baryonic physics and many sources of errors.
 
 
 
-\section*{Acknowledgements}
+\section*{ACKNOWLEDGMENTS}
 We thank Pengjie Zhang and Kwan Chuen Chan for helpful discussions and comments.
 We acknowledge funding from NSERC.
-HRY acknowledges General Financial Grant No.2015M570884 and Special Financial Grant No.2016T90009 from the China Postdoctoal Science Foundation.
-HMZ acknowledges the support of the Chinese MoST 863 program under Grant
+H.R.Y. acknowledges General Financial Grant No. 2015M570884 and Special Financial Grant No. 2016T90009 from the China PostdoctRoal Science Foundation.
+H.M.Z. acknowledges the support of the Chinese MoST 863 program under Grant
 No. 2012AA121701, the CAS Science Strategic Priority Research Program
 XDB09000000 and the NSFC under Grant No. 11373030.
 Research at the Perimeter Institute is supported by the Government of Canada
