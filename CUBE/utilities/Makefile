@@ -1,6 +1,6 @@
 OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
-OPTIONS+=-DPID
+#OPTIONS+=-DPID
 
 all: ic.x dsp.x convert.x
 	@echo "done"
@@ -14,15 +14,15 @@ convert.x: parameters.o convert_zip_to_xv.o
 
 parameters.o: ../main/parameters.f90
 	$(FC) $(OFLAG) $(OPTIONS) $<
-pencil_fft.o: ../main/pencil_fft.f90
+pencil_fft.o: ../main/pencil_fft.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-powerspectrum.o: powerspectrum.f90
+powerspectrum.o: powerspectrum.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-initial_conditions.o: initial_conditions.f90
+initial_conditions.o: initial_conditions.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-displacement.o: displacement.f90
+displacement.o: displacement.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-convert_zip_to_xv.o: convert_zip_to_xv.f90
+convert_zip_to_xv.o: convert_zip_to_xv.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 *.o: Makefile
 

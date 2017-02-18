@@ -1,6 +1,6 @@
 #define ZA
 #define mkdir
-#define PID
+!#define PID
 !#define READ_SEED
 !#define READ_NOISE
 
@@ -12,9 +12,11 @@ program initial_conditions
   save
 
   ! nc: coarse grid per node per dim
-  ! nf: fine grid per node per dim
+  ! nf: fine grid per node per dim, ng=nf
+  ! nyquest: Nyquest frequency
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf)
+  integer,parameter :: nyquest=ng*nn/2
   integer,parameter :: nk=nk_tf   !1000
   integer i,j,k,seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
@@ -67,13 +69,16 @@ program initial_conditions
   call geometry
 
   if (head) then
-    print*, 'Initial conditions on resolution', ng
-    print*, 'Number of particles per side', np_nc*nc
+    print*, 'CUBE Initial Conditions'
+    print*, 'on',nn**3,' images'
+    print*, 'Resolution', ng*nn
+    print*, 'Number of particles per side', np_nc*nc*nn
     print*, 'np_2n3 =',np_2n3
     print*, 'output: ', opath
     print*, 'head image number',icx,icy,icz
+    print*, '-----------------------------------------'
   endif
-
+  sync all
 
 #ifdef mkdir
     call system('mkdir -p '//opath//'node'//image2str(this_image()-1))
@@ -117,35 +122,32 @@ program initial_conditions
   sim%m_neu(1:3)=0
   sim%vsim2phys=1.0/(300.*sqrt(omega_m)*box/a/2./ nf/nn)
   sim%z_i=z_i
+  sync all
 
-
-  ! initialize variables
+  ! initialize variables ------------------------------
   if (np_2n3) then
     nf_shake=(ncell/np_nc)/2
   else
     nf_shake=0
   endif
-
   ! initvar
   phi=0
   tf=0
   pkm=0
   pkn=0
+  sync all
 
-
-  print*,'Creating FFT plans'
+  if (head) print*,'Creating FFT plans'
   call create_penfft_plan
+  sync all
 
-  ! transferfnc
+  ! transferfnc --------------------------------------
   open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
   read(11,*) tf
   close(11)
-
   ! normalization
   norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1)
-  write(*,*) 'norm:', norm
-
-
+  if (head) print*, 'Normalization factor: norm =', norm
   !Delta^2
   tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
   tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
@@ -157,61 +159,56 @@ program initial_conditions
   enddo
   tf(4,nk)=tf(1,nk)-tf(1,nk-1)
 
-
   v8=0
-  kmax=2*pi*sqrt(3.)*nf/2/box
+  kmax=2*pi*sqrt(3.)*nf*nn/2/box
   do k=1,nk
     if (tf(1,k)>kmax) exit
     v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
   enddo
-  write(*,*) 's8**2/v8:', v8, s8**2/v8
-
+  if (head) print*, 's8**2/v8:', v8, s8**2/v8
   !!tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
   tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2
+  sync all
 
-  ! noisemap
-  print*,'Generating random noise'
 
+  ! noisemap -------------------------------------
+  if (head) print*,'Generating random noise'
   call random_seed(size=seedsize)
-  print*,'min seedsize =', seedsize
+  if (head) print*,'min seedsize =', seedsize
   seedsize=max(seedsize,12)
-
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
-
 #ifdef READ_SEED
     ! Read seeds from ../configs
-
     call system('cp ../configs/seed_'//image2str(this_image()-1)//'.bin '//opath//'node'//image2str(this_image()-1)) ! for Xin
-
     ! need to use seed[image_number].dat for parallel
-
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
     read(11) iseed
     close(11)
     ! Input iseed
     call random_seed(put=iseed)
-    print*, 'iseed', iseed
+    if (head) print*, 'iseed', iseed
 #else
     ! Generate at least 12 seeds according to system clock
     call system_clock(time64)
     do i = 1, seedsize
-      iseed(i) = lcg(time64)
-      print*,'time64,iseed(',int(i,1),')=',time64,iseed(i)
+      iseed(i) = lcg(time64) + this_image()*137
+      !print*,'time64,iseed(',int(i,1),')=',time64,iseed(i)
     enddo
     ! Input iseed to system
     call random_seed(put=iseed)
-    print*, 'iseed', iseed
+    !print*, 'iseed', iseed
     ! Write iseed into file
     open(11,file=output_dir()//'seed'//output_suffix(),status='replace',access='stream')
     write(11) iseed
     close(11)
 #endif
-
   call random_number(r3)
-
+  deallocate(iseed)
+  deallocate(rseed_all)
+  sync all
 #ifdef READ_NOISE
-      !!!!! test only
+      !!!!! test only for 1 node job
       open(11,file='initnoise.bin',access='stream')
       read(11) r3
       close(11)
@@ -219,13 +216,9 @@ program initial_conditions
       !!!!! test only
 #endif
 
-  deallocate(iseed)
-  deallocate(rseed_all)
 
-  ! to-do: rseed_all for image-dependent seed
-
-  !! Box-Muller transform
-  print*,'Box-Muller transform'
+  ! Box-Muller transform ----------------------------------------------
+  if (head) print*,'Box-Muller transform'
   do k=1,nf
   do j=1,nf
   do i=1,nf,2
@@ -236,17 +229,17 @@ program initial_conditions
   enddo
   enddo
   enddo
+  sync all
 
   !call cross_power(xi,r3,r3)
   !open(11,file='initpower.dat',access='stream')
   !write(11) xi
   !close(11)
 
-  print*, 'Start ftran'
+  if (head) print*, 'Start ftran'
   call pencil_fft_forward
-
   ! delta field
-  print*, 'Wiener filter noise'
+  if (head) print*, 'Wiener filter on white noise'
   do k=1,npen
   do j=1,nf
   do i=1,nf*nn/2+1
@@ -254,33 +247,34 @@ program initial_conditions
     kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*nf+j
     ig=i
-    kz=mod(kg+nf/2-1,nf)-nf/2
-    ky=mod(jg+nf/2-1,nf)-nf/2
+    kz=mod(kg+nf*nn/2-1,nf*nn)-nf*nn/2
+    ky=mod(jg+nf*nn/2-1,nf*nn)-nf*nn/2
     kx=ig-1
     kr=sqrt(kx**2+ky**2+kz**2)
     kr=max(kr,1.0)
     pow=interp_tf(2*pi*kr/box,1,2)/(4*pi*kr**3)
-    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*nf**3)
+    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*(nf*nn)**3)
   enddo
   enddo
   enddo
   if (head) cxyz(1,1,1)=0 ! DC frequency
 
+  ! print*,icx,icy,icz,ig,jg,kg; stop ! check last frequency
   sync all
 
   cx_temp=cxyz ! backup delta
 
-  print*,'Start btran'
+  if (head) print*,'Start btran'
   call pencil_fft_backward
 
-  ! write initial overdensity
-  print*,'Write delta_L into file'
-  print*,'Growth factor Dgrow(a) =',Dgrow(a)
+  ! write delta_L
+  if (head) print*,'Write delta_L into file'
+  if (head) print*,'Growth factor Dgrow(a) =',Dgrow(a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
   ! potential field
-
+!stop
   do k=1,npen
   do j=1,nf
   do i=1,nf*nn+1,2
