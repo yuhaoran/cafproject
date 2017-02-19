@@ -14,9 +14,10 @@ program initial_conditions
   ! nc: coarse grid per node per dim
   ! nf: fine grid per node per dim, ng=nf
   ! nyquest: Nyquest frequency
+  integer,parameter :: nf_global=nf*nn
+  integer,parameter :: nyquest=nf_global/2
   real,parameter :: a=1/(1+z_i)
-  real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf)
-  integer,parameter :: nyquest=ng*nn/2
+  real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
   integer,parameter :: nk=nk_tf   !1000
   integer i,j,k,seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
@@ -36,7 +37,7 @@ program initial_conditions
   real kr,kx,ky,kz
   !real xi(10,nbin)
 
-  complex cx_temp(nf*nn/2+1,nf,npen)
+  complex cx_temp(nyquest+1,nf,npen)
   real phi(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
 #ifndef ZA
     real phi1(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
@@ -100,7 +101,7 @@ program initial_conditions
   sim%cur_proj=0
   sim%cur_halo=0
 
-  sim%mass_p=real((nf)**3)/sim%nplocal ! will be overwritten
+  sim%mass_p=real(nf**3)/sim%nplocal ! will be overwritten
   sim%v_r2i=1 ! will be overwritten
   sim%shake_offset=0
 
@@ -120,7 +121,7 @@ program initial_conditions
   sim%s8=s8
 
   sim%m_neu(1:3)=0
-  sim%vsim2phys=1.0/(300.*sqrt(omega_m)*box/a/2./ nf/nn)
+  sim%vsim2phys=1.0/(300.*sqrt(omega_m)*box/a/2./ nf_global)
   sim%z_i=z_i
   sync all
 
@@ -160,7 +161,7 @@ program initial_conditions
   tf(4,nk)=tf(1,nk)-tf(1,nk-1)
 
   v8=0
-  kmax=2*pi*sqrt(3.)*nf*nn/2/box
+  kmax=2*pi*sqrt(3.)*nyquest/box
   do k=1,nk
     if (tf(1,k)>kmax) exit
     v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
@@ -242,18 +243,18 @@ program initial_conditions
   if (head) print*, 'Wiener filter on white noise'
   do k=1,npen
   do j=1,nf
-  do i=1,nf*nn/2+1
+  do i=1,nyquest+1
     ! global grid in Fourier space for i,j,k
     kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*nf+j
     ig=i
-    kz=mod(kg+nf*nn/2-1,nf*nn)-nf*nn/2
-    ky=mod(jg+nf*nn/2-1,nf*nn)-nf*nn/2
+    kz=mod(kg+nyquest-1,nf_global)-nyquest
+    ky=mod(jg+nyquest-1,nf_global)-nyquest
     kx=ig-1
     kr=sqrt(kx**2+ky**2+kz**2)
     kr=max(kr,1.0)
     pow=interp_tf(2*pi*kr/box,1,2)/(4*pi*kr**3)
-    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*(nf*nn)**3)
+    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*nf_global**3)
   enddo
   enddo
   enddo
@@ -273,79 +274,65 @@ program initial_conditions
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
+
   ! potential field
-!stop
   do k=1,npen
   do j=1,nf
-  do i=1,nf*nn+1,2
+  do i=1,nyquest+1
     kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*nf+j
     ig=i
-    kz=mod(kg+nf/2-1,nf)-nf/2
-    ky=mod(jg+nf/2-1,nf)-nf/2
-    kx=(ig-1)/2
-    kz=2*sin(pi*kz/nf)
-    ky=2*sin(pi*ky/nf)
-    kx=2*sin(pi*kx/nf)
+    kz=mod(kg+nyquest-1,nf_global)-nyquest
+    ky=mod(jg+nyquest-1,nf_global)-nyquest
+    kx=ig-1
+    kz=2*sin(pi*kz/nf_global)
+    ky=2*sin(pi*ky/nf_global)
+    kx=2*sin(pi*kx/nf_global)
     kr=kx**2+ky**2+kz**2
-    kr=max(kr,1.0/nf**2)
-    cxyz((i+1)/2,j,k)=-4*pi/kr
+    kr=max(kr,1.0/nf_global**2) ! avoid kr being 0
+    cxyz(i,j,k)=-4*pi/kr
   enddo
   enddo
   enddo
   if (head) cxyz(1,1,1)=0 ! DC frequency
-
   sync all
 
   if (correct_kernel) then
-
     call pencil_fft_backward
-
     !open(11,file='laplace.dat',status='replace',access='stream')
     !write(11) r3
     !close(11)
-
-    sync all
     temp8=0
     if (rank==0) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
+    !if (rank==0) print*, r3(9,1,1),r3(1,9,1),r3(1,1,9)
     sync all
     if (icx==nn .and. icy==1 .and. icz==1) temp8=temp8+r3(nf-7,1,1)
+    !if (icx==nn .and. icy==1 .and. icz==1) print*, r3(nf-7,1,1)
     sync all
     if (icx==1 .and. icy==nn .and. icz==1) temp8=temp8+r3(1,nf-7,1)
+    !if (icx==1 .and. icy==nn .and. icz==1) print*, r3(1,nf-7,1)
     sync all
     if (icx==1 .and. icy==1 .and. icz==nn) temp8=temp8+r3(1,1,nf-7)
+    !if (icx==1 .and. icy==1 .and. icz==nn) print*, r3(1,1,nf-7)
     sync all
-
+    phi8=0
     do i=1,nn**3
       phi8=phi8+temp8[i]
     enddo
     sync all
     phi8=phi8/6
-    !phi8=0.0
-
-    !phi8=r3(9,1,1)[image1d(1,1,1)]+r3(1,9,1)[image1d(1,1,1)]+r3(1,1,9)[image1d(1,1,1)]
-    !phi8=phi8+r3(nf-7,1,1)[image1d(nn,1,1)]
-    !phi8=phi8+r3(1,nf-7,1)[image1d(1,nn,1)]
-    !phi8=phi8+r3(1,1,nf-7)[image1d(1,1,nn)]
-    !phi8=phi8/6
-
-  !print*, 'phi8='
-  !print*, r3(9,1,1)[image1d(1,1,1)]
-  !print*, r3(1,9,1)[image1d(1,1,1)]
-  !print*, r3(1,1,9)[image1d(1,1,1)]
-  !print*, r3(nf-7,1,1)[image1d(nn,1,1)]
-  !print*, r3(1,nf-7,1)[image1d(1,nn,1)]
-  !print*, r3(1,1,nf-7)[image1d(1,1,nn)]
-print*,'phi8 =',phi8
+    if (head) print*,'phi8 =',phi8
+    sync all
+    ! Construct Ewald potential kernel in real space
     do k=1,nf
     do j=1,nf
     do i=1,nf
       kg=k+nf*(icx-1)
       jg=j+nf*(icy-1)
       ig=i+nf*(icz-1)
-      kx=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kz=mod(ig+nf/2-1,nf)-nf/2
+      kx=mod(kg+nyquest-1,nf_global)-nyquest
+      ky=mod(jg+nyquest-1,nf_global)-nyquest
+      kz=mod(ig+nyquest-1,nf_global)-nyquest
       kr=sqrt(kx**2+ky**2+kz**2)
       if (kr>8) then
         r3(i,j,k)=r3(i,j,k)-(phi8+1/8.)
@@ -358,10 +345,8 @@ print*,'phi8 =',phi8
     enddo
     enddo
     sync all
-
     call pencil_fft_forward
   endif
-
   ! Complex multiply density field with potential kernel
   cxyz=real(cxyz)*cx_temp
   cx_temp=cxyz  ! backup phi(k)
@@ -370,11 +355,12 @@ print*,'phi8 =',phi8
   call pencil_fft_backward
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
-  !open(11,file='phi1.dat',status='replace',access='stream')
-  !write(11) r3
-  !close(11)
+  open(11,file=ic_name('phi1'),status='replace',access='stream')
+  write(11) r3
+  close(11)
   call pencil_fft_forward
   !!!!!!
+!stop
 
 #ifndef ZA
     ! 2LPT
