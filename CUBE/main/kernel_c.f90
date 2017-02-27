@@ -8,7 +8,7 @@ subroutine kernel_c
 
   character(*),parameter :: dir_kern='../kernels/'
   integer,parameter :: ncglobal=nc*nn
-  integer ig,jg,kg,idim,itemp(3)
+  integer ig,jg,kg,itemp(3)
   real rx(3),r,ck_table(3,4,4,4),kx(3),kx_sin(3),kr
 
   if (head) print*, 'coarse kernel initialization'
@@ -90,14 +90,14 @@ subroutine kernel_c
   enddo
   enddo
 
-  do idim=1,3
-    if (head) print*,'correct dim',idim
+  do i_dim=1,3
+    if (head) print*,'correct dim',i_dim
 
-    r3=force_c(idim,1:nc,1:nc,1:nc)
+    r3=force_c(i_dim,1:nc,1:nc,1:nc)
     call pencil_fft_forward
-    kern_c(idim,:,:,:)=imag(cxyz)
+    kern_c(i_dim,:,:,:)=imag(cxyz)
 
-    r3=ck(idim,:,:,:)
+    r3=ck(i_dim,:,:,:)
     call pencil_fft_forward
 
     do k=1,npen
@@ -109,9 +109,9 @@ subroutine kernel_c
       kx=mod((/ig,jg,kg/)+ncglobal/2-1,ncglobal)-ncglobal/2
       kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
       kx_sin=2*sin(pi*kx/real(ncglobal))
-      kern_c(idim,i,j,k)=merge(kern_c(idim,i,j,k), &
-        kern_c(idim,i,j,k)*0.25*pi*kx_sin(idim)/sum(kx_sin**2)/imag(cxyz(i,j,k)), &
-        (kr>8.0 .or. kx(idim)==0))
+      kern_c(i_dim,i,j,k)=merge(kern_c(i_dim,i,j,k), &
+        kern_c(i_dim,i,j,k)*0.25*pi*kx_sin(i_dim)/sum(kx_sin**2)/imag(cxyz(i,j,k)), &
+        (kr>8.0 .or. kx(i_dim)==0))
     enddo
     enddo
     enddo
@@ -119,10 +119,10 @@ subroutine kernel_c
 
 #else
   if (head) print*, 'without LRCKCORR'
-  do idim=1,3
-    r3=ck(idim,:,:,:)
+  do i_dim=1,3
+    r3=ck(i_dim,:,:,:)
     call pencil_fft_forward
-    kern_c(idim,:,:,:)=imag(cxyz)
+    kern_c(i_dim,:,:,:)=imag(cxyz)
   enddo
 #endif
 
