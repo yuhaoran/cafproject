@@ -12,8 +12,7 @@ save
 integer istep, hostnm,ierr
 character(100) :: myhost
 
-if (this_image()==1) print*, 'CUBE start'
-if (this_image()==1) print*, 'call initialize'
+if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'  images'
 call initialize
 call particle_initialization
 sync all

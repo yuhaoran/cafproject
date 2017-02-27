@@ -1,5 +1,5 @@
 OPTIONS=
-OPTIONS+=-DPID
+#OPTIONS+=-DPID
 #OPTIONS+=-Wall
 
 MODFILE:=$(wildcard *.f90)

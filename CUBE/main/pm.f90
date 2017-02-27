@@ -120,7 +120,7 @@ do itx=1,nnt
     rho_f(::2,:,:,ithread)=-crho_f(2::2,:,:,ithread)*kern_f(i_dim,:,:,:)
     rho_f(2::2,:,:,ithread)=crho_f(::2,:,:,ithread)*kern_f(i_dim,:,:,:)
     call sfftw_execute(plan_ifft_fine)
-    rho_f=rho_f/real(nfe)**3
+    rho_f=rho_f/real(nfe)/real(nfe)/real(nfe)
     force_f(i_dim,:,:,:,ithread)=rho_f(nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ithread)
   enddo
   print*, 'max force_f', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
@@ -378,6 +378,7 @@ do i_dim=1,3
   cxyz=cmplx(-crho_c(2::2,:,:)*kern_c(i_dim,:,:,:),crho_c(::2,:,:)*kern_c(i_dim,:,:,:))
   !cxyz=cmplx(-imag(cxyz)*kern_c(i_dim,:,:,:), real(cxyz)*kern_c(i_dim,:,:,:))
   call pencil_fft_backward
+  !cxyz=crho*(0,1)*kern_c(i_dim,:,:,:)
   force_c(i_dim,1:nc,1:nc,1:nc)=r3
 enddo
 

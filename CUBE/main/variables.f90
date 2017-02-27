@@ -65,10 +65,7 @@ integer cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
 ! coarse kernel arrays
 real ck(3,nc,nc,nc)
-!real kern_c(3,nc*nn/2,nc,npen+2)
 real kern_c(3,nc*nn/2+1,nc,npen)
-!real tmp_kern_c(3,nc*nn,nc,npen+2)
-real tmp_kern_c(3,nc*nn+2,nc,npen)
 real crho_c(nc*nn+2,nc,npen) !!! temp
 real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
 

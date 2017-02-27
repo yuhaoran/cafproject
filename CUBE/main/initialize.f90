@@ -10,15 +10,16 @@ implicit none
 save
 include 'fftw3.f'
 
+if (this_image()==1) print*, 'initialize'
 if (this_image()==1) print*, 'call geometry'
 call geometry
 
-if (head) print*, 'call create_cubefft_plan'
+if (head) print*, 'call create_cubefft_plan ng = ',ng
 call create_cubefft_plan
 
-if (head) print*, 'call create_penfft_plan'
+if (head) print*, 'call create_penfft_plan nfe = ',nfe
 call create_penfft_plan
-
+sync all
 ! omp_init
 
 #ifdef penffttest
@@ -27,13 +28,13 @@ call create_penfft_plan
   call pencil_fft_forward
   call pencil_fft_backward
   if (head) print*, 'penfft test done.'
+  sync all
 #endif
 
+
 #ifndef readkernel
-  if (head) print*, 'call kernel_f'
   call kernel_f
-  if (head) print*, 'call kernel_c'
-  call kernel_c
+  call kernel_c;stop
 #else
 ! now works only for single node
   open(14,file='cubep3m_kern_f.dat',status='old',access='stream')
@@ -43,6 +44,8 @@ call create_penfft_plan
   read(15) kern_c
   close(15)
 #endif
+
+stop
 
 its=0
 t=0

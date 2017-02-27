@@ -1,5 +1,4 @@
 #define mkdir
-#define PID
 !#define READ_SEED
 !#define READ_NOISE
 !#define DO_2LPT
