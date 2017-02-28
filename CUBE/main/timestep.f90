@@ -11,9 +11,9 @@ dt_old=dt
 sync all
 
 if (head) then
-
-  print*,''
-  print*,'timestep'
+  print*, ''
+  print*, '-------------------------------------------------------'
+  print*, 'timestep    :',its
 
   dt_e=dt_max
   ntemp=0
@@ -61,9 +61,7 @@ if (head) then
 
   ra=da/(a+da)
   a_mid=a+(da/2)
-  print*, '-------------------------------------------------------'
-  print*, 'timestep    :',its
-  print*, 'tau         :',tau,tau+dt
+  !print*, 'tau         :',tau,tau+dt
   print*, 'redshift    :',1.0/a-1.0,1.0/(a+da)-1.0
   print*, 'scale factor:',a,a_mid,a+da
   print*, 'expansion   :',ra
@@ -89,10 +87,6 @@ final_step=final_step[1]
 sync all
 
 endsubroutine timestep
-
-
-
-
 
 
 subroutine expansion(a0,dt0,da1,da2)

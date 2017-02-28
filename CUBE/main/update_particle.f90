@@ -18,21 +18,23 @@ integer(8) irand(3)
 integer iii(3)
 integer pr1,pr2,pr3,pr4
 
-v_th=1.5/real(2**(izipx*8))*ncell*0.5
+if (head) print*,'update_particle'
 
-pr1=71
-pr2=73
-pr3=79
-pr4=83
-iii=(/1,3,7/)
+#ifdef randomv
+  v_th=1.5/real(2**(izipx*8))*ncell*0.5
 
+  pr1=71
+  pr2=73
+  pr3=79
+  pr4=83
+  iii=(/1,3,7/)
+#endif
 dt_mid=(dt_old+dt)/2
 
-!dt_mid=dt_mid*(its)/(its+2)
+  !dt_mid=dt_mid*(its)/(its+2)
 
 if (head) then
-  print*, 'update_particle', ishift, rshift, x_resolution
-  print*, 'max delta_x', dt_mid/dt_vmax(1)*vbuf*20
+  !print*, '  ishift,rshift,x_resolution', ishift, rshift, x_resolution
 endif
 
 !! openmpi parallel
@@ -75,8 +77,11 @@ do itx=1,nnt
       !  ( (/i,j,k/)-1 + ((x(:,ip)+int(-128,1))+128.5)/256. ) &
       !  + dt_mid*v(:,ip)*v_i2r(:)/4. &
       !  )
-      g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r(:)/4 &
-                +(x_resolution*ncell)*vrand)
+      xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
+      deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
+      g=ceiling(xq+deltax)
+      !g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r/4 &
+      !          +(x_resolution*ncell)*vrand)
       !print*, 'particle',ip,itx,ity,itz,g
       !print*, dt_mid*v(:,ip)*v_i2r(:)/4.
       !print*, g,vrand
@@ -111,8 +116,11 @@ do itx=1,nnt
 #else
       vrand=0
 #endif
-      g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r(:)/4 &
-                +(x_resolution*ncell)*vrand)
+      xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
+      deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
+      g=ceiling(xq+deltax)
+      !g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r(:)/4 &
+      !          +(x_resolution*ncell)*vrand)
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3)) ! index for writing
 #ifdef debug
@@ -159,7 +167,7 @@ enddo
 enddo
 enddo
 
-print*, 'cleaned buffer particles'
+if (head) print*, '  cleaned buffer particles'
 ! clean up buffer region of rhoc
 
 rhoc(:0,:,:,:,:,:)=0
@@ -185,14 +193,13 @@ if (head) then
   do i=1,nn**3
     npcheck=npcheck+nplocal[i]
   enddo
-  if (npcheck/=nptotal) then
-    print*, 'nptotal incorrect.', npcheck,nptotal
-    !stop
-  endif
+  print*, '  npcheck,npglobal=', npcheck,npglobal
 endif
 
 sync all
 
+print*, '  ',nplocal,sum(rhoc),this_image()
+sync all
 
 !print*, 'nplocal, v_i2r =', iright, v_i2r
 !print*, 'sum of x', sum(x(:,:nplocal)*unit8)
@@ -200,5 +207,5 @@ sync all
 !print*, 'sum of rhoc', sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
 !print*, x(:,1), v(:,1)
 !print*, 'update_particle done'
-print*, ''
+
 endsubroutine update_particle

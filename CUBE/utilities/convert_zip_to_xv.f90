@@ -64,7 +64,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   mass_p=sim%mass_p
   print*, 'nplocal =', sim%nplocal
   nplocal=sim%nplocal
-  print*, 'v_r2i =', sim%v_r2i
+  print*, 'v_i2r =', sim%v_i2r
 
   open(10,file=output_name('zip0'),status='old',action='read',access='stream')
   read(10) x(:,:nplocal)
@@ -86,7 +86,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
     do l=1,np
       ip=nlast+l
       xv(1:3,ip) = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution ! in unit of nc
-      xv(4:6,ip) = v(:,ip)/sim%v_r2i
+      xv(4:6,ip) = v(:,ip)*sim%v_i2r
       xpos = xv(1:3,ip) * real(ng)/real(nc) - 0.5
       idx1=floor(xpos)+1
       idx2=idx1+1
@@ -132,7 +132,7 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
 
   !write(16) xv(1:3,:nplocal) * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
 
-  print*, 'v_r2i =',sim%v_r2i
+  print*, 'v_i2r =',sim%v_i2r
 
   open(16,file=output_name('xv'),status='replace',access='stream')
   write(16) xv(:,:nplocal) / real(nc) ! in unit of box size

@@ -27,7 +27,8 @@ integer iseed(nseedmax), iseedsize
 integer itx,ity,itz,ix,iy,iz,i_dim
 integer i,j,k,l,ip,ipp,pp
 integer nplocal[*], nptile(nnt,nnt,nnt)
-integer(8) nptotal, npcheck
+integer(8) npglobal, npcheck
+real(8) xq(3),deltax(3),deltav(3)
 
 real mass_p
 

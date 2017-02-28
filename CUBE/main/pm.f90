@@ -27,14 +27,12 @@ integer idx1(3), idx2(3)
 real vtemp(3), tempx(3), dx1(3), dx2(3)
 real r3t(-1:nt+2,-1:nt+2,-1:nt+2) ! coarse density on tile, with buffer=2
 
-print*, ''
-print*, 'particle mesh'
-cum=cumsum6(rhoc)
+if (head) then
+  print*, ''
+  print*, 'particle mesh'
+endif
 
-!idx1min=5
-!idx1max=5
-!idx2min=5
-!idx2max=5
+cum=cumsum6(rhoc)
 
 nthread=1
 !ithread=omp_get_thread_num()+1
@@ -47,12 +45,12 @@ f2_max_pp=0
 f2_max_coarse=0
 
 if (fine_force) then
-
+if (head) print*, '  pm fine'
 do itz=1,nnt
 do ity=1,nnt
 do itx=1,nnt
 
-  ! fine_cic_mass
+  ! fine_cic_mass ---------------------------------------------------
   rho_f(:,:,:,ithread)=0
   crho_f(:,:,:,ithread)=0
   do k=2-ncb,nt+ncb-1
@@ -95,15 +93,6 @@ do itx=1,nnt
   enddo
   enddo
   enddo
-  !print*, 'idx1min',idx1min
-  !print*, 'idx1max',idx1max
-  !print*, 'idx2min',idx2min
-  !print*, 'idx2max',idx2max
-
-!#ifdef debug_force
-  !rho_f=0;
-  !rho_f(48,48,48,1)=1000
-!#endif
 
   !!! print*, 'real-space rho_f =', sum(rho_f*1.d0), maxval(rho_f)
 #ifdef write_file
@@ -112,7 +101,7 @@ do itx=1,nnt
   close(10)
 #endif
 
-  ! fine force
+  ! fine force --------------------------------------------------------
   call sfftw_execute(plan_fft_fine)
 !  print*, 'sum of Fourier-space rho_f =', sum(rho_f*1d0), maxval(rho_f)
   crho_f(:,:,:,ithread)=rho_f(:,:,:,ithread) ! back up
@@ -123,7 +112,7 @@ do itx=1,nnt
     rho_f=rho_f/real(nfe)/real(nfe)/real(nfe)
     force_f(i_dim,:,:,:,ithread)=rho_f(nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ithread)
   enddo
-  print*, 'max force_f', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
+  if (head) print*, '    max force_f', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
 
   ! max force
   f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:,ithread)**2,1))
@@ -132,6 +121,7 @@ do itx=1,nnt
 
   !print*, sqrt(maxval(sum(force_f(:,:,:,:,ithread)**2,1)))
 
+  ! fine velocity ---------------------------------------------------
   do k=1,nt
   do j=1,nt
   do i=1,nt ! loop over coarse cell
@@ -180,11 +170,13 @@ enddo
 ! create v_i2r_new in this node
 v_i2r_new=vmax_new*v_resolution
 
+
+
 do itz=1,nnt
 do ity=1,nnt
 do itx=1,nnt
 
-  ! fine_cic_mass
+  ! fine_cic_mass ------------------------------------------
   rho_f(:,:,:,ithread)=0
   crho_f(:,:,:,ithread)=0
   do k=2-ncb,nt+ncb-1
@@ -227,7 +219,7 @@ do itx=1,nnt
   enddo
   enddo
 
-  ! fine force
+  ! fine force ---------------------------------------------------------
   call sfftw_execute(plan_fft_fine)
 !  print*, 'sum of Fourier-space rho_f =', sum(rho_f*1d0), maxval(rho_f)
   crho_f(:,:,:,ithread)=rho_f(:,:,:,ithread) ! back up
@@ -245,7 +237,7 @@ do itx=1,nnt
   !print*, 'force2'
   !print*, maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
 
-  ! fine velocity
+  ! fine velocity ------------------------------------------------
   do k=1,nt
   do j=1,nt
   do i=1,nt ! loop over coarse cell
@@ -306,17 +298,21 @@ enddo
 v_i2r=v_i2r_new
 vmax=vmax_new
 
-print*, 'fine mesh done'
-print*,'vmax', vmax
+!print*, 'fine mesh done'
+!print*,'vmax', vmax
 
 endif
 
+sync all
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! call coarse_mesh
  ! call coarse_mass
 
 if (coarse_force) then
+if (head) print*, '  pm coarse'
 
+! coarse_cic_mass ------------------------------------------
+if (head) print*, '    coarse cic mass'
 r3=0
 do itz=1,nnt
 do ity=1,nnt
@@ -365,6 +361,8 @@ enddo
 !r3(12,12,12)=1000
 !#endif
 
+! coarse force ----------------------------------------
+if (head) print*, '    coarse cic force'
 call pencil_fft_forward
 
 !call fft_cube2pencil ! r3 -> cz
@@ -397,10 +395,11 @@ sync all
 
 ! coarse_max_dt
 f2_max_coarse=maxval(sum(force_c**2,1))
-print*, 'f2_max_coarse = ',f2_max_coarse
-print*, 'min', minval(sum(force_c**2,1))
+!print*, 'f2_max_coarse = ',f2_max_coarse
+!print*, 'min', minval(sum(force_c**2,1))
 
-! coarse max velocity
+! coarse max velocity ---------------------------------------------
+if (head) print*, '    coarse cic velocity'
 do itz=1,nnt
 do ity=1,nnt
 do itx=1,nnt ! loop over tiles
@@ -448,6 +447,7 @@ enddo
 enddo
 
 v_i2r_new=vmax_new*v_resolution
+
 
 do itz=1,nnt ! loop again
 do ity=1,nnt
@@ -497,11 +497,13 @@ enddo
 v_i2r=v_i2r_new
 vmax=vmax_new
 
-print*, 'coarse mesh done'
+!print*, 'coarse mesh done'
 
 endif
 
-print*,'vmax', vmax
+sync all
+print*,'  vmax', vmax
+sync all
 
 f2_max_fine(1,1,1)=maxval(f2_max_fine)
 f2_max_pp(1,1,1)=maxval(f2_max_pp)
@@ -523,10 +525,12 @@ if (head) then
   dt_vmax=vbuf*20/maxval(dt_vmax)
 endif
 
+if (head) then 
+  print*, 'particle mesh done'
+  print*, ''
+endif
 sync all
 
-print*, 'particle mesh done'
-print*, ''
 endsubroutine
 
 

@@ -9,8 +9,6 @@ integer nshift,nlen,nlast,ifrom,mlast
 
 if (head) print*, 'buffer_v'
 
-print*, 'cumsum of all particles =', cum(nt+ncb,nt+ncb,nt+ncb,nnt,nnt,nnt)
-
 ! buffer x direction
 
 ! sync x- buffer with node on the left
@@ -232,8 +230,5 @@ sync all
 !print*, 'buffered z', sum(x*unit8)
 !print*, 'first (8*nplocal) x =', sum(x(:,:nplocal*8)*unit8)
 !print*, 'the rest =', sum(abs(x(:,nplocal*8+1:)*unit8))
-#ifdef debug
-  print*, sum(abs(x(1,:884736)*unit8-1))
-#endif
 
 endsubroutine buffer_v

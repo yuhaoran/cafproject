@@ -23,7 +23,7 @@ sim%cur_proj=cur_checkpoint
 sim%cur_halo=cur_checkpoint
 
 sim%mass_p=mass_p
-sim%v_r2i=1/v_i2r
+sim%v_i2r=v_i2r
 sim%shake_offset=0
 
 sim%box=box

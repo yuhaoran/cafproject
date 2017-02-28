@@ -15,16 +15,12 @@ character(100) :: myhost
 if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'  images'
 call initialize
 call particle_initialization
-sync all
 
 call buffer_density
 call buffer_x
 call buffer_v
 
-sync all
-
 if (head) print*, '---------- starting main loop ----------'
-
 DO istep=1,1000
   call timestep
   call update_particle

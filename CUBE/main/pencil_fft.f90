@@ -32,6 +32,7 @@ module pencil_fft
   subroutine pencil_fft_forward
     implicit none
     save
+    sync all
     call c2x
     call sfftw_execute(planx)
     call x2y
@@ -45,6 +46,7 @@ module pencil_fft
   subroutine pencil_fft_backward
     implicit none
     save
+    sync all
     call x2y
     call y2z
     call sfftw_execute(iplanz)

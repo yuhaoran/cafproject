@@ -9,15 +9,15 @@ module parameters
   integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
   integer,parameter :: izipv=2 ! 1 or 2, integer*? for particle velocity
   integer(izipx),parameter :: ishift=-(2**(izipx*8-1))
-  real,parameter :: rshift=0.5-ishift
+  real(8),parameter :: rshift=0.5-ishift
 
   ! (hereafter 'number of fine cells' = 'nf')
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
-  integer,parameter :: nn=1 ! number of imgages (nodes) /dim
+  integer,parameter :: nn=2 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
   integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer,parameter :: nf=nc*ncell ! >=96
@@ -49,11 +49,11 @@ module parameters
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
 
   ! cosmological parameters
-  real,parameter :: z_i=100.0   ! initial redshift
+  real,parameter :: z_i=20.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=1024.0  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=100.0  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
@@ -86,8 +86,8 @@ module parameters
 
   integer,parameter :: nts=400 ! maximum number of timesteps
   real,parameter :: ra_max=0.1
-  real,parameter :: v_resolution=2.1/(2**(izipv*8))
-  real,parameter :: x_resolution=1.0/2**(izipx*8)
+  real(8),parameter :: v_resolution=2.1/(2**(izipv*8))
+  real(8),parameter :: x_resolution=1.0/2**(izipx*8)
 
   ! transfer function
   integer, parameter      :: nk_tf=2000
@@ -110,7 +110,7 @@ module parameters
     real dt_f_acc, dt_pp_acc, dt_c_acc
     integer cur_checkpoint,cur_proj,cur_halo
     real mass_p
-    real v_r2i(3)
+    real v_i2r(3)
     real shake_offset(3) ! -18
     ! more simulation config info
     real box
@@ -158,14 +158,15 @@ module parameters
 
     subroutine print_header(s)
       type(sim_header),intent(in) :: s
-      print*,'-------------------------------- CUBEP3M info --------------------------------'
+      if (this_image()==1) then
+      print*,'-------------------------------- CUBE info --------------------------------'
       print*,'| nplocal      =',s%nplocal
       print*,'| a,t,tau      =',s%a,s%t,s%tau
       print*,'| nts          =',s%nts
       print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
       print*,'| cur_steps    =',int(s%cur_checkpoint,2),int(s%cur_proj,2),int(s%cur_halo,2)
       print*,'| mass_p       =',s%mass_p
-      print*,'| v_r2i        =',s%v_r2i
+      print*,'| v_i2r        =',s%v_i2r, '(1.0)/1'
       print*,'| shake_offset =',s%shake_offset
       print*,'| '
       print*,'| box/(Mpc/h)=',s%box
@@ -182,9 +183,11 @@ module parameters
       print*,'| omega_l    =',s%omega_l
       print*,'| sigma_8    =',s%s8
       print*,'| m_neu/eV   =',s%m_neu
-      print*,'| vsim2phys  =',s%vsim2phys
+      print*,'| vsim2phys  =',s%vsim2phys, '(km/s)/(1.0)'
       print*,'| z_i        =',s%z_i
       print*,'------------------------------------------------------------------------------'
+      endif
+      sync all
     endsubroutine
 
     function image1d(cx,cy,cz)

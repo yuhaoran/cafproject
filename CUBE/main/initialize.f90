@@ -34,7 +34,7 @@ sync all
 
 #ifndef readkernel
   call kernel_f
-  call kernel_c;stop
+  call kernel_c
 #else
 ! now works only for single node
   open(14,file='cubep3m_kern_f.dat',status='old',access='stream')
@@ -44,8 +44,6 @@ sync all
   read(15) kern_c
   close(15)
 #endif
-
-stop
 
 its=0
 t=0
@@ -80,5 +78,5 @@ sync all
 #ifdef mkdir
   call system('mkdir -p '//opath//'/node'//image2str(this_image()-1))
 #endif
-
+sync all
 endsubroutine

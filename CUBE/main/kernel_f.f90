@@ -25,7 +25,6 @@ subroutine kernel_f
   do i_dim=1,3
     rho_f=0
     mfactor=merge(-1,1,(/1,2,3/)==i_dim)
-    print*, mfactor
     rho_f(:nf_cutoff,:nf_cutoff,:nf_cutoff,1)=fk_table(:,:,:,i_dim)
     rho_f(nfe-nf_cutoff+2:nfe,:,:,1)=mfactor(1)*rho_f(nf_cutoff:2:-1,:,:,1)
     rho_f(:,nfe-nf_cutoff+2:nfe,:,1)=mfactor(2)*rho_f(:,nf_cutoff:2:-1,:,1)

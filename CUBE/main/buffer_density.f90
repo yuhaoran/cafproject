@@ -7,29 +7,22 @@ save
 !integer ntemp
 integer nshift,nlen,nlast,ifrom
 
-print*, 'buffer_density'
-
-! convert integer(1) density into integer(4) density with buffer: rhoc
-
-!rhoc(1:nt,1:nt,1:nt,:,:,:)=(rhoc_i1+int(-128,1))+128
-!ntemp=count(rhoc(1:nt,1:nt,1:nt,:,:,:)==255)
-!rhoc(1:nt,1:nt,1:nt,:,:,:)=unpack(rhoc_i4(:ntemp),rhoc(1:nt,1:nt,1:nt,:,:,:)==255,rhoc(1:nt,1:nt,1:nt,:,:,:))
-!print*, 'particles =', sum(rhoc)
+if (head) print*, 'buffer_density'
 
 ! sync buffer regions in rhoc for each tile
 !x
-rhoc(:0,1:nt,1:nt,1,:,:)=rhoc(nt-ncb+1:nt,1:nt,1:nt,nnt,:,:)[image1d(inx,icy,icz)]
-rhoc(:0,1:nt,1:nt,2:,:,:)=rhoc(nt-ncb+1:nt,1:nt,1:nt,:nnt-1,:,:)
-rhoc(nt+1:,1:nt,1:nt,nnt,:,:)=rhoc(1:ncb,1:nt,1:nt,1,:,:)[image1d(ipx,icy,icz)]
-rhoc(nt+1:,1:nt,1:nt,:nnt-1,:,:)=rhoc(1:ncb,1:nt,1:nt,2:,:,:)
+rhoc(:0,:,1:nt,1,:,:)=rhoc(nt-ncb+1:nt,:,1:nt,nnt,:,:)[image1d(inx,icy,icz)]
+rhoc(:0,:,1:nt,2:,:,:)=rhoc(nt-ncb+1:nt,:,1:nt,:nnt-1,:,:)
+rhoc(nt+1:,:,1:nt,nnt,:,:)=rhoc(1:ncb,:,1:nt,1,:,:)[image1d(ipx,icy,icz)]
+rhoc(nt+1:,:,1:nt,:nnt-1,:,:)=rhoc(1:ncb,:,1:nt,2:,:,:)
 sync all
 !print*, 'sync x done', sum(rhoc)
 
 !y
-rhoc(:,:0,1:nt,:,1,:)=rhoc(:,nt-ncb+1:nt,1:nt,:,nnt,:)[image1d(icx,iny,icz)]
-rhoc(:,:0,1:nt,:,2:,:)=rhoc(:,nt-ncb+1:nt,1:nt,:,1:nnt-1,:)
-rhoc(:,nt+1:,1:nt,:,nnt,:)=rhoc(:,1:ncb,1:nt,:,1,:)[image1d(icx,ipy,icz)]
-rhoc(:,nt+1:,1:nt,:,:nnt-1,:)=rhoc(:,1:ncb,1:nt,1:,2:,:)
+rhoc(:,:0,:,:,1,:)=rhoc(:,nt-ncb+1:nt,:,:,nnt,:)[image1d(icx,iny,icz)]
+rhoc(:,:0,:,:,2:,:)=rhoc(:,nt-ncb+1:nt,:,:,1:nnt-1,:)
+rhoc(:,nt+1:,:,:,nnt,:)=rhoc(:,1:ncb,:,:,1,:)[image1d(icx,ipy,icz)]
+rhoc(:,nt+1:,:,:,:nnt-1,:)=rhoc(:,1:ncb,:,1:,2:,:)
 sync all
 !print*, 'sync y done', sum(rhoc)
 
@@ -51,21 +44,17 @@ endif
 !print*, 'v before shift =', sum(v*unit8)
 
 ! move xv to the end, leave enough space for buffer
-
+!print*,sum(rhoc),npmax
 nshift=npmax-nplocal
-
 x(:,nshift+1:npmax)=x(:,1:nplocal)
 v(:,nshift+1:npmax)=v(:,1:nplocal)
-
-x(:,:nshift)=0 ! redundant
-v(:,:nshift)=0 ! redundant
+!x(:,:nshift)=0 ! redundant
+!v(:,:nshift)=0 ! redundant
 
 #ifdef PID
 pid(:,nshift+1:npmax)=pid(:,1:nplocal)
-pid(:,:nshift)=0
+!pid(:,:nshift)=0
 #endif
-
-
 
 !print*, 'x after shift=', sum(x*unit8)
 
@@ -94,12 +83,9 @@ do itx=1,nnt ! loop over tiles
     nlen=nlast-cum(0,iy,iz,itx,ity,itz)
     x(:,nlast-nlen+1:nlast)=x(:,ifrom+1:ifrom+nlen)
     v(:,nlast-nlen+1:nlast)=v(:,ifrom+1:ifrom+nlen)
-#   ifdef PID
+#ifdef PID
       pid(:,nlast-nlen+1:nlast)=pid(:,ifrom+1:ifrom+nlen)
-#   endif
-#   ifdef redundant
-      x(:,ifrom+1:ifrom+nlen)=0 ! only when (npmax>>nplocal) so won't overwrite
-#   endif
+#endif
     ifrom=ifrom+nlen
   enddo
   enddo
@@ -107,5 +93,5 @@ enddo
 enddo
 enddo
 !print*, 'redistributed local particles', sum(x*unit8)
-
+sync all
 endsubroutine buffer_density

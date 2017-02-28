@@ -71,10 +71,10 @@ subroutine kernel_c
     ck(:,nc-2:nc,nc-2:nc,nc-2:nc)=-ck_table(:,4:2:-1,4:2:-1,4:2:-1) !8 xyz
   endif
   sync all
-  if (head) print*, 'finished octants'
+  if (head) print*, '  finished octants'
 
 #ifdef LRCKCORR
-  if (head) print*, 'LRCKCORR'
+  if (head) print*, '  LRCKCORR'
   force_c(:,1:nc,1:nc,1:nc)=ck ! back up ck
   ck=0
   do k=1,nc
@@ -91,8 +91,7 @@ subroutine kernel_c
   enddo
 
   do i_dim=1,3
-    if (head) print*,'correct dim',i_dim
-
+    !if (head) print*,'correct dim',i_dim
     r3=force_c(i_dim,1:nc,1:nc,1:nc)
     call pencil_fft_forward
     kern_c(i_dim,:,:,:)=imag(cxyz)
@@ -116,9 +115,8 @@ subroutine kernel_c
     enddo
     enddo
   enddo
-
 #else
-  if (head) print*, 'without LRCKCORR'
+  if (head) print*, '  without LRCKCORR'
   do i_dim=1,3
     r3=ck(i_dim,:,:,:)
     call pencil_fft_forward
@@ -132,5 +130,5 @@ subroutine kernel_c
   write(21) kern_c
   close(21)
   !print*, 'sum of kern_c', sum(kern_c)
-
+  sync all
 endsubroutine kernel_c

@@ -105,7 +105,7 @@ program initial_conditions
   sim%cur_halo=0
 
   sim%mass_p=real(nf**3)/sim%nplocal ! will be overwritten
-  sim%v_r2i=1 ! will be overwritten
+  sim%v_i2r=1 ! will be overwritten
   sim%shake_offset=0
 
   sim%box=box
@@ -124,7 +124,8 @@ program initial_conditions
   sim%s8=s8
 
   sim%m_neu(1:3)=0
-  sim%vsim2phys=1.0/(300.*sqrt(omega_m)*box/a/2./ nf_global)
+  sim%vsim2phys=3*box*h0*sqrt(omega_m)/(2*a*nf_global)
+  ! 1.0/(300.*sqrt(omega_m)*box/a/2./ nf_global)
   sim%z_i=z_i
   sync all
 
@@ -405,7 +406,6 @@ program initial_conditions
   grad_max(2)=maxval(abs(phi(1:nf,0:nf-1,1:nf)-phi(1:nf,2:nf+1,1:nf)))
   grad_max(3)=maxval(abs(phi(1:nf,1:nf,0:nf-1)-phi(1:nf,1:nf,2:nf+1)))
   sync all
-  !print*, grad_max; sync all
   do i=1,nn**3 ! co_max
     grad_max=max(grad_max,grad_max(:)[i])
   enddo
@@ -533,7 +533,7 @@ program initial_conditions
 #endif
 
   sim%nplocal=nplocal
-  sim%v_r2i=1/v_i2r
+  sim%v_i2r=v_i2r
   rewind(12)
   write(12) sim
   close(12)
