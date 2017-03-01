@@ -17,6 +17,8 @@ integer,parameter :: NULL=0
 real,parameter :: GG=1.0/6.0/pi
 
 ! variables
+real proj_3d(nf,nf,nf)[*]
+
 integer its[*]
 real dt[*],dt_old[*],dt_mid[*]
 real dt_fine(nn**3),dt_pp(nn**3),dt_coarse(nn**3),dt_vmax(nn**3)
@@ -36,7 +38,7 @@ real mass_p
 integer(8) plan_fft_fine,plan_ifft_fine
 
 real v_i2r(3)[*],v_i2r_new(3)[*]
-real vmax(3)[*],vmax_new(3)[*]
+real vmax(3)[*],vmax_new(3)[*],buf_tile[*],buf_image[*]
 ! n^3
 #ifdef zipconvert
   integer(1) xic_new(3,npmax)

@@ -8,7 +8,7 @@ save
 integer nshift,nlen,nlast,ifrom
 
 if (head) print*, 'buffer_density'
-
+buf_image=0
 ! sync buffer regions in rhoc for each tile
 !x
 rhoc(:0,:,1:nt,1,:,:)=rhoc(nt-ncb+1:nt,:,1:nt,nnt,:,:)[image1d(inx,icy,icz)]
@@ -34,9 +34,19 @@ rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
 sync all
 !print*, 'sync z done', sum(rhoc)
 
+buf_image=sum(rhoc)/real(nfe*nnt)**3
+sync all
+
+do i=1,nn**3
+  buf_image=max(buf_image,buf_image[i])
+enddo
+if (head) print*,'  buf_image',buf_image
+sync all
+
 if (sum(rhoc)>npmax) then
-  print*, 'npmax should be set larger'
-  print*, sum(rhoc), npmax
+  print*, '  error: too many particles in this image+buffer'
+  print*, '  ',sum(rhoc),npmax
+  print*, '  on',this_image()
   stop
 endif
 

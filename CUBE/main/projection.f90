@@ -1,4 +1,4 @@
-!#define proj3d
+#define proj3d
 ! single node, fine cell, NGP projection
 subroutine projection
 use variables
@@ -7,7 +7,8 @@ save
 integer idxf(3),np
 real proj_yz(nf,nf), proj_xz(nf,nf), proj_xy(nf,nf)
 #ifdef proj3d
-  real proj_3d(nf,nf,nf)
+  !real proj_3d(nf,nf,nf)[*]
+  real proj_3d_global(nf*nn,nf*nn,nf*nn)
 #endif
 
 if (head) print*, 'projection'
@@ -48,6 +49,22 @@ enddo
 enddo
 enddo
 enddo
+sync all
+
+if (head) then
+  do k=1,nn
+  do j=1,nn
+  do i=1,nn
+print*, (i-1)*nf+1,i*nf,(j-1)*nf+1,j*nf,(k-1)*nf+1,k*nf
+    proj_3d_global((i-1)*nf+1:i*nf,(j-1)*nf+1:j*nf,(k-1)*nf+1:k*nf)=proj_3d(:,:,:)[image1d(i,j,k)]
+  enddo
+  enddo
+  enddo
+  open(11,file='proj_3d_global.bin',status='replace',access='stream')
+  write(11) proj_3d_global
+  close(11)
+endif
+
 
 !open(11,file='./output/proj_yz.dat',status='replace',access='stream')
 !write(11) proj_yz

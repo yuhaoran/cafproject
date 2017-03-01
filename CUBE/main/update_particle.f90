@@ -31,12 +31,8 @@ if (head) print*,'update_particle'
 #endif
 dt_mid=(dt_old+dt)/2
 
-  !dt_mid=dt_mid*(its)/(its+2)
 
-if (head) then
-  !print*, '  ishift,rshift,x_resolution', ishift, rshift, x_resolution
-endif
-
+buf_tile=0
 iright=0
 do itz=1,nnt ! loop over tile
 do ity=1,nnt
@@ -91,13 +87,14 @@ do itx=1,nnt
   enddo
   
   cume=cumsum3(rhoce)
+  buf_tile=max(buf_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(nfe**3))
+ 
   if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>npmax/nnt**3) then
     print*, '  error: too many particles in this tile+buffer'
     print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',npmax/nnt**3
     print*, '  on',this_image(), itx,ity,itz
     stop
   endif
-  sync all 
 
   ! create a new x and v for this local tile
 
@@ -174,10 +171,18 @@ do itx=1,nnt
 enddo
 enddo
 enddo
+
 nplocal=iright
 
-sync all
-if (head) print*, '  cleaned buffer particles'
+do i=1,nn**3
+  buf_tile=max(buf_tile,buf_tile[i])
+enddo
+
+if (head) then
+  print*, '  buf_tile',buf_tile
+  print*, '  clean buffer of rhoc'
+endif
+
 ! clean up buffer region of rhoc
 
 rhoc(:0,:,:,:,:,:)=0
@@ -188,10 +193,6 @@ rhoc(:,:,:0,:,:,:)=0
 rhoc(:,:,nt+1:,:,:,:)=0
 
 ! clean up x, v beyond nplocal
-
-nplocal=iright
-sync all
-
 x(:,nplocal+1:)=0
 v(:,nplocal+1:)=0
 #ifdef PID
