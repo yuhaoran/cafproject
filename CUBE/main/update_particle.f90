@@ -37,7 +37,6 @@ if (head) then
   !print*, '  ishift,rshift,x_resolution', ishift, rshift, x_resolution
 endif
 
-!! openmpi parallel
 iright=0
 do itz=1,nnt ! loop over tile
 do ity=1,nnt
@@ -92,6 +91,13 @@ do itx=1,nnt
   enddo
   
   cume=cumsum3(rhoce)
+  if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>npmax/nnt**3) then
+    print*, '  error: too many particles in this tile+buffer'
+    print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',npmax/nnt**3
+    print*, '  on',this_image(), itx,ity,itz
+    stop
+  endif
+  sync all 
 
   ! create a new x and v for this local tile
 
@@ -123,6 +129,7 @@ do itx=1,nnt
       !          +(x_resolution*ncell)*vrand)
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3)) ! index for writing
+
 #ifdef debug
       x_new(:,idx)=x_new(:,idx)+1
 #else
@@ -143,8 +150,9 @@ do itx=1,nnt
 #ifdef debug
   print*, sum(abs(x_new(1,1:nptile_old)-1)*1)
 #endif
-
   ! delete particles
+
+  sync all
 
   do k=1,nt
   do j=1,nt
@@ -166,7 +174,9 @@ do itx=1,nnt
 enddo
 enddo
 enddo
+nplocal=iright
 
+sync all
 if (head) print*, '  cleaned buffer particles'
 ! clean up buffer region of rhoc
 
@@ -180,6 +190,8 @@ rhoc(:,:,nt+1:,:,:,:)=0
 ! clean up x, v beyond nplocal
 
 nplocal=iright
+sync all
+
 x(:,nplocal+1:)=0
 v(:,nplocal+1:)=0
 #ifdef PID
@@ -196,9 +208,6 @@ if (head) then
   print*, '  npcheck,npglobal=', npcheck,npglobal
 endif
 
-sync all
-
-print*, '  ',nplocal,sum(rhoc),this_image()
 sync all
 
 !print*, 'nplocal, v_i2r =', iright, v_i2r

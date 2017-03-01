@@ -46,10 +46,10 @@ f2_max_coarse=0
 
 if (fine_force) then
 if (head) print*, '  pm fine'
+if (head) print*, '    first loop'
 do itz=1,nnt
 do ity=1,nnt
 do itx=1,nnt
-
   ! fine_cic_mass ---------------------------------------------------
   rho_f(:,:,:,ithread)=0
   crho_f(:,:,:,ithread)=0
@@ -112,7 +112,7 @@ do itx=1,nnt
     rho_f=rho_f/real(nfe)/real(nfe)/real(nfe)
     force_f(i_dim,:,:,:,ithread)=rho_f(nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ithread)
   enddo
-  if (head) print*, '    max force_f', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
+  ! if (head) print*, '      max force_f', maxval(abs(force_f(1,:,:,:,1))),maxval(abs(force_f(2,:,:,:,1))),maxval(abs(force_f(3,:,:,:,1)))
 
   ! max force
   f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:,ithread)**2,1))
@@ -166,12 +166,19 @@ do itx=1,nnt
 enddo
 enddo
 enddo
+sync all
 
-! create v_i2r_new in this node
+! sync vmax over images
+if (head) print*, '    co_max vmax_new over images'
+do i=1,nn**3
+  vmax_new=max(vmax_new,vmax_new(:)[i])
+enddo
 v_i2r_new=vmax_new*v_resolution
+if (head) print*, '    vmax_new =', vmax_new
+sync all
 
 
-
+if (head) print*, '    second loop'
 do itz=1,nnt
 do ity=1,nnt
 do itx=1,nnt
@@ -294,7 +301,8 @@ enddo
 enddo
 enddo
 
-! update v_i2r by v_i2r_new in this node
+! update v_i2r by v_i2r_new
+if (head) print*, '    update v_i2r by v_i2r_new'
 v_i2r=v_i2r_new
 vmax=vmax_new
 
@@ -354,6 +362,7 @@ do itx=1,nnt ! loop over tile
 enddo
 enddo
 enddo
+sync all
 !print*, 'sum of r3', sum(r3*1.d0), mass_p, ip
 
 !#ifdef debug_force
@@ -379,10 +388,10 @@ do i_dim=1,3
   !cxyz=crho*(0,1)*kern_c(i_dim,:,:,:)
   force_c(i_dim,1:nc,1:nc,1:nc)=r3
 enddo
-
+sync all
 
 ! sync force_c buffer for CIC force
-sync all
+if (head) print*, '      sync force_c buffer'
 force_c(:,0,:,:)=force_c(:,nc,:,:)[image1d(inx,icy,icz)]
 force_c(:,nc+1,:,:)=force_c(:,1,:,:)[image1d(ipx,icy,icz)]
 sync all
@@ -445,10 +454,18 @@ do itx=1,nnt ! loop over tiles
 enddo
 enddo
 enddo
+sync all
 
+! sync vmax over images
+if (head) print*, '    co_max vmax_new over images'
+do i=1,nn**3
+  vmax_new=max(vmax_new,vmax_new(:)[i])
+enddo
 v_i2r_new=vmax_new*v_resolution
+if (head) print*, '    vmax_new =', vmax_new
+sync all
 
-
+if (head) print*, '    coarse cic velocity'
 do itz=1,nnt ! loop again
 do ity=1,nnt
 do itx=1,nnt ! loop over tiles
@@ -494,16 +511,14 @@ do itx=1,nnt ! loop over tiles
 enddo
 enddo
 enddo
+sync all
+
+! update v_i2r by v_i2r_new
+if (head) print*, '    update v_i2r by v_i2r_new'
 v_i2r=v_i2r_new
 vmax=vmax_new
 
-!print*, 'coarse mesh done'
-
 endif
-
-sync all
-print*,'  vmax', vmax
-sync all
 
 f2_max_fine(1,1,1)=maxval(f2_max_fine)
 f2_max_pp(1,1,1)=maxval(f2_max_pp)
@@ -526,8 +541,8 @@ if (head) then
 endif
 
 if (head) then 
-  print*, 'particle mesh done'
-  print*, ''
+  !print*, 'particle mesh done'
+  !print*, ''
 endif
 sync all
 

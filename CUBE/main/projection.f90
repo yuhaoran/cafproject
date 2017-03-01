@@ -10,7 +10,7 @@ real proj_yz(nf,nf), proj_xz(nf,nf), proj_xy(nf,nf)
   real proj_3d(nf,nf,nf)
 #endif
 
-print*, 'projection'
+if (head) print*, 'projection'
 
 proj_yz=0
 proj_xz=0
@@ -66,5 +66,6 @@ enddo
 !write(14) proj_3d
 !close(14)
 !#endif
+sync all
 
 endsubroutine

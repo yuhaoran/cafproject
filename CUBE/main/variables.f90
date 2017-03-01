@@ -6,7 +6,7 @@ save
 
 ! parameters
 integer,parameter :: npnode=nf**3
-real,parameter :: density_buffer=1.05
+real,parameter :: density_buffer=1.5
 integer,parameter :: npmax=npnode*(nte*1./nt)**3*density_buffer
 integer,parameter ::  nseedmax=200
 real,parameter :: vbuf=0.9
