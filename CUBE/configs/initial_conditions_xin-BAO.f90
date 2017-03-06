@@ -21,7 +21,7 @@ program initial_conditions
   integer,parameter :: nyquest=nf_global/2
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
-  integer,parameter :: nk=1000
+  integer,parameter :: nk=nk_tf   !1000
   integer i,j,k,seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
   real(8) v8, norm, xq(3),gradphi(3)
@@ -148,13 +148,11 @@ program initial_conditions
   sync all
 
   ! transferfnc --------------------------------------
-  open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
-  !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
+  open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
   read(11,*) tf
   close(11)
   ! normalization
-  ! norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1) ! for Xin
-  norm=1
+  norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1)
   if (head) print*, 'Normalization factor: norm =', norm
   !Delta^2
   tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
@@ -166,15 +164,16 @@ program initial_conditions
     tf(4,k)=(tf(1,k+1)-tf(1,k-1))/2
   enddo
   tf(4,nk)=tf(1,nk)-tf(1,nk-1)
+
   v8=0
   kmax=2*pi*sqrt(3.)*nyquest/box
   do k=1,nk
     if (tf(1,k)>kmax) exit
     v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
   enddo
-!  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest ;stop
-  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
-!  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
+  if (head) print*, 's8**2/v8:', v8, s8**2/v8
+  !!tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
+  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2
   sync all
 
 
@@ -249,7 +248,6 @@ program initial_conditions
   !write(11) xi
   !close(11)
 
-
   ! delta_field ----------------------------------------------------
   if (head) print*, 'delta_field'
   if (head) print*, 'Start ftran'
@@ -282,11 +280,18 @@ program initial_conditions
   if (head) print*,'Start btran'
   call pencil_fft_backward
 
+  ! write delta_L
+
+print*, 'delta_L'
+print*, r3(1:10,1,1)
+print*, omega_m, omega_l
+
   if (head) print*,'Write delta_L into file'
   if (head) print*,'Growth factor Dgrow(a) =',Dgrow(a),a
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
+stop
 
   ! Potential field ----------------------------------------------------
   if (head) print*, 'Potential field'
@@ -314,7 +319,6 @@ program initial_conditions
   if (correct_kernel) then
     if (head) print*, 'correct kernel'
     call pencil_fft_backward
-    !print*,'kernel',rank,sum(r3*1d0)
     !open(11,file='laplace.dat',status='replace',access='stream')
     !write(11) r3
     !close(11)
@@ -344,9 +348,9 @@ program initial_conditions
     do k=1,nf
     do j=1,nf
     do i=1,nf
-      kg=k+nf*(icz-1)
+      kg=k+nf*(icx-1)
       jg=j+nf*(icy-1)
-      ig=i+nf*(icx-1)
+      ig=i+nf*(icz-1)
       kx=mod(kg+nyquest-1,nf_global)-nyquest
       ky=mod(jg+nyquest-1,nf_global)-nyquest
       kz=mod(ig+nyquest-1,nf_global)-nyquest
@@ -362,7 +366,6 @@ program initial_conditions
     enddo
     enddo
     sync all
-    !print*,'ewarld kernel',rank,sum(r3*1d0)
     call pencil_fft_forward
   endif
   ! Complex multiply density field with potential kernel
@@ -377,9 +380,6 @@ program initial_conditions
   open(11,file=ic_name('phi1'),status='replace',access='stream')
   write(11) r3
   close(11)
-
-  !print*, 'phi',rank
-  !print*, r3(1:4,1,1)
 
 !!!! DEBUG ! read same phi
 !phi=0

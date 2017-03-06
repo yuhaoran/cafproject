@@ -55,7 +55,6 @@ if (head) then
   do k=1,nn
   do j=1,nn
   do i=1,nn
-print*, (i-1)*nf+1,i*nf,(j-1)*nf+1,j*nf,(k-1)*nf+1,k*nf
     proj_3d_global((i-1)*nf+1:i*nf,(j-1)*nf+1:j*nf,(k-1)*nf+1:k*nf)=proj_3d(:,:,:)[image1d(i,j,k)]
   enddo
   enddo

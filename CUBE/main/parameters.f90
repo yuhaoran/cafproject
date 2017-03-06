@@ -81,7 +81,7 @@ module parameters
 
   real,parameter :: f_nl=0
   real,parameter :: g_nl=0
-  real,parameter :: n_s=0.9667
+  real,parameter :: n_s=0.96
   real,parameter :: scalar_amp=2.142e-9
 
   integer,parameter :: nts=400 ! maximum number of timesteps
