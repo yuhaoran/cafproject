@@ -47,6 +47,8 @@ module parameters
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
+  real,parameter :: image_buffer=2.5
+  real,parameter :: tile_buffer=2.5
 
   ! cosmological parameters
   real,parameter :: z_i=20.0   ! initial redshift

@@ -1,13 +1,12 @@
-!#define zipconvert
 module variables
 use parameters
 implicit none
 save
 
 ! parameters
-integer,parameter :: npnode=nf**3
-real,parameter :: density_buffer=2.5
-integer,parameter :: npmax=npnode*(nte*1./nt)**3*density_buffer
+integer,parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
+integer,parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
+integer,parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
 integer,parameter ::  nseedmax=200
 real,parameter :: vbuf=0.9
 real,parameter :: dt_max=1
@@ -38,23 +37,19 @@ real mass_p
 integer(8) plan_fft_fine,plan_ifft_fine
 
 real v_i2r(3)[*],v_i2r_new(3)[*]
-real vmax(3)[*],vmax_new(3)[*],buf_tile[*],buf_image[*]
+real vmax(3)[*],vmax_new(3)[*],overhead_tile[*],overhead_image[*]
 ! n^3
-#ifdef zipconvert
-  integer(1) xic_new(3,npmax)
-  integer(2) vic_new(3,npmax)
-#endif
-integer(izipx) x(3,npmax)[*], x_new(3,npmax/nnt**3)
-integer(izipv) v(3,npmax)[*], v_new(3,npmax/nnt**3)
+integer(izipx) x(3,np_image_max)[*], x_new(3,np_tile_max)
+integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
 #ifdef PID
-  integer(2) pid(4,npmax)[*], pid_new(4,npmax/nnt**3)
+  integer(2) pid(4,np_image_max)[*], pid_new(4,np_tile_max)
 #endif
 integer(1) rhoc_i1(nt,nt,nt,nnt,nnt,nnt)
 integer(4) rhoc_i4(nc**2)
 
 real rho_f(nfe+2,nfe,nfe,ncore)
 real crho_f(nfe+2,nfe,nfe,ncore)
-real kern_f(3,nfe/2+1,nfe,nfe)
+real kern_f(nfe/2+1,nfe,nfe,3)
 real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ncore)
 !integer rhoce1d(nce**3), rhoequiv(nce,nce,nce) ! rhoce is a coarray
 !equivalence(rhoequiv,rhoce1d)
@@ -68,7 +63,7 @@ integer cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
 ! coarse kernel arrays
 real ck(3,nc,nc,nc)
-real kern_c(3,nc*nn/2+1,nc,npen)
+real kern_c(nc*nn/2+1,nc,npen,3)
 real crho_c(nc*nn+2,nc,npen) !!! temp
 real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
 

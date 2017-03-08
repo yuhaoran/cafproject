@@ -30,16 +30,11 @@ subroutine kernel_f
     rho_f(:,nfe-nf_cutoff+2:nfe,:,1)=mfactor(2)*rho_f(:,nf_cutoff:2:-1,:,1)
     rho_f(:,:,nfe-nf_cutoff+2:nfe,1)=mfactor(3)*rho_f(:,:,nf_cutoff:2:-1,1)
     call sfftw_execute(plan_fft_fine)
-    kern_f(i_dim,:,:,:)=rho_f(2::2,:,:,1)
+    kern_f(:,:,:,i_dim)=rho_f(2::2,:,:,1)
   enddo
 
   !open(21,file=output_dir()//'kern_f'//output_suffix(),access='stream',status='replace')
   !write(21) kern_f
   !close(21)
-  !print*, 'sum of kern_f',&
-  ! sum(kern_f(1,:,:,:)*1.d0),&
-  ! sum(kern_f(2,:,:,:)*1.d0),&
-  ! sum(kern_f(3,:,:,:)*1.d0)
-  !print*, kern_f(1,:,1,1)
   sync all
 endsubroutine kernel_f

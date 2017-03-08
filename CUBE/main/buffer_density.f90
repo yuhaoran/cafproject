@@ -8,7 +8,7 @@ save
 integer nshift,nlen,nlast,ifrom
 
 if (head) print*, 'buffer_density'
-buf_image=0
+overhead_image=0
 ! sync buffer regions in rhoc for each tile
 !x
 rhoc(:0,:,1:nt,1,:,:)=rhoc(nt-ncb+1:nt,:,1:nt,nnt,:,:)[image1d(inx,icy,icz)]
@@ -34,19 +34,23 @@ rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
 sync all
 !print*, 'sync z done', sum(rhoc)
 
-buf_image=sum(rhoc)/real(nfe*nnt)**3
+overhead_image=sum(rhoc)/real(np_image_max)
 sync all
 
 do i=1,nn**3
-  buf_image=max(buf_image,buf_image[i])
+  overhead_image=max(overhead_image,overhead_image[i])
 enddo
-if (head) print*,'  buf_image',buf_image
+if (head) then
+  print*, '  image overhead',overhead_image*100,'% full'
+  print*, '  comsumed image_buffer =',overhead_image*image_buffer,'/',image_buffer
+endif
 sync all
 
-if (sum(rhoc)>npmax) then
+if (sum(rhoc)>np_image_max) then
   print*, '  error: too many particles in this image+buffer'
-  print*, '  ',sum(rhoc),npmax
+  print*, '  ',sum(rhoc),np_image_max
   print*, '  on',this_image()
+  print*, '  please set image_buffer larger'
   stop
 endif
 
@@ -54,15 +58,15 @@ endif
 !print*, 'v before shift =', sum(v*unit8)
 
 ! move xv to the end, leave enough space for buffer
-!print*,sum(rhoc),npmax
-nshift=npmax-nplocal
-x(:,nshift+1:npmax)=x(:,1:nplocal)
-v(:,nshift+1:npmax)=v(:,1:nplocal)
+!print*,sum(rhoc),np_image_max
+nshift=np_image_max-nplocal
+x(:,nshift+1:np_image_max)=x(:,1:nplocal)
+v(:,nshift+1:np_image_max)=v(:,1:nplocal)
 !x(:,:nshift)=0 ! redundant
 !v(:,:nshift)=0 ! redundant
 
 #ifdef PID
-pid(:,nshift+1:npmax)=pid(:,1:nplocal)
+pid(:,nshift+1:np_image_max)=pid(:,1:nplocal)
 !pid(:,:nshift)=0
 #endif
 
@@ -70,7 +74,7 @@ pid(:,nshift+1:npmax)=pid(:,1:nplocal)
 
 #ifdef debug
   x=0
-  x(1,npmax-nplocal+1:npmax)=1 ! only count particles
+  x(1,np_image_max-nplocal+1:np_image_max)=1 ! only count particles
 #endif
 
 cum=cumsum6(rhoc)

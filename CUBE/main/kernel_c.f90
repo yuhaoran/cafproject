@@ -94,7 +94,7 @@ subroutine kernel_c
     !if (head) print*,'correct dim',i_dim
     r3=force_c(i_dim,1:nc,1:nc,1:nc)
     call pencil_fft_forward
-    kern_c(i_dim,:,:,:)=imag(cxyz)
+    kern_c(:,:,:,i_dim)=imag(cxyz)
 
     r3=ck(i_dim,:,:,:)
     call pencil_fft_forward
@@ -108,8 +108,8 @@ subroutine kernel_c
       kx=mod((/ig,jg,kg/)+ncglobal/2-1,ncglobal)-ncglobal/2
       kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
       kx_sin=2*sin(pi*kx/real(ncglobal))
-      kern_c(i_dim,i,j,k)=merge(kern_c(i_dim,i,j,k), &
-        kern_c(i_dim,i,j,k)*0.25*pi*kx_sin(i_dim)/sum(kx_sin**2)/imag(cxyz(i,j,k)), &
+      kern_c(i,j,k,i_dim)=merge(kern_c(i,j,k,i_dim), &
+        kern_c(i,j,k,i_dim)*0.25*pi*kx_sin(i_dim)/sum(kx_sin**2)/imag(cxyz(i,j,k)), &
         (kr>8.0 .or. kx(i_dim)==0))
     enddo
     enddo
@@ -120,7 +120,7 @@ subroutine kernel_c
   do i_dim=1,3
     r3=ck(i_dim,:,:,:)
     call pencil_fft_forward
-    kern_c(i_dim,:,:,:)=imag(cxyz)
+    kern_c(:,:,:,i_dim)=imag(cxyz)
   enddo
 #endif
 

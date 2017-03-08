@@ -32,7 +32,7 @@ if (head) print*,'update_particle'
 dt_mid=(dt_old+dt)/2
 
 
-buf_tile=0
+overhead_tile=0
 iright=0
 do itz=1,nnt ! loop over tile
 do ity=1,nnt
@@ -87,12 +87,13 @@ do itx=1,nnt
   enddo
   
   cume=cumsum3(rhoce)
-  buf_tile=max(buf_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(nfe**3))
+  overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max))
  
-  if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>npmax/nnt**3) then
+  if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>np_tile_max) then
     print*, '  error: too many particles in this tile+buffer'
-    print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',npmax/nnt**3
+    print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',np_tile_max
     print*, '  on',this_image(), itx,ity,itz
+    print*, '  please set tile_buffer larger'
     stop
   endif
 
@@ -175,11 +176,12 @@ enddo
 nplocal=iright
 
 do i=1,nn**3
-  buf_tile=max(buf_tile,buf_tile[i])
+  overhead_tile=max(overhead_tile,overhead_tile[i])
 enddo
 
 if (head) then
-  print*, '  buf_tile',buf_tile
+  print*, '  tile overhead',overhead_tile*100,'% full'
+  print*, '  comsumed tile_buffer =',overhead_tile*tile_buffer,'/',tile_buffer
   print*, '  clean buffer of rhoc'
 endif
 

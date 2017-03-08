@@ -39,6 +39,8 @@ subroutine particle_initialization
   enddo
   mass_p=real((nf*nn)**3)/npglobal
 
+  print*,'  from image',this_image(),'read',nplocal,' particles'
+  sync all
   if (head) then
     print*, '  npglobal =', npglobal
     print*, '  mass_p=', mass_p
@@ -54,6 +56,4 @@ subroutine particle_initialization
   endif
   sync all
 
-  print*,'  ',nplocal,sum(rhoc),this_image()
-  sync all
 endsubroutine
