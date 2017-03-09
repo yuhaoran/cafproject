@@ -30,6 +30,8 @@ module parameters
     integer,parameter :: ng=nc ! coarse grid fft, for N-body main code
 # endif
   integer,parameter :: npen=ng/nn ! ng /dim in shorter side of the pencil, for pencil decomposition
+  integer,parameter :: ng_global=ng*nn
+  integer,parameter :: nyquest=ng_global/2
 
   integer,parameter :: ncore=1 ! number of cores per image
   integer,parameter :: n_nest=4 ! number of nested threads

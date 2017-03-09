@@ -1,3 +1,4 @@
+! because pos0 could be in adjacent node, this code works for single node only.
 #define linear_kbin
 
 !#define remove_ny
@@ -11,7 +12,9 @@ save
 ! nf: fine grid per node per dim
 
 integer i,j,k,l,i_dim,dim_1,dim_2,dim_3
-integer nplocal
+integer nplocal[*]
+real(8) masslocal[*],massglobal
+integer(8) npglobal
 integer,parameter :: npnode=nf**3 ! only true for this project
 real,parameter :: density_buffer=1.2
 integer,parameter :: npmax=npnode*density_buffer
@@ -46,8 +49,8 @@ complex pdim, ekx(3)
 call geometry
 
 if (head) then
-  print*, 'Displacement field analysis on resolution:'
-  print*, 'ng=',ng
+  print*, 'Displacement field analysis on',nn**3,'images'
+  print*, 'Resolution ng*nn=',ng*nn
 endif
 
 sync all
@@ -83,13 +86,20 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   endif
   read(12) rhoc ! coarse grid density
   close(12)
-
-  mass_p=sim%mass_p
-  if (head) print*, 'mass_p =',mass_p
-
-  !print*, sum(rhoc), sim%nplocal
   nplocal=sim%nplocal
-  if (head) print*, 'nplocal =',nplocal
+  npglobal=0
+  do i=1,nn**3
+    npglobal=npglobal+nplocal[i]
+  enddo
+  print*,'  from image',this_image(),'read',nplocal,' particles'
+  sync all
+  mass_p=sim%mass_p
+  if (head) then
+    print*, 'npglobal =',npglobal
+    print*, 'mass_p =',mass_p
+  endif
+  sync all
+  !print*, sum(rhoc), sim%nplocal
 
   open(10,file=output_name('zip0'),status='old',action='read',access='stream')
   read(10) x(:,:nplocal) ! particle Eulerian positions
@@ -105,11 +115,12 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   dsp=0 ! CIC disp
   !dsp_e=0
   nlast=0
+  sync all
 
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-  if (head) print*, 'CIC interpolation on tile'
+  if (head) print*, 'CIC interpolation on tile',itx,ity,itz
   do k=1,nt
   do j=1,nt
   do i=1,nt
@@ -121,7 +132,6 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
       icnode(3)=irank/(nn**2)
       icnode(2)=(irank-nn**2*icnode(3))/nn
       icnode(1)=mod(irank,nn)
-
       pos0=real(ng)*icnode + real(ng)*(real(pid(2:4,ip))+0.5+2**15)/2**16
       pos1=nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + ((x(:,ip)+ishift)+rshift)*x_resolution
       pos1=real(ng)*((/icx,icy,icz/)-1) + pos1*real(ng)/real(nc)
@@ -136,10 +146,12 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
                          ! then the divergence will be done between current- and right-grid.
 !#endif
       idx1=floor(pos0)+1
-      idx2=idx1+1
       dx1=idx1-pos0
       dx2=1-dx1
 
+      idx1=idx1-ng*icnode
+      idx2=idx1+1
+print*,this_image(),pos0;stop
       ! CIC dsp_{-}
       dsp(:,idx1(1),idx1(2),idx1(3))=dsp(:,idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*dpos
       dsp(:,idx2(1),idx1(2),idx1(3))=dsp(:,idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*dpos
@@ -161,9 +173,10 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
       ! CIC final density
       pos1=pos1-0.5
       idx1=floor(pos1)+1
-      idx2=idx1+1
       dx1=idx1-pos1
       dx2=1-dx1
+      idx1=idx1-ng*((/icx,icy,icz/)-1)
+      idx2=idx1+1
       rho_grid(idx1(1),idx1(2),idx1(3))=rho_grid(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p
       rho_grid(idx2(1),idx1(2),idx1(3))=rho_grid(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p
       rho_grid(idx1(1),idx2(2),idx1(3))=rho_grid(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p
@@ -181,10 +194,16 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   enddo
   enddo
   enddo
+  sync all
 
-  print*, 'sum of rho_grid',sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
-  print*, 'Start sync from buffer regions'
-  print*, '  dsp'
+  !print*, this_image(),'sum of rho_grid',sum(rho_grid*1d0)
+  !sync all
+
+print*, minval(rho_0(1:ng,1:ng,1:ng))
+sync all
+stop
+
+  if (head) print*, 'Start sync from buffer regions'
   sync all
   ! buffer dsp
   dsp(:,1,:,:)=dsp(:,1,:,:)+dsp(:,ng+1,:,:)[image1d(inx,icy,icz)]
@@ -198,7 +217,6 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   sync all
 
   ! buffer fine density
-  print*, '  rho_0'
   rho_0(1,:,:)=rho_0(1,:,:)+rho_0(ng+1,:,:)[image1d(inx,icy,icz)]
   rho_0(ng,:,:)=rho_0(ng,:,:)+rho_0(0,:,:)[image1d(ipx,icy,icz)]
   sync all
@@ -208,7 +226,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   rho_0(:,:,1)=rho_0(:,:,1)+rho_0(:,:,ng+1)[image1d(icx,icy,inz)]
   rho_0(:,:,ng)=rho_0(:,:,ng)+rho_0(:,:,0)[image1d(icx,icy,ipz)]
   sync all
-  print*, '  rho_grid'
+
   rho_grid(1,:,:)=rho_grid(1,:,:)+rho_grid(ng+1,:,:)[image1d(inx,icy,icz)]
   rho_grid(ng,:,:)=rho_grid(ng,:,:)+rho_grid(0,:,:)[image1d(ipx,icy,icz)]
   sync all
@@ -219,22 +237,29 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   rho_grid(:,:,ng)=rho_grid(:,:,ng)+rho_grid(:,:,0)[image1d(icx,icy,ipz)]
   sync all
 
-  print*, 'sum of rho_grid = '
-  print*, sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
-  rho_grid=rho_grid/(sum(rho_grid(1:ng,1:ng,1:ng)*1d0)/ng**3)-1
+  !print*, this_image(),'sum of rho_grid = ',sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
+  masslocal=sum(rho_grid(1:ng,1:ng,1:ng)*1d0)
+  sync all
+
+  massglobal=0
+  do i=1,nn**3
+    massglobal=massglobal+masslocal[i]
+  enddo
+  if (head) print*,'massglobal =',massglobal
+
+  rho_grid=rho_grid/(massglobal/ng/ng/ng)-1
   cube2=rho_grid(1:ng,1:ng,1:ng)
+  sync all
 
   if (head) print*,'Write delta_N into file'
   open(15,file=output_name('delta_nbody'),status='replace',access='stream')
-  write(15) sum(cube2,3)/ng
+  write(15) cube2
   close(15)
-  print*,'cube2',cube2(:10,1,1)
-
 
   do i_dim=1,3
     dsp(i_dim,1:ng,1:ng,1:ng)=dsp(i_dim,1:ng,1:ng,1:ng)/rho_0(1:ng,1:ng,1:ng)
-    print*, 'dsp: dim',int(i_dim,1),'min,max values ='
-    print*, minval(dsp(i_dim,1:ng,1:ng,1:ng)), maxval(dsp(i_dim,1:ng,1:ng,1:ng))
+    !print*, 'dsp: dim',int(i_dim,1),'min,max values ='
+    !print*, minval(dsp(i_dim,1:ng,1:ng,1:ng)), maxval(dsp(i_dim,1:ng,1:ng,1:ng))
   enddo
 
   if (head) print*,'Write dsp into file'
@@ -243,6 +268,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   write(15) dsp(2,1:ng,1:ng,1:ng)
   write(15) dsp(3,1:ng,1:ng,1:ng)
   close(15)
+  sync all
 
   if (head) print*,'Start reconstructing delta_R'
   cphi=0
@@ -250,6 +276,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   do i_dim=1,3
     if (head) print*,'Start working on dim',int(i_dim,1)
     r3=dsp(i_dim,1:ng,1:ng,1:ng)
+    sync all
     if (head) print*,'start forward tran'
     call pencil_fft_forward
     if (head) print*,'loop over k'
@@ -260,14 +287,14 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
       kg=(nn*(icz-1)+icy-1)*npen+k
       jg=(icx-1)*ng+j
       ig=i
-      kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
+      kx=mod((/ig,jg,kg/)+ng_global/2-1,ng_global)-ng_global/2
       kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
-      ekx=exp(2*pi*(0,1)*kx/ng)
+      ekx=exp(2*pi*(0,1)*kx/ng_global)
       dim_1=i_dim
       dim_2=mod(dim_1,3)+1
       dim_3=mod(dim_2,3)+1
       pdim=(ekx(dim_1)-1)*(ekx(dim_2)+1)*(ekx(dim_3)+1)/4
-      cphi(i,j,k)=cphi(i,j,k)+cxyz(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
+      cphi(i,j,k)=cphi(i,j,k)+cxyz(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng_global)**2)+0.000001)
       cdiv(i,j,k)=cdiv(i,j,k)+cxyz(i,j,k)*pdim
     enddo
     enddo
@@ -298,7 +325,7 @@ do cur_checkpoint= n_checkpoint,n_checkpoint
   cube1=-r3
   if (head) print*,'Write delta_R into file'
   open(15,file=output_name('delta_E'),status='replace',access='stream')
-  write(15) sum(cube1,3)/ng
+  write(15) cube1
   close(15)
   sync all
 

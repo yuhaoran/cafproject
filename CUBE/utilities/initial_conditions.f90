@@ -17,8 +17,7 @@ program initial_conditions
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
 
-  integer,parameter :: nf_global=nf*nn
-  integer,parameter :: nyquest=nf_global/2
+  integer,parameter :: nf_global=ng_global
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
   integer,parameter :: nk=1000

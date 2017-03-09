@@ -49,5 +49,13 @@ close(14)
 #endif
 
 sync all
+print*,'  image',this_image(),'write',nplocal,'particles'
+npglobal=0
+do i=1,nn**3
+  npglobal=npglobal+nplocal[i]
+enddo
+sync all
+if (head) print*, '  npglobal =',npglobal
+sync all
 
 endsubroutine
