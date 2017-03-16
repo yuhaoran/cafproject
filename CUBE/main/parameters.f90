@@ -17,7 +17,7 @@ module parameters
   integer,parameter :: nn=2 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
   integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer,parameter :: nf=nc*ncell ! >=96
@@ -49,15 +49,15 @@ module parameters
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
-  real,parameter :: image_buffer=2.5
-  real,parameter :: tile_buffer=2.5
+  real,parameter :: image_buffer=1.5
+  real,parameter :: tile_buffer=2.0
 
   ! cosmological parameters
   real,parameter :: z_i=20.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=100.0  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=200.0  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim

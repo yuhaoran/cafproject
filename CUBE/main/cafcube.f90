@@ -9,10 +9,11 @@ use pm
 implicit none
 save
 
-integer istep, hostnm,ierr
-character(100) :: myhost
-
 if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'  images'
+sync all
+call system('hostname')
+sync all
+
 call initialize
 call particle_initialization
 

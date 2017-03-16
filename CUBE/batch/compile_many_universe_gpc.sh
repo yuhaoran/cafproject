@@ -1,8 +1,8 @@
 ##!/bin/bash
 
 # Note that this is in Fortran convension
-n1=1001  # first universe to compile
-n2=1003  # last universe to compile
+n1=1  # first universe to compile
+n2=1  # last universe to compile
 
 # make directories for executables
 mkdir -p many/
@@ -21,10 +21,10 @@ do
   cd ../utilities/
   source module_load_intel.sh
   make clean
-  make
+  make ic.x
   mv ic.x ../batch/many/ic_universe$i.x
-  mv dsp.x ../batch/many/dsp_universe$i.x
-  mv convert.x ../batch/many/convert_universe$i.x
+  #mv dsp.x ../batch/many/dsp_universe$i.x
+  #mv convert.x ../batch/many/convert_universe$i.x
 
   cd ../main/
   make clean

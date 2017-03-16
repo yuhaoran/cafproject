@@ -7,8 +7,7 @@ save
 integer idxf(3),np
 real proj_yz(nf,nf), proj_xz(nf,nf), proj_xy(nf,nf)
 #ifdef proj3d
-  !real proj_3d(nf,nf,nf)[*]
-  real proj_3d_global(nf*nn,nf*nn,nf*nn)
+  real den(nf,nf,nf)
 #endif
 
 if (head) print*, 'projection'
@@ -17,7 +16,7 @@ proj_yz=0
 proj_xz=0
 proj_xy=0
 #ifdef proj3d
-  proj_3d=0
+  den=0
 #endif
 
 ip=0
@@ -40,7 +39,7 @@ do i=1,nt
     proj_xz(idxf(1),idxf(3))=proj_xz(idxf(1),idxf(3))+1
     proj_xy(idxf(1),idxf(2))=proj_xy(idxf(1),idxf(2))+1
 #ifdef proj3d
-    proj_3d(idxf(1),idxf(2),idxf(3))=proj_3d(idxf(1),idxf(2),idxf(3))+1
+    den(idxf(1),idxf(2),idxf(3))=den(idxf(1),idxf(2),idxf(3))+1
 #endif
   enddo
 enddo
@@ -51,18 +50,9 @@ enddo
 enddo
 sync all
 
-if (head) then
-  do k=1,nn
-  do j=1,nn
-  do i=1,nn
-    proj_3d_global((i-1)*nf+1:i*nf,(j-1)*nf+1:j*nf,(k-1)*nf+1:k*nf)=proj_3d(:,:,:)[image1d(i,j,k)]
-  enddo
-  enddo
-  enddo
-  open(11,file='proj_3d_global.bin',status='replace',access='stream')
-  write(11) proj_3d_global
-  close(11)
-endif
+open(11,file=output_name('den'),status='replace',access='stream')
+write(11) den
+close(11)
 
 
 !open(11,file='./output/proj_yz.dat',status='replace',access='stream')

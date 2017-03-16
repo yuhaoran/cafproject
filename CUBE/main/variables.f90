@@ -16,9 +16,7 @@ integer,parameter :: NULL=0
 real,parameter :: GG=1.0/6.0/pi
 
 ! variables
-real proj_3d(nf,nf,nf)[*]
-
-integer its[*]
+integer its[*], istep
 real dt[*],dt_old[*],dt_mid[*]
 real dt_fine(nn**3),dt_pp(nn**3),dt_coarse(nn**3),dt_vmax(nn**3)
 real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
@@ -44,8 +42,6 @@ integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
 #ifdef PID
   integer(2) pid(4,np_image_max)[*], pid_new(4,np_tile_max)
 #endif
-integer(1) rhoc_i1(nt,nt,nt,nnt,nnt,nnt)
-integer(4) rhoc_i4(nc**2)
 
 real rho_f(nfe+2,nfe,nfe,ncore)
 real crho_f(nfe+2,nfe,nfe,ncore)
