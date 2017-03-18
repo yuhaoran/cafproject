@@ -85,10 +85,10 @@ do itx=1,nnt
   enddo
   enddo
   enddo
-  
+
   cume=cumsum3(rhoce)
   overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max))
- 
+
   if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>np_tile_max) then
     print*, '  error: too many particles in this tile+buffer'
     print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',np_tile_max

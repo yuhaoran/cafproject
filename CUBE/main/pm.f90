@@ -94,13 +94,6 @@ do itx=1,nnt
   enddo
   enddo
 
-  !!! print*, 'real-space rho_f =', sum(rho_f*1.d0), maxval(rho_f)
-#ifdef write_file
-  open(10,file='testrhof.dat',status='replace',access='stream')
-  write(10) rho_f(:nfe,:,:,1)
-  close(10)
-#endif
-
   ! fine force --------------------------------------------------------
   call sfftw_execute(plan_fft_fine)
 !  print*, 'sum of Fourier-space rho_f =', sum(rho_f*1d0), maxval(rho_f)
@@ -540,10 +533,6 @@ if (head) then
   dt_vmax=vbuf*20/maxval(dt_vmax)
 endif
 
-if (head) then 
-  !print*, 'particle mesh done'
-  !print*, ''
-endif
 sync all
 
 endsubroutine

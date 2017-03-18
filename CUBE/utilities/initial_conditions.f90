@@ -227,7 +227,7 @@ program initial_conditions
   write(11) r3
   close(11)
   print*, r3(1:4,1,1),this_image()
-#ENDIF
+#endif
 
   ! Box-Muller transform ----------------------------------------------
   if (head) print*,'Box-Muller transform'
@@ -433,7 +433,7 @@ program initial_conditions
       stop
     endif
   endif
-    
+
   sync all
 
   ! create particles (no communication) ----------------------------
@@ -537,7 +537,7 @@ program initial_conditions
   enddo
   enddo
   enddo
-  
+
   close(10)
   close(11)
 #ifdef PID
@@ -559,7 +559,7 @@ program initial_conditions
   if (head) print*, 'npglobal =',npglobal
   sim%mass_p=real(nf_global**3,kind=8)/npglobal
   call print_header(sim)
-  
+
   if (head) print*, 'initial condition done'
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -29,7 +29,7 @@ if (head) then
     endif
     if (ntemp>10) exit
   enddo
-  
+
   dt=min(dt_e,dt_fine(1),dt_coarse(1),dt_pp(1),dt_vmax(1))
   call expansion(a,dt,da_1,da_2)
 
@@ -38,7 +38,6 @@ if (head) then
   ! check if checkpointing is needed
   checkpoint_step=.false.
 
-  
   a_checkpoint=1.0/(1+z_checkpoint(cur_checkpoint))
   !if (a+da>a_checkpoint) then
   !  checkpoint_step=.true.
