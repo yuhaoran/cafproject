@@ -17,12 +17,13 @@ program initial_conditions
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
 
+  integer,parameter :: nf_global=ng_global
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
   integer,parameter :: nk=1000
   integer i,j,k,seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
-  real(8) v8, norm, xq(3),gradphi(3),vreal(3)
+  real(8) v8, norm, xq(3),gradphi(3)
   integer(int64) :: time64
 
   integer nplocal[*]
@@ -61,7 +62,6 @@ program initial_conditions
     integer(2) pid(4,npmax)
 #endif
   real grad_max(3)[*],vmax(3),v_i2r(3),vf
-  real vdisp(506,2),sigma_vi
 
   character (10) :: img_s, z_s
 
@@ -131,7 +131,7 @@ program initial_conditions
 
   ! initialize variables ------------------------------
   if (np_2n3) then
-    nf_shake=1
+    nf_shake=(ncell/np_nc)/2
   else
     nf_shake=0
   endif
@@ -436,16 +436,6 @@ program initial_conditions
 
   sync all
 
-  open(23,file='../velocity_conversion/vdisp.bin',access='stream')
-  read(23) vdisp
-  close(23)
-  vdisp(:,2)=vdisp(:,2)*vdisp(:,1)/1.5/box/h0/sqrt(omega_m)*real(nf_global)/sqrt(3.)
-  sigma_vi=interp_vdisp(a)
-  if (head) print*,'sigma_vi',sigma_vi
-
-
-  sync all
-
   ! create particles (no communication) ----------------------------
   if (head) print*, 'Create particles'
   open(10,file=ic_name('zip0'),status='replace',access='stream')
@@ -498,17 +488,8 @@ program initial_conditions
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-      x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=izipx)
-      vreal=-gradphi/(8*pi)*vf
-        !v(:,idx)=nint(-gradphi/(8*pi)*vf/v_i2r,kind=izipv)
-      !print*,'  idx', idx
-      !print*, '  vreal', vreal
-        !print*, v(:,idx)
-        !print*,''
-      v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
-      !print*, '  v_integer', v(:,idx)
-      !print*, '  vreal',tan(pi*real(v(:,idx))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
-      !stop
+      x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution)
+      v(:,idx)=nint(-gradphi/(8*pi)*vf/v_i2r,kind=izipv)
 #ifdef PID
       pid(1,idx)=this_image()-1
       pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove )/nf*2**(8*izipx)-2**(8*izipx-1))
@@ -602,23 +583,6 @@ program initial_conditions
   enddo
   enddo
   endfunction cumsum3
-
-  real function interp_vdisp(aa)
-  implicit none
-  integer ii,i1,i2
-  real aa
-  i1=1
-  i2=506
-  do while (i2-i1>1)
-    ii=(i1+i2)/2
-    if (aa>vdisp(ii,1)) then
-      i1=ii
-    else
-      i2=ii
-    endif
-  enddo
-  interp_vdisp=vdisp(i1,2)+(vdisp(i2,2)-vdisp(i1,2))*(aa-vdisp(i1,1))/(vdisp(i2,1)-vdisp(i1,1))
-  endfunction
 
   function interp_tf(kr,ix,iy)
   implicit none

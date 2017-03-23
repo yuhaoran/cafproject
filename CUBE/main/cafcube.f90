@@ -23,28 +23,32 @@ call buffer_density
 call buffer_x
 call buffer_v
 
-if (head) open(77,file='vel_info.bin',access='stream',status='replace')
+#ifdef LINEAR_V
+  if (head) open(77,file='vel_info.bin',access='stream',status='replace')
+#endif
 
 if (head) print*, '---------- starting main loop ----------'
 DO istep=1,1000
   call timestep
   call update_particle
 
-  ! velocity analysis
-  print*,'velocity analysis'
-  print*,'  scale factor',a,a_mid
+#ifdef LINEAR_V
+    ! velocity analysis
+    print*,'velocity analysis'
+    print*,'  scale factor',a,a_mid
 
-  abs_vsim= sqrt((v(1,:nplocal)*v_i2r(1))**2 &
-                +(v(2,:nplocal)*v_i2r(2))**2 &
-                +(v(3,:nplocal)*v_i2r(3))**2)
-  max_vsim=maxval(abs_vsim)
-  std_vsim=sqrt(sum(abs_vsim**2/nplocal*1d0))
-  kurt_vsim=sum(abs_vsim**4*1d0/nplocal)/std_vsim**4
-  print*,'  vmax',max_vsim
-  print*,'   std',std_vsim
-  print*,'  kurt',kurt_vsim
+    abs_vsim= sqrt((v(1,:nplocal)*v_i2r(1))**2 &
+                  +(v(2,:nplocal)*v_i2r(2))**2 &
+                  +(v(3,:nplocal)*v_i2r(3))**2)
+    max_vsim=maxval(abs_vsim)
+    std_vsim=sqrt(sum(abs_vsim**2/nplocal*1d0))
+    kurt_vsim=sum(abs_vsim**4*1d0/nplocal)/std_vsim**4
+    print*,'  vmax',max_vsim
+    print*,'   std',std_vsim
+    print*,'  kurt',kurt_vsim
 
-  write(77) a-da,std_vsim,max_vsim,kurt_vsim
+    write(77) a-da,std_vsim,max_vsim,kurt_vsim
+#endif
 
   sync all
   call buffer_density
@@ -67,7 +71,9 @@ DO istep=1,1000
   endif
 ENDDO
 
-if (head) close(77)
+#ifdef LINEAR_V
+  if (head) close(77)
+#endif
 
 call finalize
 

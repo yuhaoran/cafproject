@@ -27,7 +27,7 @@ integer itx,ity,itz,ix,iy,iz,i_dim
 integer i,j,k,l,ip,ipp,pp
 integer nplocal[*], nptile(nnt,nnt,nnt)
 integer(8) npglobal, npcheck
-real(8) xq(3),deltax(3),deltav(3)
+real(8) xq(3),deltax(3),deltav(3),vreal(3)
 
 real mass_p
 
@@ -36,6 +36,7 @@ integer(8) plan_fft_fine,plan_ifft_fine
 
 real v_i2r(3)[*],v_i2r_new(3)[*]
 real vmax(3)[*],vmax_new(3)[*],overhead_tile[*],overhead_image[*]
+real vdisp(506,2),sigma_vi_old,sigma_vi
 ! n^3
 integer(izipx) x(3,np_image_max)[*], x_new(3,np_tile_max)
 integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
@@ -105,6 +106,23 @@ contains
     enddo
     enddo
     enddo
+  endfunction
+
+  real function interp_vdisp(aa)
+    implicit none
+    integer ii,i1,i2
+    real aa
+    i1=1
+    i2=506
+    do while (i2-i1>1)
+      ii=(i1+i2)/2
+      if (aa>vdisp(ii,1)) then
+        i1=ii
+      else
+        i2=ii
+      endif
+    enddo
+    interp_vdisp=vdisp(i1,2)+(vdisp(i2,2)-vdisp(i1,2))*(aa-vdisp(i1,1))/(vdisp(i2,1)-vdisp(i1,1))
   endfunction
 
 

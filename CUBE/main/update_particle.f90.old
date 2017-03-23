@@ -73,13 +73,7 @@ do itx=1,nnt
       !  + dt_mid*v(:,ip)*v_i2r(:)/4. &
       !  )
       xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
-      !deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
-      vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-      !print*, tan(pi*(/-2166.,-6949.,-16286./)/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-      !stop
-      !deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
-      deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
-
+      deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
       g=ceiling(xq+deltax)
       !g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r/4 &
       !          +(x_resolution*ncell)*vrand)
@@ -127,9 +121,7 @@ do itx=1,nnt
       vrand=0
 #endif
       xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
-      vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-      !deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
-      deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
+      deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
       g=ceiling(xq+deltax)
       !g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r(:)/4 &
       !          +(x_resolution*ncell)*vrand)
@@ -139,8 +131,8 @@ do itx=1,nnt
 #ifdef debug
       x_new(:,idx)=x_new(:,idx)+1
 #else
-      !x_new(:,idx)=x(:,ip)+nint(dt_mid*v(:,ip)*v_i2r(:)/(x_resolution*ncell) + vrand)
-      x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell) + vrand)
+      x_new(:,idx)=x(:,ip)+nint(dt_mid*v(:,ip)*v_i2r(:)/(x_resolution*ncell) &
+                                + vrand)
 #endif
 			v_new(:,idx)=v(:,ip)
 #ifdef PID

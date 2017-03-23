@@ -44,14 +44,6 @@ f2_max_fine=0
 f2_max_pp=0
 f2_max_coarse=0
 
-sigma_vi=interp_vdisp(a+da)
-
-if (head) then
-  print*, '  a, sigma_vi_old =',a,sigma_vi_old
-  print*, '  a+da,  sigma_vi =',a+da, sigma_vi
-endif
-sync all
-
 if (fine_force) then
 if (head) print*, '  pm fine'
 if (head) print*, '    first loop'
@@ -140,8 +132,7 @@ do itx=1,nnt
       idx1=idx1+nfb
       idx2=idx2+nfb ! positive integer indeces
 
-      !vtemp=v(:,ip)*v_i2r
-      vtemp=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+      vtemp=v(:,ip)*v_i2r
       vtemp=vtemp+force_f(:,idx1(1),idx1(2),idx1(3),ithread)*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
       vtemp=vtemp+force_f(:,idx2(1),idx1(2),idx1(3),ithread)*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
       vtemp=vtemp+force_f(:,idx1(1),idx2(2),idx1(3),ithread)*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -262,8 +253,7 @@ do itx=1,nnt
       dx2 = 1 - dx1
       idx1=idx1+nfb
       idx2=idx2+nfb ! positive integer indeces
-      !vtemp=v(:,ip)*v_i2r
-      vtemp=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+      vtemp=v(:,ip)*v_i2r
 
       !print*, force_f(:,idx1(1),idx1(2),idx1(3),ithread)
       !print*, force_f(:,idx2(1),idx1(2),idx1(3),ithread)
@@ -294,8 +284,7 @@ do itx=1,nnt
       vtemp=vtemp+force_f(:,idxf(1),idxf(2),idxf(3),ithread)*a_mid*dt/6/pi
       !print*, 'v', vtemp
 #endif
-      !v(:,ip)=nint(vtemp/v_i2r_new,kind=izipv)
-      v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vtemp)/pi,kind=izipv)
+      v(:,ip)=nint(vtemp/v_i2r_new,kind=izipv)
     enddo
   enddo
   enddo
@@ -314,8 +303,6 @@ vmax=vmax_new
 !print*,'vmax', vmax
 
 endif
-
-sigma_vi_old=sigma_vi
 
 sync all
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -433,8 +420,7 @@ do itx=1,nnt ! loop over tiles
       idx2(:)=idx1(:)+1
       dx1(:)=idx1(:)-tempx(:)
       dx2(:)=1-dx1(:)
-      !vtemp=v(:,ip)*v_i2r
-      vtemp=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
+      vtemp=v(:,ip)*v_i2r
       vtemp=vtemp+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
       vtemp=vtemp+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
       vtemp=vtemp+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -490,8 +476,7 @@ do itx=1,nnt ! loop over tiles
       idx2(:)=idx1(:)+1
       dx1(:)=idx1(:)-tempx(:)
       dx2(:)=1-dx1(:)
-      !vtemp=v(:,ip)*v_i2r
-      vtemp=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
+      vtemp=v(:,ip)*v_i2r
       vtemp=vtemp+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
       vtemp=vtemp+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
       vtemp=vtemp+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -510,8 +495,8 @@ do itx=1,nnt ! loop over tiles
       !print*, 'v',vtemp
 #endif
 
-      !v(:,ip)=nint(vtemp/v_i2r_new,kind=izipv)
-      v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vtemp)/pi,kind=izipv)
+      v(:,ip)=nint(vtemp/v_i2r_new,kind=izipv)
+
     enddo
   enddo
   enddo

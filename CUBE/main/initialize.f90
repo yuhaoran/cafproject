@@ -79,4 +79,14 @@ sync all
   call system('mkdir -p '//opath//'/node'//image2str(this_image()-1))
 #endif
 sync all
+
+open(23,file='../velocity_conversion/vdisp.bin',access='stream')
+read(23) vdisp
+close(23)
+vdisp(:,2)=vdisp(:,2)*vdisp(:,1)/1.5/box/h0/sqrt(omega_m)*real(nf_global)/sqrt(3.)
+sigma_vi_old=interp_vdisp(a_i)
+sigma_vi=interp_vdisp(a_i)
+!if (head) print*,'sigma_vi',sigma_vi
+sync all
+
 endsubroutine
