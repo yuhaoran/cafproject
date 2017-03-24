@@ -30,7 +30,7 @@ if (head) then
     if (ntemp>10) exit
   enddo
 
-  dt=min(dt_e,dt_fine(1),dt_coarse(1),dt_pp(1),dt_vmax(1))
+  dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax)
   call expansion(a,dt,da_1,da_2)
 
   da=da_1+da_2
@@ -66,10 +66,10 @@ if (head) then
   print*, 'expansion   :',ra
   print*, 'dt          :',dt
   print*, 'dt_e        :',dt_e
-  print*, 'dt_fine     :',dt_fine(1)
-  print*, 'dt_pp       :',dt_pp(1)
-  print*, 'dt_coarse   :',dt_coarse(1)
-  print*, 'dt_vmax     :',dt_vmax(1)
+  print*, 'dt_fine     :',dt_fine
+  print*, 'dt_pp       :',dt_pp
+  print*, 'dt_coarse   :',dt_coarse
+  print*, 'dt_vmax     :',dt_vmax
   print*, ''
   tau=tau+dt
   t=t+dt

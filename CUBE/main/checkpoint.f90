@@ -14,9 +14,9 @@ sim%tau=tau
 
 sim%nts=its
 
-sim%dt_f_acc=dt_fine(1)
-sim%dt_pp_acc=dt_pp(1)
-sim%dt_c_acc=dt_coarse(1)
+sim%dt_f_acc=dt_fine
+sim%dt_pp_acc=dt_pp
+sim%dt_c_acc=dt_coarse
 
 sim%cur_checkpoint=cur_checkpoint
 sim%cur_proj=cur_checkpoint

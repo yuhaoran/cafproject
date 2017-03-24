@@ -18,7 +18,7 @@ real,parameter :: GG=1.0/6.0/pi
 ! variables
 integer its[*], istep
 real dt[*],dt_old[*],dt_mid[*]
-real dt_fine(nn**3),dt_pp(nn**3),dt_coarse(nn**3),dt_vmax(nn**3)
+real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*]
 real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
 real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
 
@@ -35,7 +35,7 @@ real mass_p
 integer(8) plan_fft_fine,plan_ifft_fine
 
 real v_i2r(3)[*],v_i2r_new(3)[*]
-real vmax(3)[*],vmax_new(3)[*],overhead_tile[*],overhead_image[*]
+real vmax,overhead_tile[*],overhead_image[*]
 real vdisp(506,2),sigma_vi_old,sigma_vi
 ! n^3
 integer(izipx) x(3,np_image_max)[*], x_new(3,np_tile_max)
@@ -44,10 +44,10 @@ integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
   integer(2) pid(4,np_image_max)[*], pid_new(4,np_tile_max)
 #endif
 
-real rho_f(nfe+2,nfe,nfe,ncore)
-real crho_f(nfe+2,nfe,nfe,ncore)
+real rho_f(nfe+2,nfe,nfe)
+real crho_f(nfe+2,nfe,nfe)
 real kern_f(nfe/2+1,nfe,nfe,3)
-real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1,ncore)
+real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1)
 !integer rhoce1d(nce**3), rhoequiv(nce,nce,nce) ! rhoce is a coarray
 !equivalence(rhoequiv,rhoce1d)
 

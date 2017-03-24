@@ -25,12 +25,12 @@ subroutine kernel_f
   do i_dim=1,3
     rho_f=0
     mfactor=merge(-1,1,(/1,2,3/)==i_dim)
-    rho_f(:nf_cutoff,:nf_cutoff,:nf_cutoff,1)=fk_table(:,:,:,i_dim)
-    rho_f(nfe-nf_cutoff+2:nfe,:,:,1)=mfactor(1)*rho_f(nf_cutoff:2:-1,:,:,1)
-    rho_f(:,nfe-nf_cutoff+2:nfe,:,1)=mfactor(2)*rho_f(:,nf_cutoff:2:-1,:,1)
-    rho_f(:,:,nfe-nf_cutoff+2:nfe,1)=mfactor(3)*rho_f(:,:,nf_cutoff:2:-1,1)
+    rho_f(:nf_cutoff,:nf_cutoff,:nf_cutoff)=fk_table(:,:,:,i_dim)
+    rho_f(nfe-nf_cutoff+2:nfe,:,:)=mfactor(1)*rho_f(nf_cutoff:2:-1,:,:)
+    rho_f(:,nfe-nf_cutoff+2:nfe,:)=mfactor(2)*rho_f(:,nf_cutoff:2:-1,:)
+    rho_f(:,:,nfe-nf_cutoff+2:nfe)=mfactor(3)*rho_f(:,:,nf_cutoff:2:-1)
     call sfftw_execute(plan_fft_fine)
-    kern_f(:,:,:,i_dim)=rho_f(2::2,:,:,1)
+    kern_f(:,:,:,i_dim)=rho_f(2::2,:,:)
   enddo
 
   !open(21,file=output_dir()//'kern_f'//output_suffix(),access='stream',status='replace')

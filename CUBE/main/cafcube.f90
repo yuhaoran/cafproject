@@ -5,7 +5,6 @@
 
 program cafcube
 use variables
-use pm
 implicit none
 save
 
