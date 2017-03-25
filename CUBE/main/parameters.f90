@@ -90,7 +90,7 @@ module parameters
   real,parameter :: n_s=0.96
   real,parameter :: scalar_amp=2.142e-9
 
-  integer,parameter :: nts=400 ! maximum number of timesteps
+  integer,parameter :: istep_max=1000 ! maximum number of timesteps
   real,parameter :: ra_max=0.1
   real(8),parameter :: v_resolution=2.1/(2**(izipv*8))
   real(8),parameter :: x_resolution=1.0/2**(izipx*8)
@@ -99,7 +99,7 @@ module parameters
   integer, parameter      :: nk_tf=2000
 
   !! MPI image variables !!
-  integer(4) :: rank,icx,icy,icz,inx,iny,inz,ipx,ipy,ipz
+  integer(4) :: image,rank,icx,icy,icz,inx,iny,inz,ipx,ipy,ipz
   logical head
   ! checkpoint variables
   integer,parameter :: nmax_redshift=100
@@ -112,43 +112,71 @@ module parameters
     ! standard cubep3m 18 variables
     integer nplocal
     real a, t, tau
-    integer nts
+    integer istep
     real dt_f_acc, dt_pp_acc, dt_c_acc
     integer cur_checkpoint,cur_proj,cur_halo
     real mass_p
-    real v_i2r(3)
-    real shake_offset(3) ! -18
     ! more simulation config info
     real box
-    integer(4) rank
+    integer(4) image
     integer(2) nn,nnt,nt,ncell,ncb
-    integer(1) izipx,izipv
+    integer(1) izipx,izipv ! 17*4 bytes
 
     ! cosmology
     real h0
     real omega_m
     real omega_l
     real s8
-    real m_neu(3)
     real vsim2phys
-    real z_i
+    real z_i ! 23*4 bytes
+    real garbage(9) ! 32*4 bytes
   endtype
 
   type(sim_header) sim
   integer m1,m2,m3,m
 
   contains
+    subroutine print_header(s)
+      type(sim_header),intent(in) :: s
+      if (this_image()==1) then
+      print*,'-------------------------------- CUBE info --------------------------------'
+      print*,'| nplocal      =',s%nplocal
+      print*,'| a,t,tau      =',s%a,s%t,s%tau
+      print*,'| istep        =',s%istep
+      print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
+      print*,'| cur_steps    =',int(s%cur_checkpoint,2),int(s%cur_proj,2),int(s%cur_halo,2)
+      print*,'| mass_p       =',s%mass_p
+      print*,'| '
+      print*,'| box          =',s%box, 'Mpc/h'
+      print*,'| image        =',s%image
+      print*,'| nn           =',s%nn
+      print*,'| nnt          =',s%nnt
+      print*,'| nt           =',s%nt, ' ( nf_tile=',int(ncell*(nt+2*ncb),2),')'
+      print*,'| ncell        =',s%ncell
+      print*,'| ncb          =',s%ncb
+      print*,'| izip x,v     =',s%izipx,s%izipv
+      print*,'| '
+      print*,'| H0           =',s%h0,'km/s/Mpc'
+      print*,'| omega_m      =',s%omega_m
+      print*,'| omega_l      =',s%omega_l
+      print*,'| sigma_8      =',s%s8
+      print*,'| vsim2phys    =',s%vsim2phys, '(km/s)/(1.0)'
+      print*,'| z_i          =',s%z_i
+      print*,'------------------------------------------------------------------------------'
+      endif
+      sync all
+    endsubroutine
+
     subroutine geometry
-      rank=this_image()-1            ! MPI_rank
+      image=this_image()
+      rank=image-1            ! MPI_rank
       icz=rank/(nn**2)+1             ! image_z
       icy=(rank-nn**2*(icz-1))/nn+1  ! image_y
       icx=mod(rank,nn)+1             ! image_x
-
       m1=icx ! pencil_fft convension
       m2=icy
       m3=icz
       m=num_images()
-
       ! adjacent images
       inx=modulo(icx-2,nn)+1
       iny=modulo(icy-2,nn)+1
@@ -156,43 +184,8 @@ module parameters
       ipx=modulo(icx,nn)+1
       ipy=modulo(icy,nn)+1
       ipz=modulo(icz,nn)+1
-
       head=(this_image()==1)
 
-      sync all
-    endsubroutine
-
-    subroutine print_header(s)
-      type(sim_header),intent(in) :: s
-      if (this_image()==1) then
-      print*,'-------------------------------- CUBE info --------------------------------'
-      print*,'| nplocal      =',s%nplocal
-      print*,'| a,t,tau      =',s%a,s%t,s%tau
-      print*,'| nts          =',s%nts
-      print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
-      print*,'| cur_steps    =',int(s%cur_checkpoint,2),int(s%cur_proj,2),int(s%cur_halo,2)
-      print*,'| mass_p       =',s%mass_p
-      print*,'| v_i2r        =',s%v_i2r, '(1.0)/1'
-      print*,'| shake_offset =',s%shake_offset
-      print*,'| '
-      print*,'| box/(Mpc/h)=',s%box
-      print*,'| rank       =',s%rank
-      print*,'| nn         =',s%nn
-      print*,'| nnt        =',s%nnt
-      print*,'| nt         =',s%nt, ' ( nf_tile=',int(ncell*(nt+2*ncb),2),')'
-      print*,'| ncell      =',s%ncell
-      print*,'| ncb        =',s%ncb
-      print*,'| izip x,v =',s%izipx,s%izipv
-      print*,'| '
-      print*,'| h0         =',s%h0
-      print*,'| omega_m    =',s%omega_m
-      print*,'| omega_l    =',s%omega_l
-      print*,'| sigma_8    =',s%s8
-      print*,'| m_neu/eV   =',s%m_neu
-      print*,'| vsim2phys  =',s%vsim2phys, '(km/s)/(1.0)'
-      print*,'| z_i        =',s%z_i
-      print*,'------------------------------------------------------------------------------'
-      endif
       sync all
     endsubroutine
 
@@ -220,23 +213,23 @@ module parameters
     function output_dir()
       character(:),allocatable :: output_dir
       character(20) :: str_z,str_i
-      write(str_i,'(i6)') rank
+      write(str_i,'(i6)') image
       write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
-      output_dir=opath//'node'//trim(adjustl(str_i))//'/'
+      output_dir=opath//'image'//trim(adjustl(str_i))//'/'
     endfunction
 
     function output_prefix()
       character(:),allocatable :: output_prefix
       character(20) :: str_z,str_i
-      write(str_i,'(i6)') rank
+      write(str_i,'(i6)') image
       write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
-      output_prefix=opath//'node'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))
+      output_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))
     endfunction
 
     function output_suffix()
       character(:),allocatable :: output_suffix
       character(20) :: str_i
-      write(str_i,'(i6)') rank
+      write(str_i,'(i6)') image
       output_suffix='_'//trim(adjustl(str_i))//'.bin'
     endfunction
 
@@ -250,8 +243,8 @@ module parameters
       character(*) ::  zipname
       character(:),allocatable :: ic_name
       character(20) :: str_z,str_i
-      write(str_i,'(i6)') rank
+      write(str_i,'(i6)') image
       write(str_z,'(f7.3)') z_i
-      ic_name=opath//'node'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//zipname//output_suffix()
+      ic_name=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//zipname//output_suffix()
     endfunction
 endmodule

@@ -12,7 +12,7 @@ sim%a=a
 sim%t=t
 sim%tau=tau
 
-sim%nts=its
+sim%istep=istep
 
 sim%dt_f_acc=dt_fine
 sim%dt_pp_acc=dt_pp
@@ -23,7 +23,7 @@ sim%cur_proj=cur_checkpoint
 sim%cur_halo=cur_checkpoint
 
 sim%mass_p=mass_p
-sim%v_i2r=v_i2r
+sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
 
 if (head) print*, '  write in file:',output_name('zip2')
 open(12,file=output_name('zip2'),status='replace',access='stream')

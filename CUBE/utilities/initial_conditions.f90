@@ -7,12 +7,12 @@
 program initial_conditions
   use pencil_fft
   !use powerspectrum
-  use iso_fortran_env , only : int64
+  use iso_fortran_env, only : int64
   implicit none
   save
 
-  ! nc: coarse grid per node per dim
-  ! nf: fine grid per node per dim, ng=nf
+  ! nc: coarse grid per image per dim
+  ! nf: fine grid per image per dim, ng=nf
   ! nyquest: Nyquest frequency
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
@@ -60,7 +60,7 @@ program initial_conditions
 #ifdef PID
     integer(2) pid(4,npmax)
 #endif
-  real grad_max(3)[*],vmax(3),v_i2r(3),vf
+  real grad_max(3)[*],vmax(3),vf
   real vdisp(506,2),sigma_vi
 
   character (10) :: img_s, z_s
@@ -85,8 +85,7 @@ program initial_conditions
   sync all
 
 #ifdef mkdir
-    call system('mkdir -p '//opath//'node'//image2str(this_image()-1))
-    !print*, 'mkdir -p '//opath//'node'//image2str(this_image()-1)
+    call system('mkdir -p '//opath//'image'//image2str(image))
 #endif
 
   sim%nplocal=1 ! will be overwritten
@@ -94,7 +93,7 @@ program initial_conditions
   sim%t=0
   sim%tau=0
 
-  sim%nts=0
+  sim%istep=0
 
   sim%dt_f_acc=1000
   sim%dt_pp_acc=1000
@@ -105,11 +104,9 @@ program initial_conditions
   sim%cur_halo=0
 
   sim%mass_p=real(nf**3)/sim%nplocal ! will be overwritten
-  sim%v_i2r=1 ! will be overwritten
-  sim%shake_offset=0
 
   sim%box=box
-  sim%rank=this_image()-1
+  sim%image=image
   sim%nn=int(nn,2)
   sim%nnt=int(nnt,2)
   sim%nt=int(nt,2)
@@ -122,11 +119,9 @@ program initial_conditions
   sim%omega_m=omega_m
   sim%omega_l=omega_l
   sim%s8=s8
-
-  sim%m_neu(1:3)=0
-  sim%vsim2phys=3*box*h0*sqrt(omega_m)/(2*a*nf_global)
-  ! 1.0/(300.*sqrt(omega_m)*box/a/2./ nf_global)
+  sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
   sim%z_i=z_i
+  sim%garbage=0
   sync all
 
   ! initialize variables ------------------------------
@@ -186,7 +181,7 @@ program initial_conditions
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
     ! Read seeds from ../configs
-    call system('cp ../configs/seed_'//image2str(this_image()-1)//'.bin '//opath//'node'//image2str(this_image()-1)) ! for Xin
+    call system('cp ../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image)) ! for Xin
     ! need to use seed[image_number].dat for parallel
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
     read(11) iseed
@@ -198,7 +193,7 @@ program initial_conditions
     ! Generate at least 12 seeds according to system clock
     call system_clock(time64)
     do i = 1, seedsize
-      iseed(i) = lcg(time64) + this_image()*137
+      iseed(i) = lcg(time64) + image*137
       !print*,'time64,iseed(',int(i,1),')=',time64,iseed(i)
     enddo
     ! Input iseed to system
@@ -214,7 +209,7 @@ program initial_conditions
   deallocate(rseed_all)
   sync all
 #ifdef READ_NOISE
-      !!!!! test only for 1 node job
+      !!!!! test only for serial job
       open(11,file='initnoise.bin',access='stream')
       read(11) r3
       close(11)
@@ -226,7 +221,7 @@ program initial_conditions
   open(11,file=output_dir()//'noise'//output_suffix(),status='replace',access='stream')
   write(11) r3
   close(11)
-  print*, 'noise',r3(1:4,1,1),this_image()
+  print*, 'noise',r3(1:4,1,1),image
 #endif
 
   ! Box-Muller transform ----------------------------------------------
@@ -313,13 +308,13 @@ program initial_conditions
   if (correct_kernel) then
     if (head) print*, 'correct kernel'
     call pencil_fft_backward
-    !print*,'kernel',rank,sum(r3*1d0)
+    !print*,'kernel',image,sum(r3*1d0)
     !open(11,file='laplace.dat',status='replace',access='stream')
     !write(11) r3
     !close(11)
     temp8=0
-    if (rank==0) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
-    !if (rank==0) print*, r3(9,1,1),r3(1,9,1),r3(1,1,9)
+    if (image==1) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
+    !if (image==1) print*, r3(9,1,1),r3(1,9,1),r3(1,1,9)
     sync all
     if (icx==nn .and. icy==1 .and. icz==1) temp8=temp8+r3(nf-7,1,1)
     !if (icx==nn .and. icy==1 .and. icz==1) print*, r3(nf-7,1,1)
@@ -361,7 +356,7 @@ program initial_conditions
     enddo
     enddo
     sync all
-    !print*,'ewarld kernel',rank,sum(r3*1d0)
+    !print*,'ewarld kernel',image,sum(r3*1d0)
     call pencil_fft_forward
   endif
   ! Complex multiply density field with potential kernel
@@ -377,7 +372,7 @@ program initial_conditions
   write(11) r3
   close(11)
 
-  !print*, 'phi',rank
+  !print*, 'phi',image
   !print*, r3(1:4,1,1)
 
 !!!! DEBUG ! read same phi
@@ -423,7 +418,6 @@ program initial_conditions
   enddo
   !print*, grad_max
   vmax=grad_max/2/(4*pi)*vf
-  v_i2r=vmax*v_resolution
   if (head) then
     print*, 'grad_max',grad_max
     print*, 'max dsp',grad_max/2/(4*pi)
@@ -500,31 +494,11 @@ program initial_conditions
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
       x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=izipx)
       vreal=-gradphi/(8*pi)*vf
-        !v(:,idx)=nint(-gradphi/(8*pi)*vf/v_i2r,kind=izipv)
-      !print*,'  idx', idx
-      !print*, '  vreal', vreal
-        !print*, v(:,idx)
-        !print*,''
       v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
-      !print*, '  v_integer', v(:,idx)
-      !print*, '  vreal',tan(pi*real(v(:,idx))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
-      !stop
 #ifdef PID
-      pid(1,idx)=this_image()-1
+      pid(1,idx)=image
       pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove )/nf*2**(8*izipx)-2**(8*izipx-1))
 #endif
-      !if (itx==1 .and. ity==1 .and. itz==1 .and. i==1 .and. j==1 .and. k==1) then
-      !  print*, 'idx',idx
-      !  !print*, x(:,idx)
-      !  print*, (x(:,idx)+ishift+rshift)*x_resolution*ncell + (g-1)*ncell
-      !  print*, v(:,idx)*v_i2r
-      !endif
-      !if (itx==nnt .and. ity==nnt .and. itz==nnt .and. i==npt .and. j==npt .and. k==npt) then
-      !  print*, 'idx',idx
-      !  !print*, x(:,idx)
-      !  print*, (x(:,idx)+ishift+rshift)*x_resolution*ncell + (g-1)*ncell
-      !  print*, v(:,idx)*v_i2r
-      !endif
     enddo
     enddo
     enddo
@@ -564,12 +538,11 @@ program initial_conditions
 #endif
 
   sim%nplocal=nplocal
-  sim%v_i2r=v_i2r
   rewind(12)
   write(12) sim
   close(12)
 
-  print*,'image',this_image(),', nplocal',nplocal
+  print*,'image',image,', nplocal',nplocal
   sync all
   npglobal=0
   do i=1,nn**3

@@ -36,7 +36,7 @@ sync all
   call kernel_f
   call kernel_c
 #else
-! now works only for single node
+! now works only for single image
   open(14,file='cubep3m_kern_f.dat',status='old',access='stream')
   read(14) kern_f
   close(14)
@@ -45,7 +45,7 @@ sync all
   close(15)
 #endif
 
-its=0
+istep=0
 t=0
 dt=0
 dt_old=0
@@ -76,7 +76,7 @@ z_checkpoint(:)=z_checkpoint(:)[1]
 sync all
 
 #ifdef mkdir
-  call system('mkdir -p '//opath//'/node'//image2str(this_image()-1))
+  call system('mkdir -p '//opath//'/image'//image2str(image))
 #endif
 sync all
 

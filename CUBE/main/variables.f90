@@ -16,7 +16,7 @@ integer,parameter :: NULL=0
 real,parameter :: GG=1.0/6.0/pi
 
 ! variables
-integer its[*], istep
+integer istep
 real dt[*],dt_old[*],dt_mid[*]
 real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*]
 real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
@@ -33,8 +33,6 @@ real mass_p
 
 ! FFT plans
 integer(8) plan_fft_fine,plan_ifft_fine
-
-real v_i2r(3)[*],v_i2r_new(3)[*]
 real vmax,overhead_tile[*],overhead_image[*]
 real vdisp(506,2),sigma_vi_old,sigma_vi
 ! n^3

@@ -1,5 +1,3 @@
-!#define debug
-!#define redundant
 !#define randomv
 subroutine update_particle
 use variables
@@ -62,30 +60,15 @@ do itx=1,nnt
       irand=mod(irand**2+jj*pr2,pr3)
       irand=mod(irand**2+kk*pr3,pr4)
       vrand=(irand+0.5)/pr4-0.5
-      vrand=vrand*(1/(1+int(abs(dt_mid*v(:,ip)*v_i2r/v_th))))
+      vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+      vrand=vrand*(1/(1+int(abs(dt_mid*vreal/v_th))))
 #else
       vrand=0
 #endif
-      !print*, 'x0', ( 4.*nt*((/itx,ity,itz/)-1) + 4.*((/i,j,k/)-1) + 4*((x(:,ip)+int(-128,1))+128.5)/256 )
-      !print*, 'dx', dt_mid*v(:,ip)*v_i2r(:)
-      !g=ceiling( &
-      !  ( (/i,j,k/)-1 + ((x(:,ip)+int(-128,1))+128.5)/256. ) &
-      !  + dt_mid*v(:,ip)*v_i2r(:)/4. &
-      !  )
       xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
-      !deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
       vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-      !print*, tan(pi*(/-2166.,-6949.,-16286./)/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-      !stop
-      !deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
       deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
-
       g=ceiling(xq+deltax)
-      !g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r/4 &
-      !          +(x_resolution*ncell)*vrand)
-      !print*, 'particle',ip,itx,ity,itz,g
-      !print*, dt_mid*v(:,ip)*v_i2r(:)/4.
-      !print*, g,vrand
       rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! update mesh
     enddo
   enddo
@@ -122,24 +105,21 @@ do itx=1,nnt
       irand=mod(irand**2+jj*pr2,pr3)
       irand=mod(irand**2+kk*pr3,pr4)
       vrand=(irand+0.5)/pr4-0.5
-      vrand=vrand*(1/(1+int(abs(dt_mid*v(:,ip)*v_i2r/v_th))))
+      vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+      vrand=vrand*(1/(1+int(abs(dt_mid*vreal/v_th))))
 #else
       vrand=0
 #endif
       xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
       vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-      !deltax=dt_mid*v(:,ip)*v_i2r/4+(x_resolution*ncell)*vrand
       deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
       g=ceiling(xq+deltax)
-      !g=ceiling(((/i,j,k/)-1+(x(:,ip)+ishift+rshift)*x_resolution)+dt_mid*v(:,ip)*v_i2r(:)/4 &
-      !          +(x_resolution*ncell)*vrand)
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3)) ! index for writing
 
 #ifdef debug
       x_new(:,idx)=x_new(:,idx)+1
 #else
-      !x_new(:,idx)=x(:,ip)+nint(dt_mid*v(:,ip)*v_i2r(:)/(x_resolution*ncell) + vrand)
       x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell) + vrand)
 #endif
 			v_new(:,idx)=v(:,ip)
@@ -220,12 +200,5 @@ if (head) then
 endif
 
 sync all
-
-!print*, 'nplocal, v_i2r =', iright, v_i2r
-!print*, 'sum of x', sum(x(:,:nplocal)*unit8)
-!print*, 'sum of v', sum(v(:,:nplocal)*unit8)
-!print*, 'sum of rhoc', sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
-!print*, x(:,1), v(:,1)
-!print*, 'update_particle done'
 
 endsubroutine update_particle

@@ -5,15 +5,13 @@ save
 integer ntemp,i_images
 real ra,da_1,da_2,dt_e,a_checkpoint
 
-its=its+1
 dt_old=dt
-
 sync all
 
 if (head) then
   print*, ''
   print*, '-------------------------------------------------------'
-  print*, 'timestep    :',its
+  print*, 'timestep    :',istep
 
   dt_e=dt_max
   ntemp=0
