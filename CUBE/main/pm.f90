@@ -16,7 +16,7 @@ subroutine particle_mesh
   integer ithread, nthread
   integer idxf(3),np
   integer idx1(3), idx2(3)
-  real vtemp(3), tempx(3), dx1(3), dx2(3)
+  real tempx(3), dx1(3), dx2(3)
   real r3t(-1:nt+2,-1:nt+2,-1:nt+2) ! coarse density on tile, with buffer=2
 
   if (head) then
@@ -101,16 +101,16 @@ subroutine particle_mesh
         dx2 = 1 - dx1
         idx1=idx1+nfb
         idx2=idx2+nfb ! positive integer indeces
-        vtemp=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-        vtemp=vtemp+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
-        vtemp=vtemp+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
-        vtemp=vtemp+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
-        vtemp=vtemp+force_f(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
-        vtemp=vtemp+force_f(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
-        vtemp=vtemp+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
-        vtemp=vtemp+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
-        vtemp=vtemp+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vtemp)/pi,kind=izipv)
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+        vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_f(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_f(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
+        vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
       enddo
     enddo
     enddo
@@ -205,17 +205,17 @@ subroutine particle_mesh
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:)
         dx2(:)=1-dx1(:)
-        vtemp=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
-        vtemp=vtemp+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
-        vtemp=vtemp+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
-        vtemp=vtemp+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
-        vtemp=vtemp+force_c(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
-        vtemp=vtemp+force_c(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
-        vtemp=vtemp+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
-        vtemp=vtemp+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
-        vtemp=vtemp+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        vmax=max(vmax,maxval(vtemp))
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vtemp)/pi,kind=izipv)
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
+        vreal=vreal+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_c(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_c(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
+        vreal=vreal+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+        vmax=max(vmax,maxval(vreal))
+        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
       enddo
     enddo
     enddo

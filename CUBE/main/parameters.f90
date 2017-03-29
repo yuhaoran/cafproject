@@ -6,8 +6,8 @@ module parameters
   character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
-  integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
-  integer,parameter :: izipv=2 ! 1 or 2, integer*? for particle velocity
+  integer,parameter :: izipx=1 ! 1 or 2, integer*? for particle location
+  integer,parameter :: izipv=1 ! 1 or 2, integer*? for particle velocity
   integer,parameter :: nvbin=2**(8*izipv)
   integer(izipx),parameter :: ishift=-(2**(izipx*8-1))
   real(8),parameter :: rshift=0.5-ishift
@@ -91,7 +91,7 @@ module parameters
   real,parameter :: scalar_amp=2.142e-9
 
   integer,parameter :: istep_max=1000 ! maximum number of timesteps
-  real,parameter :: ra_max=0.1
+  real,parameter :: ra_max=1000
   real(8),parameter :: v_resolution=2.1/(2**(izipv*8))
   real(8),parameter :: x_resolution=1.0/2**(izipx*8)
 
