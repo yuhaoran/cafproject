@@ -19,7 +19,7 @@ integer pr1,pr2,pr3,pr4
 if (head) print*,'update_particle'
 
 #ifdef randomv
-  v_th=1.5/real(2**(izipx*8))*ncell*0.5
+  v_th=1.5/real(int(2,8)**(izipx*8))*ncell*0.5
 
   pr1=71
   pr2=73
@@ -70,6 +70,8 @@ do itx=1,nnt
       deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
       g=ceiling(xq+deltax)
       rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! update mesh
+!print*,x(:,ip)
+!print*,xq,deltax,g;stop
     enddo
   enddo
   enddo
@@ -121,6 +123,8 @@ do itx=1,nnt
       x_new(:,idx)=x_new(:,idx)+1
 #else
       x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell) + vrand)
+!print*, x_new(:,idx)
+!stop
 #endif
 			v_new(:,idx)=v(:,ip)
 #ifdef PID

@@ -6,9 +6,9 @@ module parameters
   character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
-  integer,parameter :: izipx=1 ! 1 or 2, integer*? for particle location
-  integer,parameter :: izipv=1 ! 1 or 2, integer*? for particle velocity
-  integer,parameter :: nvbin=2**(8*izipv)
+  integer,parameter :: izipx=4 ! 1 or 2, integer*? for particle location
+  integer,parameter :: izipv=4 ! 1 or 2, integer*? for particle velocity
+  integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
   integer(izipx),parameter :: ishift=-(2**(izipx*8-1))
   real(8),parameter :: rshift=0.5-ishift
 
@@ -55,11 +55,11 @@ module parameters
   real,parameter :: tile_buffer=2.0
 
   ! cosmological parameters
-  real,parameter :: z_i=20.0   ! initial redshift
+  real,parameter :: z_i=49.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=200.0  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=50.0  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
@@ -91,9 +91,9 @@ module parameters
   real,parameter :: scalar_amp=2.142e-9
 
   integer,parameter :: istep_max=1000 ! maximum number of timesteps
-  real,parameter :: ra_max=1000
-  real(8),parameter :: v_resolution=2.1/(2**(izipv*8))
-  real(8),parameter :: x_resolution=1.0/2**(izipx*8)
+  real,parameter :: ra_max=0.2
+  real(8),parameter :: v_resolution=2.1/(int(2,8)**(izipv*8))
+  real(8),parameter :: x_resolution=1.0/(int(2,8)**(izipx*8))
 
   ! transfer function
   integer, parameter      :: nk_tf=2000

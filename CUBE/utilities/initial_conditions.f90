@@ -492,12 +492,21 @@ program initial_conditions
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-      x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=izipx)
+      x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
       vreal=-gradphi/(8*pi)*vf
       v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
+
+!print*, x_resolution
+!print*, xq
+!print*, -gradphi/(8*pi*ncell)
+!print*, xq-gradphi/(8*pi*ncell)
+!print*, floor( (xq-gradphi/(8*pi*ncell))/x_resolution ,8)
+!print*, x(:,idx)
+!stop
+
 #ifdef PID
       pid(1,idx)=image
-      pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove )/nf*2**(8*izipx)-2**(8*izipx-1))
+      pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove )/nf*int(2,8)**(8*izipx)-int(2,8)**(8*izipx-1))
 #endif
     enddo
     enddo
