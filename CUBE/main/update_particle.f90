@@ -65,7 +65,7 @@ do itx=1,nnt
 #else
       vrand=0
 #endif
-      xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
+      xq=(/i,j,k/)-1d0 + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
       vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
       deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
       g=ceiling(xq+deltax)
@@ -112,7 +112,7 @@ do itx=1,nnt
 #else
       vrand=0
 #endif
-      xq=(/i,j,k/)-1d0 + ((x(:,ip)+ishift)+rshift)*x_resolution
+      xq=(/i,j,k/)-1d0 + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
       vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
       deltax=dt_mid*vreal/4+(x_resolution*ncell)*vrand
       g=ceiling(xq+deltax)

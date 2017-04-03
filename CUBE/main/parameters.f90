@@ -3,13 +3,13 @@ module parameters
   save
 
   ! output directory for both IC and snapshots
-  character(*),parameter :: opath='../output/universe1/'
+  character(*),parameter :: opath='../output/universe4/'
 
   ! simulation parameters
-  integer,parameter :: izipx=4 ! 1 or 2, integer*? for particle location
-  integer,parameter :: izipv=4 ! 1 or 2, integer*? for particle velocity
+  integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
+  integer,parameter :: izipv=1 ! 1 or 2, integer*? for particle velocity
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
-  integer(izipx),parameter :: ishift=-(2**(izipx*8-1))
+  integer(8),parameter :: ishift=-(2**(izipx*8-1))
   real(8),parameter :: rshift=0.5-ishift
 
   ! (hereafter 'number of fine cells' = 'nf')
@@ -18,7 +18,7 @@ module parameters
   integer,parameter :: nn=1 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
   integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer,parameter :: nf=nc*ncell ! >=96
@@ -55,11 +55,11 @@ module parameters
   real,parameter :: tile_buffer=2.0
 
   ! cosmological parameters
-  real,parameter :: z_i=49.0   ! initial redshift
+  real,parameter :: z_i=9.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=50.0  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=100.0  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
@@ -91,7 +91,7 @@ module parameters
   real,parameter :: scalar_amp=2.142e-9
 
   integer,parameter :: istep_max=1000 ! maximum number of timesteps
-  real,parameter :: ra_max=0.2
+  real,parameter :: ra_max=1000
   real(8),parameter :: v_resolution=2.1/(int(2,8)**(izipv*8))
   real(8),parameter :: x_resolution=1.0/(int(2,8)**(izipx*8))
 

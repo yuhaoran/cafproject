@@ -56,7 +56,7 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=4.*((/i,j,k/)-1)+4*(x(:,ip)+ishift+rshift)*x_resolution !-0.5
+        tempx=4.*((/i,j,k/)-1)+4*(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
         idx2 = idx1 + 1
         dx1 = idx1 - tempx
@@ -94,7 +94,7 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=4.*((/i,j,k/)-1)+4*(x(:,ip)+ishift+rshift)*x_resolution !-0.5
+        tempx=4.*((/i,j,k/)-1)+4*(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
         idx2 = idx1 + 1
         dx1 = idx1 - tempx
@@ -138,7 +138,7 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=((/i,j,k/)-1)+(x(:,ip)+ishift+rshift)*x_resolution-0.5
+        tempx=((/i,j,k/)-1)+(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:) ! CIC contribution to idx1
@@ -200,7 +200,7 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(x(:,ip)+ishift+rshift)*x_resolution-0.5
+        tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:)
