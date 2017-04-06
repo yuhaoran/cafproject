@@ -5,16 +5,16 @@ implicit none
 save
 
 ! x(1:3,:)
-integer ileft,iright,nlast,nlen,idx
-integer g(3),np ! index of grid
-integer rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
-integer cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-integer rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
+integer(8) ileft,iright,nlast,nlen,idx
+integer(8) g(3),np ! index of grid
+integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
+integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
 real vrand(3), v_th
-integer ii,jj,kk
+integer(8) ii,jj,kk
 integer(8) irand(3)
-integer iii(3)
-integer pr1,pr2,pr3,pr4
+integer(8) iii(3)
+integer(8) pr1,pr2,pr3,pr4
 
 if (head) print*,'update_particle'
 

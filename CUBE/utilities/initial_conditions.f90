@@ -19,23 +19,23 @@ program initial_conditions
 
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
-  integer,parameter :: nk=1000
-  integer i,j,k,seedsize
+  integer(8),parameter :: nk=1000
+  integer(8) i,j,k
+  integer(4) seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
   real(8) v8, norm, xq(3),gradphi(3),vreal(3)
   integer(int64) :: time64
 
-  integer nplocal[*]
-  integer(8) npglobal
+  integer(8) nplocal[*],npglobal
   ! power spectrum arrays
   real, dimension(7,nk) :: tf    !CAMB
   real, dimension(2,nc) :: pkm,pkn
 
-  integer,allocatable :: iseed(:)
+  integer(4),allocatable :: iseed(:)
   real,allocatable :: rseed_all(:,:)
 
-  integer ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,nf_shake
-  integer ileft,iright,nlen,nlast,g(3)
+  integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,nf_shake
+  integer(8) ileft,iright,nlen,nlast,g(3)
   real kr,kx,ky,kz
   !real xi(10,nbin)
 
@@ -48,13 +48,12 @@ program initial_conditions
 
 
   ! zip arrays
-  integer,parameter :: npt=nt*np_nc ! np / tile / dim !64
-  integer,parameter :: npb=ncb*np_nc !24
-  integer,parameter :: npmax=2*(npt+2*npb)**3
-  !integer rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-  integer rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  integer(8),parameter :: npt=nt*np_nc ! np / tile / dim !64
+  integer(8),parameter :: npb=ncb*np_nc !24
+  integer(8),parameter :: npmax=2*(npt+2*npb)**3
+  integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(izipx) x(3,npmax)
   integer(izipv) v(3,npmax)
 #ifdef PID
@@ -107,13 +106,13 @@ program initial_conditions
 
   sim%box=box
   sim%image=image
-  sim%nn=int(nn,2)
-  sim%nnt=int(nnt,2)
-  sim%nt=int(nt,2)
-  sim%ncell=int(ncell,2)
-  sim%ncb=int(ncb,2)
-  sim%izipx=int(izipx,1)
-  sim%izipv=int(izipv,1)
+  sim%nn=nn
+  sim%nnt=nnt
+  sim%nt=nt
+  sim%ncell=ncell
+  sim%ncb=ncb
+  sim%izipx=izipx
+  sim%izipv=izipv
 
   sim%h0=h0
   sim%omega_m=omega_m
@@ -121,7 +120,6 @@ program initial_conditions
   sim%s8=s8
   sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
   sim%z_i=z_i
-  sim%garbage=0
   sync all
 
   ! initialize variables ------------------------------
@@ -248,9 +246,9 @@ program initial_conditions
   if (head) print*, 'Start ftran'
   call pencil_fft_forward
   if (head) print*, 'Wiener filter on white noise'
-  do k=npen,npen
-  do j=nf,nf
-  do i=nyquest+1,nyquest+1
+  do k=1,npen
+  do j=1,nf
+  do i=1,nyquest+1
     ! global grid in Fourier space for i,j,k
     kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*nf+j
@@ -507,7 +505,8 @@ print*,'r3',r3(1,1,1)
 
 #ifdef PID
       pid(1,idx)=image
-      pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove )/nf*int(2,8)**(8*izipx)-int(2,8)**(8*izipx-1))
+      pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove ) &
+      /nf*int(2,8)**(8*izipx)-int(2,8)**(8*izipx-1))
 #endif
     enddo
     enddo
@@ -571,60 +570,61 @@ print*,'r3',r3(1,1,1)
   contains
 
   function cumsum3(input)
-  implicit none
-  integer input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer nsum,igx,igy,igz
-  nsum=0
-  do igz=1-2*ncb,nt+2*ncb
-  do igy=1-2*ncb,nt+2*ncb
-  do igx=1-2*ncb,nt+2*ncb
-    nsum=nsum+input(igx,igy,igz)
-    cumsum3(igx,igy,igz)=nsum
-  enddo
-  enddo
-  enddo
-  endfunction cumsum3
-
-  real function interp_vdisp(aa)
-  implicit none
-  integer ii,i1,i2
-  real aa
-  i1=1
-  i2=506
-  do while (i2-i1>1)
-    ii=(i1+i2)/2
-    if (aa>vdisp(ii,1)) then
-      i1=ii
-    else
-      i2=ii
-    endif
-  enddo
-  interp_vdisp=vdisp(i1,2)+(vdisp(i2,2)-vdisp(i1,2))*(aa-vdisp(i1,1))/(vdisp(i2,1)-vdisp(i1,1))
+    implicit none
+    integer(4) input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer(8) cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer(8) nsum,igx,igy,igz
+    nsum=0
+    do igz=1-2*ncb,nt+2*ncb
+    do igy=1-2*ncb,nt+2*ncb
+    do igx=1-2*ncb,nt+2*ncb
+      nsum=nsum+input(igx,igy,igz)
+      cumsum3(igx,igy,igz)=nsum
+    enddo
+    enddo
+    enddo
   endfunction
 
-  function interp_tf(kr,ix,iy)
-  implicit none
-  integer ix,iy,ii,i1,i2
-  real kr,xx,yy,x1,x2,y1,y2,interp_tf
-  i1=1
-  i2=nk
-  do while (i2-i1>1)
-    ii=(i1+i2)/2
-    if (kr>tf(ix,ii)) then
-      i1=ii
-    else
-      i2=ii
-    endif
-  enddo
-  x1=log(tf(ix,i1))
-  y1=log(tf(iy,i1))
-  x2=log(tf(ix,i2))
-  y2=log(tf(iy,i2))
-  xx=log(kr)
-  yy=y1+(y2-y1)*(xx-x1)/(x2-x1)
-  interp_tf=exp(yy)
-  endfunction interp_tf
+  real function interp_vdisp(aa)
+    implicit none
+    integer(8) ii,i1,i2
+    real aa
+    i1=1
+    i2=506
+    do while (i2-i1>1)
+      ii=(i1+i2)/2
+      if (aa>vdisp(ii,1)) then
+        i1=ii
+      else
+        i2=ii
+      endif
+    enddo
+    interp_vdisp=vdisp(i1,2)+(vdisp(i2,2)-vdisp(i1,2))*(aa-vdisp(i1,1))/(vdisp(i2,1)-vdisp(i1,1))
+  endfunction
+
+  real function interp_tf(kr,ix,iy)
+    implicit none
+    integer(4) ix,iy
+    integer(8) ii,i1,i2
+    real kr,xx,yy,x1,x2,y1,y2
+    i1=1
+    i2=nk
+    do while (i2-i1>1)
+      ii=(i1+i2)/2
+      if (kr>tf(ix,ii)) then
+        i1=ii
+      else
+        i2=ii
+      endif
+    enddo
+    x1=log(tf(ix,i1))
+    y1=log(tf(iy,i1))
+    x2=log(tf(ix,i2))
+    y2=log(tf(iy,i2))
+    xx=log(kr)
+    yy=y1+(y2-y1)*(xx-x1)/(x2-x1)
+    interp_tf=exp(yy)
+  endfunction
 
 
   function tophat(x)
@@ -665,7 +665,7 @@ print*,'r3',r3(1,1,1)
 
   function lcg(s) !// Linear congruential generator
     implicit none
-    integer :: lcg
+    integer(4) :: lcg
     integer(int64) :: s
     if (s == 0) then
        s = 104729

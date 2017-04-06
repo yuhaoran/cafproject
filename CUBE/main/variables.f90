@@ -4,28 +4,27 @@ implicit none
 save
 
 ! parameters
-integer,parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
-integer,parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
-integer,parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
-integer,parameter ::  nseedmax=200
+integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
+integer(8),parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
+integer(8),parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
+integer(8),parameter ::  nseedmax=200
+integer(8),parameter :: unit8=1
 real,parameter :: vbuf=0.9
 real,parameter :: dt_max=1
 real,parameter :: dt_scale=1
-integer(8),parameter :: unit8=1
-integer,parameter :: NULL=0
 real,parameter :: GG=1.0/6.0/pi
 
 ! variables
-integer istep
+integer(8) istep
 real dt[*],dt_old[*],dt_mid[*]
 real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*]
 real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
 real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
 
-integer iseed(nseedmax), iseedsize
-integer itx,ity,itz,ix,iy,iz,i_dim
-integer i,j,k,l,ip,ipp,pp
-integer nplocal[*], nptile(nnt,nnt,nnt)
+integer(4) iseed(nseedmax), iseedsize
+integer(8) itx,ity,itz,ix,iy,iz,i_dim
+integer(8) i,j,k,l,ip,ipp,pp
+integer(8) nplocal[*], nptile(nnt,nnt,nnt)
 integer(8) npglobal, npcheck
 real(8) xq(3),deltax(3),deltav(3),vreal(3)
 
@@ -46,14 +45,9 @@ real rho_f(nfe+2,nfe,nfe)
 real crho_f(nfe+2,nfe,nfe)
 real kern_f(nfe/2+1,nfe,nfe,3)
 real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1)
-!integer rhoce1d(nce**3), rhoequiv(nce,nce,nce) ! rhoce is a coarray
-!equivalence(rhoequiv,rhoce1d)
 
-! rho in physical tiles and 6 buffers of tiles
-! n^3
-!integer rhotile(nt,nt,nt,nnt,nnt,nnt)[*]
-integer rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
-integer cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
+integer(4) rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
+integer(8) cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
 
 ! coarse kernel arrays
@@ -70,9 +64,9 @@ contains
 
   function cumsum3(rho_input)
     implicit none
-    integer rho_input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-    integer cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-    integer nsum,igx,igy,igz
+    integer(4) rho_input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer(8) cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer(8) nsum,igx,igy,igz
     nsum=0
     do igz=1-2*ncb,nt+2*ncb
     do igy=1-2*ncb,nt+2*ncb
@@ -86,9 +80,9 @@ contains
 
   function cumsum6(rho_input)
     implicit none
-    integer rho_input(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-    integer cumsum6(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-    integer nsum,ihx,ihy,ihz,igx,igy,igz
+    integer(4) rho_input(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
+    integer(8) cumsum6(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
+    integer(8) nsum,ihx,ihy,ihz,igx,igy,igz
     nsum=0
     do ihz=1,nnt
     do ihy=1,nnt
@@ -108,7 +102,7 @@ contains
 
   real function interp_vdisp(aa)
     implicit none
-    integer ii,i1,i2
+    integer(8) ii,i1,i2
     real aa
     i1=1
     i2=506

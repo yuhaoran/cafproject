@@ -3,7 +3,7 @@ use variables
 implicit none
 save
 
-integer nfirst,nlast
+integer(8) nfirst,nlast
 
 if (head) print*, 'checkpoint'
 

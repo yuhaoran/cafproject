@@ -12,10 +12,10 @@ subroutine particle_mesh
   !logical,parameter :: pp_force=.false.
   !logical,parameter :: ext_pp_force=.false.
 
-  integer nlast,nlen
-  integer ithread, nthread
-  integer idxf(3),np
-  integer idx1(3), idx2(3)
+  integer(8) nlast,nlen
+  integer(4) ithread, nthread
+  integer(8) idxf(3),np
+  integer(8) idx1(3), idx2(3)
   real tempx(3), dx1(3), dx2(3)
   real r3t(-1:nt+2,-1:nt+2,-1:nt+2) ! coarse density on tile, with buffer=2
 
@@ -62,7 +62,7 @@ subroutine particle_mesh
         dx1 = idx1 - tempx
         dx2 = 1 - dx1
         idx1=idx1+nfb
-        idx2=idx2+nfb ! positive integer indeces
+        idx2=idx2+nfb
         rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p
         rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p
         rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p
@@ -100,7 +100,7 @@ subroutine particle_mesh
         dx1 = idx1 - tempx
         dx2 = 1 - dx1
         idx1=idx1+nfb
-        idx2=idx2+nfb ! positive integer indeces
+        idx2=idx2+nfb
         vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
         vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)

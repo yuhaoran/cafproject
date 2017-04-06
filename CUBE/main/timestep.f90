@@ -2,7 +2,7 @@ subroutine timestep
 use variables
 implicit none
 save
-integer ntemp,i_images
+integer(8) ntemp,i_images
 real ra,da_1,da_2,dt_e,a_checkpoint
 
 dt_old=dt

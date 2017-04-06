@@ -4,8 +4,7 @@ subroutine buffer_v
 use variables
 implicit none
 save
-!integer ntemp
-integer nshift,nlen,nlast,ifrom,mlast
+integer(8) nshift,nlen,nlast,ifrom,mlast
 
 if (head) print*, 'buffer_v'
 
@@ -92,7 +91,7 @@ sync all
 
 ! buffer y direction
 
-! sync y- 
+! sync y-
 do itz=1,nnt
 do ity=1,1 ! do only ity=1
 do itx=1,nnt

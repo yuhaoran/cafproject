@@ -6,7 +6,7 @@ subroutine kernel_f
   include 'fftw3.f'
 
   character(*),parameter :: dir_kern='../kernels/'
-  integer itemp(3),mfactor(3)
+  integer(8) itemp(3),mfactor(3)
   real fk_table(nf_cutoff,nf_cutoff,nf_cutoff,3)
 
   if (head) print*, 'fine kernel initialization'

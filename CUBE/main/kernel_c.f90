@@ -7,8 +7,8 @@ subroutine kernel_c
   include 'fftw3.f'
 
   character(*),parameter :: dir_kern='../kernels/'
-  integer,parameter :: ncglobal=nc*nn
-  integer ig,jg,kg,itemp(3)
+  integer(8),parameter :: ncglobal=nc*nn
+  integer(8) ig,jg,kg,itemp(3)
   real rx(3),r,ck_table(3,4,4,4),kx(3),kx_sin(3),kr
 
   if (head) print*, 'coarse kernel initialization'

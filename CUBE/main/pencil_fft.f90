@@ -4,9 +4,8 @@ module pencil_fft
   implicit none
   save
 
-  integer,parameter :: NULL=0
+  integer(4),parameter :: NULL=0
   integer(8) planx,plany,planz,iplanx,iplany,iplanz
-  !integer i0,i1,i2,islab
 
   ! fft arrays
   real        r3(ng,ng,ng),r0(ng,ng)
@@ -61,7 +60,7 @@ module pencil_fft
   subroutine c2x
     implicit none
     save
-    integer i0,i1,i2,islab
+    integer(8) i0,i1,i2,islab
     do islab=1,npen ! loop over cells in z, extract slabs
       ctransfer1(:,:,1:nn)=c3(:,:,islab::npen) ! nn slabs of c3 copied to ctransfer1
       sync all
@@ -76,7 +75,7 @@ module pencil_fft
   subroutine x2y
     implicit none
     save
-    integer i0,i1,i2,islab
+    integer(8) i0,i1,i2,islab
     do islab=1,npen ! loop over z
       do i1=1,nn ! loop over squares in x direction
         ctransfer2(:,:,i1)=transpose(cxyz(ng/2*(i1-1)+1:ng/2*i1+1,:,islab))
@@ -92,7 +91,7 @@ module pencil_fft
   subroutine y2z
     implicit none
     save
-    integer i0,i1,i2,islab
+    integer(8) i0,i1,i2,islab
     do islab=1,ng/2+1 ! loop over slices in x direction
       do i2=1,nn
       do i1=1,nn
@@ -112,7 +111,7 @@ module pencil_fft
   subroutine z2y
     implicit none
     save
-    integer i0,i1,i2,islab
+    integer(8) i0,i1,i2,islab
     do islab=1,ng/2+1 ! loop over slices in x direction
       do i2=1,nn
       do i1=1,nn
@@ -132,7 +131,7 @@ module pencil_fft
   subroutine y2x
     implicit none
     save
-    integer i0,i1,i2,islab
+    integer(8) i0,i1,i2,islab
     do islab=1,npen ! loop over z
       do i1=1,nn ! loop over squares in x direction
         ctransfer4(:,:,i1)=transpose(cyyxz(:,i1,:,islab))
@@ -148,7 +147,7 @@ module pencil_fft
   subroutine x2c
     implicit none
     save
-    integer i0,i1,i2,islab
+    integer(8) i0,i1,i2,islab
     do islab=1,npen
       do i1=1,nn
         ctransfer1(:,:,i1)=cxyz(ng*(i1-1)/2+1:ng*i1/2,:,islab)

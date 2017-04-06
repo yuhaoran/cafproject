@@ -4,8 +4,7 @@ subroutine buffer_density
 use variables
 implicit none
 save
-!integer ntemp
-integer nshift,nlen,nlast,ifrom
+integer(8) nshift,nlen,nlast,ifrom
 
 if (head) print*, 'buffer_density'
 overhead_image=0

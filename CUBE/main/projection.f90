@@ -4,7 +4,7 @@ subroutine projection
 use variables
 implicit none
 save
-integer idxf(3),np
+integer(8) idxf(3),np
 real proj_yz(nf,nf), proj_xz(nf,nf), proj_xy(nf,nf)
 #ifdef proj3d
   real den(nf,nf,nf)
