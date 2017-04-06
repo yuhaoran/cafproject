@@ -3,10 +3,10 @@ module parameters
   save
 
   ! output directory for both IC and snapshots
-  character(*),parameter :: opath='../output/universe4/'
+  character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
-  integer,parameter :: izipx=2 ! 1 or 2, integer*? for particle location
+  integer,parameter :: izipx=1 ! 1 or 2, integer*? for particle location
   integer,parameter :: izipv=1 ! 1 or 2, integer*? for particle velocity
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
   integer(8),parameter :: ishift=-(2**(izipx*8-1))
@@ -17,8 +17,8 @@ module parameters
   ! (hereafter 'per dimension' = '/dim')
   integer,parameter :: nn=1 ! number of imgages (nodes) /dim
   integer,parameter :: ncell=4 ! number of nf in each nc, /dim
-  integer,parameter :: nnt=2 ! number of tiles /image/dim
-  integer,parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nnt=4 ! number of tiles /image/dim
+  integer,parameter :: nc=384 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer,parameter :: nf=nc*ncell ! >=96
@@ -51,15 +51,15 @@ module parameters
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
-  real,parameter :: image_buffer=1.5
-  real,parameter :: tile_buffer=2.0
+  real,parameter :: image_buffer=1.1
+  real,parameter :: tile_buffer=1.5
 
   ! cosmological parameters
-  real,parameter :: z_i=9.0   ! initial redshift
+  real,parameter :: z_i=99.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=100.0  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=1000.0  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
@@ -90,7 +90,7 @@ module parameters
   real,parameter :: n_s=0.96
   real,parameter :: scalar_amp=2.142e-9
 
-  integer,parameter :: istep_max=1000 ! maximum number of timesteps
+  integer,parameter :: istep_max=10 ! maximum number of timesteps
   real,parameter :: ra_max=1000
   real(8),parameter :: v_resolution=2.1/(int(2,8)**(izipv*8))
   real(8),parameter :: x_resolution=1.0/(int(2,8)**(izipx*8))
@@ -109,18 +109,16 @@ module parameters
 
   ! 128 byte (equivalent 32 4-byte variables) header in zip2
   type sim_header
-    ! standard cubep3m 18 variables
-    integer nplocal
+    integer(8) nplocal
     real a, t, tau
     integer istep
     real dt_f_acc, dt_pp_acc, dt_c_acc
     integer cur_checkpoint,cur_proj,cur_halo
     real mass_p
-    ! more simulation config info
     real box
     integer(4) image
     integer(2) nn,nnt,nt,ncell,ncb
-    integer(1) izipx,izipv ! 17*4 bytes
+    integer(1) izipx,izipv ! 18*4 bytes
 
     ! cosmology
     real h0
@@ -128,8 +126,8 @@ module parameters
     real omega_l
     real s8
     real vsim2phys
-    real z_i ! 23*4 bytes
-    real garbage(9) ! 32*4 bytes
+    real z_i ! 24*4 bytes
+    real garbage(8) ! 32*4 bytes
   endtype
 
   type(sim_header) sim

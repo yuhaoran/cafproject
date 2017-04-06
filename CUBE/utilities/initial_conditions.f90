@@ -243,15 +243,14 @@ program initial_conditions
   !write(11) xi
   !close(11)
 
-
   ! delta_field ----------------------------------------------------
   if (head) print*, 'delta_field'
   if (head) print*, 'Start ftran'
   call pencil_fft_forward
   if (head) print*, 'Wiener filter on white noise'
-  do k=1,npen
-  do j=1,nf
-  do i=1,nyquest+1
+  do k=npen,npen
+  do j=nf,nf
+  do i=nyquest+1,nyquest+1
     ! global grid in Fourier space for i,j,k
     kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*nf+j
@@ -262,7 +261,7 @@ program initial_conditions
     kr=sqrt(kx**2+ky**2+kz**2)
     kr=max(kr,1.0)
     pow=interp_tf(2*pi*kr/box,1,2)/(4*pi*kr**3)
-    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*nf_global**3)
+    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*nf_global*nf_global*nf_global)
   enddo
   enddo
   enddo
@@ -270,11 +269,13 @@ program initial_conditions
 
   ! print*,icx,icy,icz,ig,jg,kg; stop ! check last frequency
   sync all
+print*,'cxyz',cxyz(ng*nn/2+1,ng,npen)
 
   cx_temp=cxyz ! backup delta
 
   if (head) print*,'Start btran'
   call pencil_fft_backward
+print*,'r3',r3(1,1,1)
 
   if (head) print*,'Write delta_L into file'
   if (head) print*,'Growth factor Dgrow(a) =',Dgrow(a),a
