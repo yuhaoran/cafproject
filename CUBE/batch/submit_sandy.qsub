@@ -1,7 +1,7 @@
 #!/bin/bash
 # MOAB/Torque submission script for Sandy
 #
-#PBS -l nodes=1:ppn=16,walltime=15:00:00
+#PBS -l nodes=1:ppn=16,walltime=4:00:00
 #PBS -N CUBE
 #PBS -q sandy
 
@@ -12,9 +12,11 @@ cd $PBS_O_WORKDIR
 
 cd ../utilities/
 source module_load_intel.sh
-cafrun -np 1 -N 1 ./ic.x > ../batch/many/log_ic_1536
+#cafrun -np 1 -N 1 ./ic.x > ../batch/many/log_ic1536
 
 cd ../main/
 cafrun -np 1 -N 1 ./cafcube.x > ../batch/many/log_cube1536
+#mpirun -np 1 ./cafcube.x > ../batch/many/log_cube1536
+
 
 cd ../batch/

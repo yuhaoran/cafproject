@@ -33,7 +33,7 @@ rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
 sync all
 !print*, 'sync z done', sum(rhoc)
 
-overhead_image=sum(rhoc)/real(np_image_max)
+overhead_image=sum(rhoc*unit8)/real(np_image_max,8)
 sync all
 
 do i=1,nn**3
@@ -45,9 +45,9 @@ if (head) then
 endif
 sync all
 
-if (sum(rhoc)>np_image_max) then
+if (overhead_image>1d0) then
   print*, '  error: too many particles in this image+buffer'
-  print*, '  ',sum(rhoc),np_image_max
+  print*, '  ',sum(rhoc*unit8),np_image_max
   print*, '  on',this_image()
   print*, '  please set image_buffer larger'
   stop

@@ -123,19 +123,26 @@ do itx=1,nnt
       x_new(:,idx)=x_new(:,idx)+1
 #else
       x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell) + vrand)
+!print*, nlast,np,l,ip
+!print*, x(:,ip)
+!print*, nint(dt_mid*vreal/(x_resolution*ncell) + vrand)
+!print*, idx
 !print*, x_new(:,idx)
 !stop
 #endif
-			v_new(:,idx)=v(:,ip)
+      v_new(:,idx)=v(:,ip)
+!print*, v(:,ip)
+!print*, v_new(:,idx)
+!stop
 #ifdef PID
       pid_new(:,idx)=pid(:,ip)
 #endif
-			! update mesh
-			! rhoce_new
-		enddo
-	enddo
-	enddo
-	enddo
+      ! update mesh
+      ! rhoce_new
+    enddo
+  enddo
+  enddo
+  enddo
 
 #ifdef debug
   print*, sum(abs(x_new(1,1:nptile_old)-1)*1)
@@ -152,6 +159,11 @@ do itx=1,nnt
     iright=ileft+nlen-1
     x(:,ileft:iright)=x_new(:,nlast-nlen+1:nlast)
     v(:,ileft:iright)=v_new(:,nlast-nlen+1:nlast)
+!print*,ileft,iright,nlast,nlen
+!print*, x(:,ileft:iright)
+!print*, x_new(:,nlast-nlen+1:nlast)
+!stop
+
 #ifdef PID
     pid(:,ileft:iright)=pid_new(:,nlast-nlen+1:nlast)
 #endif
@@ -166,7 +178,7 @@ enddo
 enddo
 
 nplocal=iright
-
+print*,x(:,1),v(:,1)
 do i=1,nn**3
   overhead_tile=max(overhead_tile,overhead_tile[i])
 enddo
@@ -187,11 +199,12 @@ rhoc(:,:,:0,:,:,:)=0
 rhoc(:,:,nt+1:,:,:,:)=0
 
 ! clean up x, v beyond nplocal
-x(:,nplocal+1:)=0
-v(:,nplocal+1:)=0
+!x(:,nplocal+1:)=0
+!v(:,nplocal+1:)=0
 #ifdef PID
-pid(:,nplocal+1:)=0
+!pid(:,nplocal+1:)=0
 #endif
+print*,x(:,1),v(:,1)
 
 sync all
 

@@ -3,6 +3,9 @@ subroutine particle_initialization
   implicit none
   save
 
+  integer(8),parameter :: blocksize=1024**2
+  integer(8) nplow,nphigh,num_io
+
   if (head) print*, 'particle_initialization'
 
   open(12,file=ic_name('zip2'),status='old',access='stream')
@@ -17,17 +20,42 @@ subroutine particle_initialization
   close(12)
   nplocal=sim%nplocal
 
+  num_io=(nplocal-1)/blocksize+1
+  if (head) print*, 'number of io',num_io
+
   open(10,file=ic_name('zip0'),status='old',access='stream')
-  read(10) x(:,:nplocal)
+  !read(10) x(:,:nplocal)
+  do i=1,num_io
+    nplow=(i-1)*blocksize+1
+    nphigh=min(i*blocksize,nplocal)
+    read(10) x(:,nplow:nphigh)
+  enddo
   close(10)
+
   open(11,file=ic_name('zip1'),status='old',access='stream')
-  read(11) v(:,:nplocal)
+  !read(11) v(:,:nplocal)
+  do i=1,num_io
+    nplow=(i-1)*blocksize+1
+    nphigh=min(i*blocksize,nplocal)
+    read(11) v(:,nplow:nphigh)
+  enddo
   close(11)
 
+  !print*,nplocal,ip
+  !print*,x(:,1),x(:,nplocal)
+  !print*,v(:,1),v(:,nplocal)
+  !print*,'done'
+  !stop
+
 #ifdef PID
-    open(14,file=ic_name('zipid'),status='old',access='stream')
-    read(14) pid(:,:nplocal)
-    close(14)
+  open(14,file=ic_name('zipid'),status='old',access='stream')
+  !read(14) pid(:,:nplocal)
+  do i=1,num_io
+    nplow=(i-1)*blocksize+1
+    nphigh=min(i*blocksize,nplocal)
+    read(14) pid(:,nplow:nphigh)
+  enddo
+  close(14)
 #endif
   a=a_i
   npglobal=0
