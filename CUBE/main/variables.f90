@@ -1,64 +1,64 @@
 module variables
-use parameters
-implicit none
-save
+  use parameters
+  implicit none
+  save
 
-! parameters
-integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
-integer(8),parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
-integer(8),parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
-integer(8),parameter ::  nseedmax=200
-integer(8),parameter :: unit8=1
-real,parameter :: vbuf=0.9
-real,parameter :: dt_max=1
-real,parameter :: dt_scale=1
-real,parameter :: GG=1.0/6.0/pi
+  ! parameters
+  integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
+  integer(8),parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
+  integer(8),parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
+  integer(8),parameter ::  nseedmax=200
+  integer(8),parameter :: unit8=1
+  real,parameter :: vbuf=0.9
+  real,parameter :: dt_max=1
+  real,parameter :: dt_scale=1
+  real,parameter :: GG=1.0/6.0/pi
 
-! variables
-integer(8) istep
-real dt[*],dt_old[*],dt_mid[*]
-real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*]
-real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
-real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
+  ! variables
+  integer(8) istep
+  real dt[*],dt_old[*],dt_mid[*]
+  real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*]
+  real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
+  real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
 
-integer(4) iseed(nseedmax), iseedsize
-integer(8) itx,ity,itz,ix,iy,iz,i_dim
-integer(8) i,j,k,l,ip,ipp,pp
-integer(8) nplocal[*], nptile(nnt,nnt,nnt)
-integer(8) npglobal, npcheck
-real(8) xq(3),deltax(3),deltav(3),vreal(3)
+  integer(4) iseed(nseedmax), iseedsize
+  integer(8) itx,ity,itz,ix,iy,iz,i_dim
+  integer(8) i,j,k,l,ip,ipp,pp
+  integer(8) nplocal[*], nptile(nnt,nnt,nnt)
+  integer(8) npglobal, npcheck
+  real(8) xq(3),deltax(3),deltav(3),vreal(3)
 
-real mass_p
+  real mass_p
 
-! FFT plans
-integer(8) plan_fft_fine,plan_ifft_fine
-real vmax,overhead_tile[*],overhead_image[*]
-real vdisp(506,2),sigma_vi_old,sigma_vi
-! n^3
-integer(izipx) x(3,np_image_max)[*], x_new(3,np_tile_max)
-integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
+  ! FFT plans
+  integer(8) plan_fft_fine,plan_ifft_fine
+  real vmax,overhead_tile[*],overhead_image[*]
+  real vdisp(506,2),sigma_vi_old,sigma_vi
+  ! n^3
+  integer(izipx) x(3,np_image_max)[*], x_new(3,np_tile_max)
+  integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
 #ifdef PID
-  integer(2) pid(4,np_image_max)[*], pid_new(4,np_tile_max)
+    integer(8) pid(np_image_max)[*], pid_new(np_tile_max)
 #endif
 
-real rho_f(nfe+2,nfe,nfe)
-real crho_f(nfe+2,nfe,nfe)
-real kern_f(nfe/2+1,nfe,nfe,3)
-real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1)
+  real rho_f(nfe+2,nfe,nfe)
+  real crho_f(nfe+2,nfe,nfe)
+  real kern_f(nfe/2+1,nfe,nfe,3)
+  real force_f(3,nfb:nfe-nfb+1,nfb:nfe-nfb+1,nfb:nfe-nfb+1)
 
-integer(4) rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
-integer(8) cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
+  integer(4) rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
+  integer(8) cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
 
-! coarse kernel arrays
-real ck(3,nc,nc,nc)
-real kern_c(nc*nn/2+1,nc,npen,3)
-real crho_c(nc*nn+2,nc,npen) !!! temp
-real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
+  ! coarse kernel arrays
+  real ck(3,nc,nc,nc)
+  real kern_c(nc*nn/2+1,nc,npen,3)
+  real crho_c(nc*nn+2,nc,npen) !!! temp
+  real force_c(3,0:nc+1,0:nc+1,0:nc+1)[*]
 
-character (10) :: img_s, z_s
+  character (10) :: img_s, z_s
 
-!equivalence(rhoce,rhoce1d)
+  !equivalence(rhoce,rhoce1d)
 
 contains
 

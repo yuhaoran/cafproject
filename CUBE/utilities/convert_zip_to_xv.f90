@@ -5,39 +5,31 @@ program convert_zip_to_xv
 use parameters
 implicit none
 
-integer i,j,k,l
-integer nplocal
-integer,parameter :: npnode=nf**3
+integer(8) i,j,k,l,nplocal,nlast
+integer(8),parameter :: npnode=nf**3
 real,parameter :: density_buffer=1.1
-integer,parameter :: npmax=npnode*density_buffer
-integer ind,dx,dxy,kg,mg,jg,ig,i0,j0,k0,itx,ity,itz,idx,imove,nf_shake,ibin
-integer nshift,ifrom,ileft,iright,nlen,nlast,g(3)
-real kr,kx(3), sincx,sincy,sincz,sinc, rbin
+integer(8),parameter :: npmax=npnode*density_buffer
+integer(8) ind,dx,dxy,kg,mg,jg,ig,i0,j0,k0,itx,ity,itz,idx,imove,nf_shake,ibin
 
-integer rhoc(nt,nt,nt,nnt,nnt,nnt)
+integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt)
 real rho_f(0:ng+1,0:ng+1,0:ng+1)
-integer idx1(3),idx2(3),ip,np
+integer(8) idx1(3),idx2(3),ip,np
 real mass_p,dx1(3),dx2(3),xv(6,npmax),xpos(3)
 integer(izipx) x(3,npmax)
 integer(izipv) v(3,npmax)
 
-character (10) :: img_s, z_s
-integer,parameter :: nexp=4
-
-integer pp,i_s,j_s,k_s,ii_s,jj_s,kk_s,r
-integer wp(npmax),pp_s
-integer hoc_g(ng,ng,ng),ll_p(npmax) ! linked list
-integer hoc_p(npmax),ll_g(ng**3) ! inverse linked list
+integer(8) pp,i_s,j_s,k_s,ii_s,jj_s,kk_s,r
+integer(8) wp(npmax),pp_s
+integer(8) hoc_g(ng,ng,ng),ll_p(npmax) ! linked list
+integer(8) hoc_p(npmax),ll_g(ng**3) ! inverse linked list
 real r2,r2min,gpos(3),hpos(3),dpos(3)
 real(8) rho_tot
 logical search
 
 call geometry
 
-if (head) print*, 'rho_f'
-
-
 if (head) then
+  print*, 'convert zip to xv'
   print*, 'checkpoint at:'
   open(16,file='../main/redshifts.txt',status='old')
   do i=1,nmax_redshift
@@ -49,7 +41,7 @@ if (head) then
 endif
 
 
-do cur_checkpoint=n_checkpoint,n_checkpoint
+do cur_checkpoint=1,n_checkpoint
   open(12,file=output_name('zip2'),status='old',action='read',access='stream')
   read(12) sim
   ! check zip format and read rhoc
@@ -64,7 +56,6 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   mass_p=sim%mass_p
   print*, 'nplocal =', sim%nplocal
   nplocal=sim%nplocal
-  print*, 'v_i2r =', sim%v_i2r
 
   open(10,file=output_name('zip0'),status='old',action='read',access='stream')
   read(10) x(:,:nplocal)
@@ -85,13 +76,18 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
     np=rhoc(i,j,k,itx,ity,itz)
     do l=1,np
       ip=nlast+l
-      xv(1:3,ip) = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (x(:,ip)+ishift+rshift)*x_resolution ! in unit of nc
-      xv(4:6,ip) = v(:,ip)*sim%v_i2r
+      xv(1:3,ip) = nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution ! in unit of nc
+      !print*,ishift,rshift
+      !print*,x(:,ip)
+      !print*,x(:,ip)+ishift
+      !print*, (int(x(:,ip)+ishift,izipx)+rshift), xv(:3,ip); stop
+      xv(4:6,ip) = 0
       xpos = xv(1:3,ip) * real(ng)/real(nc) - 0.5
       idx1=floor(xpos)+1
       idx2=idx1+1
       dx1=idx1-xpos
       dx2=1-dx1
+
       rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p
       rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p
       rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p
@@ -109,8 +105,13 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
   enddo
   enddo
 
-  print*, sum(rho_f*1d0)
+  open(16,file=output_name('xv'),status='replace',access='stream')
+  write(16) xv(:,:nplocal)*ncell ! / real(nc) ! in unit of box size
+  close(16)
+  print*, 'complete writing xv.bin'
 
+
+  print*, sum(rho_f*1d0),nlast,sum(rhoc),sim%mass_p
   ! buffer fine density
   rho_f(1,:,:)=rho_f(1,:,:)+rho_f(ng+1,:,:)
   rho_f(ng,:,:)=rho_f(ng,:,:)+rho_f(0,:,:)
@@ -120,11 +121,11 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
 
   rho_f(:,:,1)=rho_f(:,:,1)+rho_f(:,:,ng+1)
   rho_f(:,:,ng)=rho_f(:,:,ng)+rho_f(:,:,0)
-
-  rho_tot=sum(rho_f(1:ng,1:ng,1:ng)*1.d0)
-  print*, 'mean density =',rho_tot/ng/ng/ng
-  rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(rho_tot/ng/ng/ng)-1
-
+  print*, sum(rho_f(1:ng,1:ng,1:ng)*1d0)
+  stop
+  !rho_tot=sum(rho_f(1:ng,1:ng,1:ng)*1.d0)
+  !print*, 'mean density =',rho_tot/ng/ng/ng
+  !rho_f(1:ng,1:ng,1:ng)=rho_f(1:ng,1:ng,1:ng)/(rho_tot/ng/ng/ng)-1
   open(15,file=output_name('delta_nbody'),status='replace',access='stream')
   write(15) rho_f(1:ng,1:ng,1:ng)
   close(15)
@@ -132,7 +133,6 @@ do cur_checkpoint=n_checkpoint,n_checkpoint
 
   !write(16) xv(1:3,:nplocal) * sim%box*1000*(sim%h0/100)/real(sim%nt*sim%nnt*sim%nn) ! in unit of kpc
 
-  print*, 'v_i2r =',sim%v_i2r
 
   open(16,file=output_name('xv'),status='replace',access='stream')
   write(16) xv(:,:nplocal) / real(nc) ! in unit of box size

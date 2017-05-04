@@ -10,13 +10,6 @@ cd $PBS_O_WORKDIR
 
 # EXECUTION COMMAND; -np = nodes*ppn
 
-cd ../utilities/
-source module_load_intel.sh
-cafrun  -N 1 ./ic.x > ../batch/many/log_ic1536
+source ../utilities/module_load_intel.sh
+cafrun -N 1 ./a.out > log
 
-cd ../main/
-#cafrun  -N 1 ./cafcube.x > ../batch/many/log_cube1536
-#mpirun -np 1 ./cafcube.x > ../batch/many/log_cube1536
-
-
-cd ../batch/

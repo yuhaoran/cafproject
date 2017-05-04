@@ -1,7 +1,7 @@
 #define mkdir
 #define READ_SEED
 #define WRITE_NOISE
-!#define READ_NOISE
+#define READ_NOISE
 !#define DO_2LPT
 
 program initial_conditions
@@ -57,7 +57,8 @@ program initial_conditions
   integer(izipx) x(3,npmax)
   integer(izipv) v(3,npmax)
 #ifdef PID
-    integer(2) pid(4,npmax)
+    integer(8) pid(npmax)
+    integer(8) iq(3)
 #endif
   real grad_max(3)[*],vmax(3),vf
   real vdisp(506,2),sigma_vi
@@ -208,7 +209,7 @@ program initial_conditions
   sync all
 #ifdef READ_NOISE
       !!!!! test only for serial job
-      open(11,file='initnoise.bin',access='stream')
+      open(11,file=output_dir()//'noise'//output_suffix(),access='stream')
       read(11) r3
       close(11)
       print*, 'READ IN NOISE MAP:', r3(1,1,1), r3(ng,ng,ng)
@@ -504,9 +505,15 @@ print*,'r3',r3(1,1,1)
 !stop
 
 #ifdef PID
-      pid(1,idx)=image
-      pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove ) &
-      /nf*int(2,8)**(8*izipx)-int(2,8)**(8*izipx-1))
+      iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
+      iq = modulo(iq,nf_global)
+      pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
+      !if (i==1 .and. j==2 .and. k==1) then
+      !  print*, iq,idx,pid(idx); stop
+      !endif
+      !pid(1,idx)=image
+      !pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove ) &
+      !/nf*int(2,8)**(8*izipx)-int(2,8)**(8*izipx-1))
 #endif
     enddo
     enddo
@@ -522,7 +529,7 @@ print*,'r3',r3(1,1,1)
       x(:,ileft:iright)=x(:,nlast-nlen+1:nlast)
       v(:,ileft:iright)=v(:,nlast-nlen+1:nlast)
 #ifdef PID
-      pid(:,ileft:iright)=pid(:,nlast-nlen+1:nlast)
+      pid(ileft:iright)=pid(nlast-nlen+1:nlast)
 #endif
     enddo
     enddo
@@ -530,7 +537,7 @@ print*,'r3',r3(1,1,1)
     write(10) x(:,1:iright)
     write(11) v(:,1:iright)
 #ifdef PID
-    write(14) pid(:,1:iright)
+    write(14) pid(1:iright)
 #endif
     write(12) rhoce(1:nt,1:nt,1:nt)
 

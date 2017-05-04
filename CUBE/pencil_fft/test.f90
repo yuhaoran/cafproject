@@ -7,8 +7,8 @@ program test_penfft
   integer,parameter :: NULL=0
   real,parameter :: pi=3.14159
 
-  integer,parameter :: nn=1
-  integer,parameter :: nc=768 ! nc/image/dim, in physical volume, >=24
+  integer,parameter :: nn=2
+  integer,parameter :: nc=1536 ! nc/image/dim, in physical volume, >=24
   integer,parameter :: npen=nc/nn ! nc /dim in shorter side of the pencil, for pencil decomposition
 
   !! MPI images !!

@@ -1,8 +1,8 @@
 OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
-#OPTIONS+=-DPID
+OPTIONS+=-DPID
 
-all: ic.x #dsp.x convert.x
+all: ic.x dsp.x #convert.x
 	@echo "done"
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)

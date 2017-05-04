@@ -8,11 +8,11 @@
 module powerspectrum
 use pencil_fft
 
-integer,parameter :: nk_ny=ng*nn/2 ! Nyquist wave number
+integer(8),parameter :: nk_ny=ng*nn/2 ! Nyquist wave number
 #ifdef linear_kbin
-  integer,parameter :: nbin=nint(nk_ny*sqrt(3.))
+  integer(8),parameter :: nbin=nint(nk_ny*sqrt(3.))
 #else
-  integer,parameter :: nbin=floor(4*log(nk_ny*sqrt(3.)/0.95)/log(2.))
+  integer(8),parameter :: nbin=floor(4*log(nk_ny*sqrt(3.)/0.95)/log(2.))
 #endif
 complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
@@ -22,7 +22,7 @@ contains
 subroutine cross_power(xi,cube1,cube2)
 implicit none
 
-integer i,j,k,ig,jg,kg,ibin
+integer(8) i,j,k,ig,jg,kg,ibin
 real kr,kx(3),sincx,sincy,sincz,sinc,rbin
 
 real cube1(ng,ng,ng),cube2(ng,ng,ng)

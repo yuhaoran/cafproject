@@ -39,10 +39,9 @@ subroutine update_particle
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np
         ip=nlast-np+l
-
-        xq=(/i,j,k/)-1d0 + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-        deltax=dt_mid*vreal/4
+        xq=((/i,j,k/)-1d0) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
+        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/sigma_vi_old)
+        deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
         rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! update mesh
         !print*,x(:,ip)
@@ -74,9 +73,9 @@ subroutine update_particle
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np
         ip=nlast-np+l
-        xq=(/i,j,k/)-1d0 + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
-        deltax=dt_mid*vreal/4
+        xq=((/i,j,k/)-1d0) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
+        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/sigma_vi_old)
+        deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
         rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
         idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3)) ! index for writing
@@ -96,7 +95,7 @@ subroutine update_particle
   !print*, v_new(:,idx)
   !stop
 #ifdef PID
-        pid_new(:,idx)=pid(:,ip)
+        pid_new(idx)=pid(ip)
 #endif
         ! update mesh
         ! rhoce_new
@@ -127,7 +126,7 @@ subroutine update_particle
   !stop
 
 #ifdef PID
-      pid(:,ileft:iright)=pid_new(:,nlast-nlen+1:nlast)
+      pid(ileft:iright)=pid_new(nlast-nlen+1:nlast)
 #endif
     enddo
     enddo

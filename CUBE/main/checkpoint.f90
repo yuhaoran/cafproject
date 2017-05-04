@@ -57,11 +57,11 @@ subroutine checkpoint
 #ifdef PID
   if (head) print*, '  write in file:',output_name('zipid')
   open(14,file=output_name('zipid'),status='replace',access='stream')
-  !write(14) pid(:,:nplocal)
+  !write(14) pid(:nplocal)
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)
-    write(14) pid(:,nplow:nphigh)
+    write(14) pid(nplow:nphigh)
   enddo
   close(14)
 #endif

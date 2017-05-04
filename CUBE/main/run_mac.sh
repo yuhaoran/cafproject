@@ -9,3 +9,8 @@ make
 cd ../main/
 make
 ./cafcube.x
+
+cd ../utilities/
+./dsp.x
+
+cd ../main/
