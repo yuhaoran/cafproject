@@ -29,6 +29,7 @@ subroutine timestep
     enddo
 
     dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax)
+
     call expansion(a,dt,da_1,da_2)
 
     da=da_1+da_2

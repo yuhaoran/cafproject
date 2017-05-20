@@ -1,7 +1,7 @@
 #define mkdir
 #define READ_SEED
 #define WRITE_NOISE
-#define READ_NOISE
+!#define READ_NOISE
 !#define DO_2LPT
 
 program initial_conditions
@@ -23,7 +23,7 @@ program initial_conditions
   integer(8) i,j,k
   integer(4) seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
-  real(8) v8, norm, xq(3),gradphi(3),vreal(3)
+  real(8) v8, norm, xq(3),gradphi(3),vreal(3), dvar[*], dvarg
   integer(int64) :: time64
 
   integer(8) nplocal[*],npglobal
@@ -268,19 +268,24 @@ program initial_conditions
 
   ! print*,icx,icy,icz,ig,jg,kg; stop ! check last frequency
   sync all
-print*,'cxyz',cxyz(ng*nn/2+1,ng,npen)
+  print*,'cxyz',cxyz(ng*nn/2+1,ng,npen)
 
-  cx_temp=cxyz ! backup delta
+  cx_temp=cxyz ! backup delta_L
 
   if (head) print*,'Start btran'
   call pencil_fft_backward
-print*,'r3',r3(1,1,1)
+  print*,'r3',r3(1,1,1)
+  print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'Write delta_L into file'
-  if (head) print*,'Growth factor Dgrow(a) =',Dgrow(a),a
+  if (head) print*,'Growth factor Dgrow(',a,') =',Dgrow(a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
+
+
+
+
 
   ! Potential field ----------------------------------------------------
   if (head) print*, 'Potential field'
@@ -308,10 +313,7 @@ print*,'r3',r3(1,1,1)
   if (correct_kernel) then
     if (head) print*, 'correct kernel'
     call pencil_fft_backward
-    !print*,'kernel',image,sum(r3*1d0)
-    !open(11,file='laplace.dat',status='replace',access='stream')
-    !write(11) r3
-    !close(11)
+
     temp8=0
     if (image==1) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
     !if (image==1) print*, r3(9,1,1),r3(1,9,1),r3(1,1,9)
@@ -357,14 +359,32 @@ print*,'r3',r3(1,1,1)
     enddo
     sync all
     !print*,'ewarld kernel',image,sum(r3*1d0)
+
     call pencil_fft_forward
+
   endif
-  ! Complex multiply density field with potential kernel
+  ! Complex multiply delta_L with potential kernel
   cxyz=real(cxyz)*cx_temp
   cx_temp=cxyz  ! backup phi(k)
 
   !!!!!! output phi in real space
   call pencil_fft_backward
+
+
+  ! Primordial Non-Gaussianity
+  dvar=sum((r3*1d0)**2)
+  dvarg=0
+  do i=1,nn**3 ! co_sum
+    dvarg=dvarg+dvar[i]
+  enddo
+  dvarg=dvarg/nf_global/nf_global/nf_global
+
+print*, r3(1:2,1,1)
+print*, r3(1:2,1,1)**2
+  r3=r3-f_nl*(r3**2-dvarg)
+print*, dvarg
+print*, r3(1:2,1,1)**2
+
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
   if (head) print*, 'Write phi1 into file'
@@ -424,6 +444,7 @@ print*,'r3',r3(1,1,1)
     print*, 'vmax',vmax
     if (maxval(grad_max)/2/(4*pi)>=nfb) then
       print*, 'particle dsp > buffer'
+      print*, maxval(grad_max)/2/(4*pi),nfb
       stop
     endif
   endif

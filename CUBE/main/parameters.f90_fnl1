@@ -3,7 +3,7 @@ module parameters
   save
 
   ! output directory for both IC and snapshots
-  character(*),parameter :: opath='../output/universe5/'
+  character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! 1 or 2, for particle location
@@ -85,7 +85,7 @@ module parameters
   real,parameter :: power_index=2
   real,parameter :: wde=-1
 
-  real,parameter :: f_nl=0.004
+  real,parameter :: f_nl=0
   real,parameter :: g_nl=0
   real,parameter :: n_s=0.96
   real,parameter :: scalar_amp=2.142e-9

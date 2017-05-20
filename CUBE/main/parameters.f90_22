@@ -3,7 +3,7 @@ module parameters
   save
 
   ! output directory for both IC and snapshots
-  character(*),parameter :: opath='../output/universe5/'
+  character(*),parameter :: opath='../output/universe2/'
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! 1 or 2, for particle location
@@ -59,7 +59,7 @@ module parameters
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=200.0  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=80.0  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
@@ -85,7 +85,7 @@ module parameters
   real,parameter :: power_index=2
   real,parameter :: wde=-1
 
-  real,parameter :: f_nl=0.004
+  real,parameter :: f_nl=0
   real,parameter :: g_nl=0
   real,parameter :: n_s=0.96
   real,parameter :: scalar_amp=2.142e-9
