@@ -66,9 +66,9 @@ real,parameter :: nexp=4.0 ! CIC kernel
 #endif
     xi(1,ibin)=xi(1,ibin)+1 ! number count
     xi(2,ibin)=xi(2,ibin)+kr ! k count
-    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**0.0)*4*pi*kr**3 ! linear density field
+    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! linear density field
     amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! CIC'ed density field
-    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**2.0)*4*pi*kr**3 ! cross
+    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! cross
 
     xi(3,ibin)=xi(3,ibin)+amp11 ! auto power 1
     xi(4,ibin)=xi(4,ibin)+amp22 ! auto power 2
