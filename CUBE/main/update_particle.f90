@@ -22,7 +22,7 @@ subroutine update_particle
   do itz=1,nnt ! loop over tile
   do ity=1,nnt
   do itx=1,nnt
-  if (head) print*,'  tile',int(itx,1),int(ity,1),int(itz,1)
+  !if (head) print*,'  tile',int(itx,1),int(ity,1),int(itz,1)
     rhoce=0
     rholocal=0
     x_new=0
@@ -31,7 +31,7 @@ subroutine update_particle
     pid_new=0
 #   endif
 
-    if (head) print*,'    density loop'
+    !if (head) print*,'    density loop'
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -51,7 +51,7 @@ subroutine update_particle
     enddo
     enddo
 
-    if (head) print*,'    cubesum3'
+    !if (head) print*,'    cubesum3'
     cume=cumsum3(rhoce)
     overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max))
 
@@ -65,7 +65,7 @@ subroutine update_particle
 
     ! create a new x and v for this local tile
 
-  if (head) print*,'    xvnew loop'
+  !if (head) print*,'    xvnew loop'
     do k=1-ncb,nt+ncb ! update particle
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -111,7 +111,7 @@ subroutine update_particle
 
     sync all
 
-  if (head) print*,'    delete_particle loop'
+  !if (head) print*,'    delete_particle loop'
     do k=1,nt
     do j=1,nt
       ileft=iright+1
@@ -165,7 +165,7 @@ subroutine update_particle
 #ifdef PID
   !pid(:,nplocal+1:)=0
 #endif
-  print*,'  check xv of first particle',x(:,1),v(:,1)
+  !print*,'  check xv of first particle',x(:,1),v(:,1)
 
   sync all
 

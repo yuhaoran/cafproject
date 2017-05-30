@@ -46,11 +46,11 @@ subroutine particle_mesh
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    if (head) print*,'    tile',int(itx,1),int(ity,1),int(itz,1)
+    !if (head) print*,'    tile',int(itx,1),int(ity,1),int(itz,1)
     ! fine_cic_mass ------------------------------------------------------------
     rho_f=0
     crho_f=0
-    if (head) print*,'      fine_cic_mass'
+    !if (head) print*,'      fine_cic_mass'
     do k=2-ncb,nt+ncb-1
     do j=2-ncb,nt+ncb-1
     do i=2-ncb,nt+ncb-1
@@ -78,11 +78,11 @@ subroutine particle_mesh
     enddo
     enddo
     ! fine force ---------------------------------------------------------------
-    if (head) print*,'      fine_fft'
+    !if (head) print*,'      fine_fft'
     call sfftw_execute(plan_fft_fine)
     crho_f(:,:,:)=rho_f(:,:,:) ! back up
     do i_dim=1,3
-      if (head) print*,'      fine_ifft dim',int(i_dim,1)
+      !if (head) print*,'      fine_ifft dim',int(i_dim,1)
       rho_f(::2,:,:)=-crho_f(2::2,:,:)*kern_f(:,:,:,i_dim)
       rho_f(2::2,:,:)=crho_f(::2,:,:)*kern_f(:,:,:,i_dim)
       call sfftw_execute(plan_ifft_fine)
@@ -91,7 +91,7 @@ subroutine particle_mesh
     enddo
     f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:)**2,1))
     ! fine velocity ------------------------------------------------------------
-    if (head) print*,'      fine velocity'
+    !if (head) print*,'      fine velocity'
     do k=1,nt
     do j=1,nt
     do i=1,nt ! loop over coarse cell

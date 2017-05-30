@@ -454,6 +454,7 @@ print*, r3(1:2,1,1)**2
   open(23,file='../velocity_conversion/vdisp.bin',access='stream')
   read(23) vdisp
   close(23)
+  vdisp(:,2)=vdisp(:,2)*vdisp_boost
   vdisp(:,2)=vdisp(:,2)*vdisp(:,1)/1.5/box/h0/sqrt(omega_m)*real(nf_global)/sqrt(3.)
   sigma_vi=interp_vdisp(a)
   if (head) print*,'sigma_vi',sigma_vi

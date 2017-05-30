@@ -1,5 +1,5 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!       Coarray CubeP3M       !
+!   CUBE™ in Coarray Fortran  !
 !   haoran@cita.utoronto.ca   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -17,16 +17,16 @@ program cafcube
 
   call initialize
   call particle_initialization
-  print*,v(:,1),v(:,nplocal)
+  if (head) print*,v(:,1),v(:,nplocal)
   call buffer_density
-  print*,v(:,1),v(:,nplocal)
+  if (head) print*,v(:,1),v(:,nplocal)
   call buffer_x
-  print*,v(:,1),v(:,nplocal)
+  if (head) print*,v(:,1),v(:,nplocal)
   call buffer_v
-  print*,v(:,1),v(:,nplocal)
-  print*,'done'
+  if (head) print*,v(:,1),v(:,nplocal)
+  if (head) print*,' buffer before main loop done'
 
-    if (head) open(77,file='vel_info.bin',access='stream',status='replace')
+  if (head) open(77,file=output_dir()//'vinfo'//output_suffix(),access='stream',status='replace')
 
   if (head) print*, '---------- starting main loop ----------'
   DO istep=1,istep_max
@@ -34,10 +34,10 @@ program cafcube
     call update_particle
 
       ! velocity analysis
-      print*,'velocity analysis'
-      print*,'  scale factor',a,a_mid
+      if (head) print*,'velocity analysis'
+      if (head) print*,'  scale factor',a,a_mid
       max_vsim=0; std_vsim=0; kurt_vsim=0
-      print*, 'nplocal',nplocal
+      if (head) print*, 'nplocal',nplocal
       do ip=1,nplocal
         vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
         abs_vsim=sqrt(sum(vreal**2))
@@ -50,9 +50,10 @@ program cafcube
       kurt_vsim=kurt_vsim/nplocal/std_vsim**4
       print*,'  vmax',max_vsim
       print*,'   std',std_vsim
-      print*,'  kurt',kurt_vsim
+      print*,' std_L',sigma_vi_old*sqrt(3.)
+      !print*,'  kurt',kurt_vsim
 
-      write(77) a-da,std_vsim,max_vsim,kurt_vsim
+      write(77) a-da,real(std_vsim,4),real(max_vsim,4),real(kurt_vsim,4)
 
     sync all
     call buffer_density
