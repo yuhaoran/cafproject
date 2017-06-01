@@ -94,7 +94,8 @@ module parameters
   real,parameter :: ra_max=0.2
   real(8),parameter :: v_resolution=2.1/(int(2,8)**(izipv*8))
   real(8),parameter :: x_resolution=1.0/(int(2,8)**(izipx*8))
-  real(8),parameter :: vdisp_boost=1.5
+  real(8),parameter :: vdisp_boost=1.0
+  real(8),parameter :: vrel_boost=0.5
 
   ! transfer function
   integer(8), parameter      :: nk_tf=2000

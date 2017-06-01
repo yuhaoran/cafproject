@@ -6,14 +6,30 @@ subroutine buffer_density
   save
   integer(8) nshift,nlen,nlast,ifrom
 
+  ! the following variables are introduced because
+  ! gcc only allows <= 7 ranks in arrays
+  real(4) vtransx(3,ncb,nt+2*ncb,nt+2*ncb,nnt,nnt)[*]
+  real(4) vtransy(3,nt+2*ncb,ncb,nt+2*ncb,nnt,nnt)[*]
+  real(4) vtransz(3,nt+2*ncb,nt+2*ncb,ncb,nnt,nnt)[*]
+
   if (head) print*, 'buffer_density'
   overhead_image=0
   ! sync buffer regions in rhoc for each tile
   !x
-  rhoc(:0,:,1:nt,1,:,:)=rhoc(nt-ncb+1:nt,:,1:nt,nnt,:,:)[image1d(inx,icy,icz)]
-  rhoc(:0,:,1:nt,2:,:,:)=rhoc(nt-ncb+1:nt,:,1:nt,:nnt-1,:,:)
-  rhoc(nt+1:,:,1:nt,nnt,:,:)=rhoc(1:ncb,:,1:nt,1,:,:)[image1d(ipx,icy,icz)]
-  rhoc(nt+1:,:,1:nt,:nnt-1,:,:)=rhoc(1:ncb,:,1:nt,2:,:,:)
+  rhoc(:0,:,:,1,:,:)=rhoc(nt-ncb+1:nt,:,:,nnt,:,:)[image1d(inx,icy,icz)]
+  rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
+  rhoc(nt+1:,:,:,nnt,:,:)=rhoc(1:ncb,:,:,1,:,:)[image1d(ipx,icy,icz)]
+  rhoc(nt+1:,:,:,:nnt-1,:,:)=rhoc(1:ncb,:,:,2:,:,:)
+
+  vtransx=vfield(:,nt-ncb+1:nt,:,:,nnt,:,:)
+  sync all
+  vfield(:,:0,:,:,1,:,:)=vtransx(:,:,:,:,:,:)[image1d(inx,icy,icz)]
+  vfield(:,:0,:,:,2:,:,:)=vfield(:,nt-ncb+1:nt,:,:,:nnt-1,:,:)
+  vtransx=vfield(:,1:ncb,:,:,1,:,:)
+  sync all
+  vfield(:,nt+1:,:,:,nnt,:,:)=vtransx(:,:,:,:,:,:)[image1d(ipx,icy,icz)]
+  vfield(:,nt+1:,:,:,:nnt-1,:,:)=vfield(:,1:ncb,:,:,2:,:,:)
+
   sync all
   !print*, 'sync x done', sum(rhoc)
 
@@ -23,6 +39,15 @@ subroutine buffer_density
   rhoc(:,nt+1:,:,:,nnt,:)=rhoc(:,1:ncb,:,:,1,:)[image1d(icx,ipy,icz)]
   rhoc(:,nt+1:,:,:,:nnt-1,:)=rhoc(:,1:ncb,:,1:,2:,:)
   sync all
+
+  vtransy=vfield(:,:,nt-ncb+1:nt,:,:,nnt,:)
+  sync all
+  vfield(:,:,:0,:,:,1,:)=vtransy(:,:,:,:,:,:)[image1d(icx,iny,icz)]
+  vfield(:,:,:0,:,:,2:,:)=vfield(:,:,nt-ncb+1:nt,:,:,1:nnt-1,:)
+  vtransy=vfield(:,:,1:ncb,:,:,1,:)
+  sync all
+  vfield(:,:,nt+1:,:,:,nnt,:)=vtransy(:,:,:,:,:,:)[image1d(icx,ipy,icz)]
+  vfield(:,:,nt+1:,:,:,:nnt-1,:)=vfield(:,:,1:ncb,:,1:,2:,:)
   !print*, 'sync y done', sum(rhoc)
 
   !z
@@ -31,6 +56,15 @@ subroutine buffer_density
   rhoc(:,:,nt+1:,:,:,nnt)=rhoc(:,:,1:ncb,:,:,1)[image1d(icx,icy,ipz)]
   rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
   sync all
+
+  vtransz=vfield(:,:,:,nt-ncb+1:nt,:,:,nnt)
+  sync all
+  vfield(:,:,:,:0,:,:,1)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,inz)]
+  vfield(:,:,:,:0,:,:,2:)=vfield(:,:,:,nt-ncb+1:nt,:,:,:nnt-1)
+  vtransz=vfield(:,:,:,1:ncb,:,:,1)
+  sync all
+  vfield(:,:,:,nt+1:,:,:,nnt)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,ipz)]
+  vfield(:,:,:,nt+1:,:,:,:nnt-1)=vfield(:,:,:,1:ncb,:,:,2:)
   !print*, 'sync z done', sum(rhoc)
 
   overhead_image=sum(rhoc*unit8)/real(np_image_max,8)

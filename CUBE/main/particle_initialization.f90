@@ -18,6 +18,11 @@ subroutine particle_initialization
     endif
     read(12) rhoc(1:nt,1:nt,1:nt,:,:,:)
   close(12)
+
+  open(15,file=ic_name('vfield'),status='old',access='stream')
+    read(15) vfield(:,1:nt,1:nt,1:nt,:,:,:)
+  close(15)
+
   nplocal=sim%nplocal
 
   num_io=(nplocal-1)/blocksize+1

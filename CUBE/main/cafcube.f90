@@ -37,20 +37,39 @@ program cafcube
       if (head) print*,'velocity analysis'
       if (head) print*,'  scale factor',a,a_mid
       max_vsim=0; std_vsim=0; kurt_vsim=0
-      if (head) print*, 'nplocal',nplocal
-      do ip=1,nplocal
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+      if (head) print*, '  nplocal',nplocal
+      !do ip=1,nplocal
+      ip=0
+      do itz=1,nnt
+      do ity=1,nnt
+      do itx=1,nnt
+      do k=1,nt
+      do j=1,nt
+      do i=1,nt
+      do l=1,rhoc(i,j,k,itx,ity,itz)
+        ip=ip+1
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_old*vrel_boost))
+        vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         abs_vsim=sqrt(sum(vreal**2))
         max_vsim=max(max_vsim,abs_vsim)
         std_vsim=std_vsim+abs_vsim**2!         sqrt(sum(abs_vsim**2/nplocal*1d0))
         kurt_vsim=kurt_vsim+abs_vsim**4!       sum(abs_vsim**4*1d0/nplocal)/std_vsim**4
         !print*,abs_vsim,max_vsim,std_vsim,kurt_vsim
       enddo
+      enddo
+      enddo
+      enddo
+      enddo
+      enddo
+      enddo
+      !enddo
       std_vsim=sqrt(std_vsim/nplocal)
       kurt_vsim=kurt_vsim/nplocal/std_vsim**4
+      print*,'™™™™™™™™™™™™™™™™™™™™™™™™™™™'
       print*,'  vmax',max_vsim
       print*,'   std',std_vsim
       print*,' std_L',sigma_vi_old*sqrt(3.)
+      print*,'  stdv',sqrt(sum(abs(vfield(:,1:nt,1:nt,1:nt,:,:,:)**2)*1d0)/nc/nc/nc)
       !print*,'  kurt',kurt_vsim
 
       write(77) a-da,real(std_vsim,4),real(max_vsim,4),real(kurt_vsim,4)

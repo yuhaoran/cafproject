@@ -53,6 +53,7 @@ program initial_conditions
   integer(8),parameter :: npmax=2*(npt+2*npb)**3
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(izipx) x(3,npmax)
   integer(izipv) v(3,npmax)
@@ -471,6 +472,7 @@ print*, r3(1:2,1,1)**2
   open(14,file=ic_name('zipid'),status='replace',access='stream')
   if (head) print*, '  also create PID'
 #endif
+  open(15,file=ic_name('vfield'),status='replace',access='stream') !!!
   write(12) sim ! occupying 128 bytes
 
   nplocal=0
@@ -493,10 +495,15 @@ print*, r3(1:2,1,1)**2
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1
+      vreal=-gradphi/(8*pi)*vf
+      vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal !!!
     enddo
     enddo
     enddo
     enddo
+    vfield(1,:,:,:)=vfield(1,:,:,:)/rhoce !!!
+    vfield(2,:,:,:)=vfield(2,:,:,:)/rhoce !!!
+    vfield(3,:,:,:)=vfield(3,:,:,:)/rhoce !!!
 
     cume=cumsum3(rhoce)
 
@@ -516,7 +523,8 @@ print*, r3(1:2,1,1)**2
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
       x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
       vreal=-gradphi/(8*pi)*vf
-      v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
+      vreal=vreal-vfield(:,g(1),g(2),g(3)) !!!
+      v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
 
 !print*, x_resolution
 !print*, xq
@@ -562,6 +570,7 @@ print*, r3(1:2,1,1)**2
     write(14) pid(1:iright)
 #endif
     write(12) rhoce(1:nt,1:nt,1:nt)
+    write(15) vfield(:,1:nt,1:nt,1:nt)
 
     nplocal=nplocal+iright
 
@@ -574,6 +583,7 @@ print*, r3(1:2,1,1)**2
 #ifdef PID
   close(14)
 #endif
+  close(15)
 
   sim%nplocal=nplocal
   rewind(12)

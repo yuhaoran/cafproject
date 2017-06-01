@@ -106,7 +106,12 @@ subroutine particle_mesh
         dx2 = 1 - dx1
         idx1=idx1+nfb
         idx2=idx2+nfb
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi_old)
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_old*vrel_boost))
+        !print*,v(:,ip)
+        !print*,vreal
+        !print*,vfield(:,i,j,k,itx,ity,itz)
+        !print*,vreal+vfield(:,i,j,k,itx,ity,itz)
+        !print*,'force'
         vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
         vreal=vreal+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -115,14 +120,27 @@ subroutine particle_mesh
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
+        !print*,vreal
+        !print*,vfield(:,i,j,k,itx,ity,itz)
+        !print*,vreal+vfield(:,i,j,k,itx,ity,itz)
+        !print*,'correct evolution'
+        vreal=vreal+(1-sigma_vi/sigma_vi_old)*vfield(:,i,j,k,itx,ity,itz)
+        !print*,sigma_vi_old,sigma_vi
+        !print*,(1-sigma_vi/sigma_vi_old)*vfield(:,i,j,k,itx,ity,itz)
+        !print*,vreal
+        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+        !print*,v(:,ip)
+        !print*, ''
+        !stop
       enddo
+
     enddo
     enddo
     enddo
   enddo
   enddo
   enddo
+  vfield=vfield*(sigma_vi/sigma_vi_old)
   sigma_vi_old=sigma_vi
   sync all
   !-----------------------------------------------------------------------------
@@ -212,7 +230,7 @@ subroutine particle_mesh
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:)
         dx2(:)=1-dx1(:)
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/sigma_vi)
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         vreal=vreal+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
         vreal=vreal+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -222,7 +240,7 @@ subroutine particle_mesh
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
         vmax=max(vmax,maxval(vreal))
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/sigma_vi*vreal)/pi,kind=izipv)
+        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
     enddo
     enddo

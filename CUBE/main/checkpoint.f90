@@ -34,6 +34,11 @@ subroutine checkpoint
   write(12) rhoc(1:nt,1:nt,1:nt,:,:,:)
   close(12)
 
+  if (head) print*, '  write in file:',output_name('vfield')
+  open(12,file=output_name('vfield'),status='replace',access='stream')
+  write(12) vfield(:,1:nt,1:nt,1:nt,:,:,:)
+  close(12)
+
   if (head) print*, '  write in file:',output_name('zip0')
   open(10,file=output_name('zip0'),status='replace',access='stream')
   !write(10) x(:,:nplocal)

@@ -7,6 +7,8 @@ subroutine update_particle
   integer(8) ileft,iright,nlast,nlen,idx
   integer(8) g(3),np ! index of grid
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
+  real(4) vfield_new(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  real(4) :: weight_v=0.1 ! how previous-step vfield is mostly weighted
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
   integer(8) ii,jj,kk
@@ -25,6 +27,8 @@ subroutine update_particle
   !if (head) print*,'  tile',int(itx,1),int(ity,1),int(itz,1)
     rhoce=0
     rholocal=0
+    ! for empty coarse cells, use previous-step vfield
+    vfield_new(:,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb)=vfield(:,:,:,:,itx,ity,itz)*weight_v
     x_new=0
     v_new=0
 #   ifdef PID
@@ -40,16 +44,24 @@ subroutine update_particle
       do l=1,np
         ip=nlast-np+l
         xq=((/i,j,k/)-1d0) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/sigma_vi_old)
+        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi_old*vrel_boost))
+        vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
         rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! update mesh
+        vfield_new(:,g(1),g(2),g(3))=vfield_new(:,g(1),g(2),g(3))+vreal
         !print*,x(:,ip)
         !print*,xq,deltax,g;stop
       enddo
     enddo
     enddo
     enddo
+    ! vfield_new is kept the same as previous-step if the grid is empty.
+    ! vfield_new is at most weight_v weighted by previous-step for non-empty grids.
+    ! this also gets rid of "if"s.
+    vfield_new(1,:,:,:)=vfield_new(1,:,:,:)/(rhoce+weight_v)
+    vfield_new(2,:,:,:)=vfield_new(2,:,:,:)/(rhoce+weight_v)
+    vfield_new(3,:,:,:)=vfield_new(3,:,:,:)/(rhoce+weight_v)
 
     !if (head) print*,'    cubesum3'
     cume=cumsum3(rhoce)
@@ -74,23 +86,25 @@ subroutine update_particle
       do l=1,np
         ip=nlast-np+l
         xq=((/i,j,k/)-1d0) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/sigma_vi_old)
+        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi_old*vrel_boost))
+        vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
         rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
         idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3)) ! index for writing
-
 #       ifdef debug
           x_new(:,idx)=x_new(:,idx)+1
 #       else
-        x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell))
-  !print*, nlast,np,l,ip
-  !print*, x(:,ip)
-  !print*, idx
-  !print*, x_new(:,idx)
-  !stop
-#endif
-        v_new(:,idx)=v(:,ip)
+          x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell))
+          !print*, nlast,np,l,ip
+          !print*, x(:,ip)
+          !print*, idx
+          !print*, x_new(:,idx)
+          !stop
+#       endif
+        vreal=vreal-vfield_new(:,g(1),g(2),g(3))
+        v_new(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_old*vrel_boost)*vreal)/pi,kind=izipv)
+        !v_new(:,idx)=v(:,ip)
   !print*, v(:,ip)
   !print*, v_new(:,idx)
   !stop
@@ -133,6 +147,7 @@ subroutine update_particle
 
     ! update rhoc
     rhoc(1:nt,1:nt,1:nt,itx,ity,itz)=rhoce(1:nt,1:nt,1:nt)
+    vfield(:,1:nt,1:nt,1:nt,itx,ity,itz)=vfield_new(:,1:nt,1:nt,1:nt)
     !print*, sum(rhoce(1:nt,1:nt,1:nt)), sum(rhoce), cume(nt+2*ncb,nt+2*ncb,nt+2*ncb), sum(rhoc(1:nt,1:nt,1:nt,itx,ity,itz))
   enddo
   enddo
