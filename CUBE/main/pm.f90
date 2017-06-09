@@ -34,13 +34,6 @@ subroutine particle_mesh
   f2_max_pp=0
   f2_max_coarse=0
 
-  sigma_vi=interp_vdisp(a+da)
-  if (head) then
-    print*, '  a, sigma_vi_old =',a,sigma_vi_old
-    print*, '  a+da,  sigma_vi =',a+da, sigma_vi
-  endif
-  sync all
-
   if (head) print*, '  pm fine over',nnt**3,'tiles'
 
   do itz=1,nnt
@@ -106,12 +99,8 @@ subroutine particle_mesh
         dx2 = 1 - dx1
         idx1=idx1+nfb
         idx2=idx2+nfb
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_old*vrel_boost))
-        !print*,v(:,ip)
-        !print*,vreal
-        !print*,vfield(:,i,j,k,itx,ity,itz)
-        !print*,vreal+vfield(:,i,j,k,itx,ity,itz)
-        !print*,'force'
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+
         vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
         vreal=vreal+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -120,18 +109,8 @@ subroutine particle_mesh
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        !print*,vreal
-        !print*,vfield(:,i,j,k,itx,ity,itz)
-        !print*,vreal+vfield(:,i,j,k,itx,ity,itz)
-        !print*,'correct evolution'
-        vreal=vreal+(1-sigma_vi/sigma_vi_old)*vfield(:,i,j,k,itx,ity,itz)
-        !print*,sigma_vi_old,sigma_vi
-        !print*,(1-sigma_vi/sigma_vi_old)*vfield(:,i,j,k,itx,ity,itz)
-        !print*,vreal
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
-        !print*,v(:,ip)
-        !print*, ''
-        !stop
+
+        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 
     enddo
@@ -140,8 +119,7 @@ subroutine particle_mesh
   enddo
   enddo
   enddo
-  vfield=vfield*(sigma_vi/sigma_vi_old)
-  sigma_vi_old=sigma_vi
+  sigma_vi=sigma_vi_new
   sync all
   !-----------------------------------------------------------------------------
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -248,6 +226,7 @@ subroutine particle_mesh
   enddo
   enddo
   enddo
+  sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
   sync all
 
   if (head) print*, '  constrain dt'

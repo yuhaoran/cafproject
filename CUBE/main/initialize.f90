@@ -80,15 +80,22 @@ subroutine initialize
 #endif
   sync all
 
-  open(23,file='../velocity_conversion/vdisp.bin',access='stream')
-  read(23) vdisp
-  close(23)
+  !open(23,file='../velocity_conversion/vdisp.bin',access='stream')
+  !read(23) vdisp
+  !close(23)
 
-  vdisp(:,2)=vdisp(:,2)*vdisp_boost
-  ! convert to sim unit, and in each direction v_i
-  vdisp(:,2)=vdisp(:,2)*vdisp(:,1)/1.5/box/h0/sqrt(omega_m)*real(nf_global)/sqrt(3.)
-  sigma_vi_old=interp_vdisp(a_i)
-  sigma_vi=interp_vdisp(a_i)
+  !open(23,file='../velocity_conversion/sigmav_z.bin',access='stream')
+  !read(23) svz
+  !close(23)
+
+  !open(23,file='../velocity_conversion/sigmav_r.bin',access='stream')
+  !read(23) svr
+  !close(23)
+
+  !svz(:,2)=svz(:,2)*svz(:,1)/1.5/box/h0/sqrt(omega_m)*real(nf_global)/sqrt(3.)
+
+  !sigma_vi_old=interp_vdisp(a_i)
+  !sigma_vi=interp_vdisp(a_i)
   !if (head) print*,'sigma_vi',sigma_vi
   sync all
 

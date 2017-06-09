@@ -26,7 +26,7 @@ program initial_conditions
   real(8) v8, norm, xq(3),gradphi(3),vreal(3), dvar[*], dvarg
   integer(int64) :: time64
 
-  integer(8) nplocal[*],npglobal
+  integer(8) nplocal[*],npglobal,ip,l
   ! power spectrum arrays
   real, dimension(7,nk) :: tf    !CAMB
   real, dimension(2,nc) :: pkm,pkn
@@ -62,7 +62,10 @@ program initial_conditions
     integer(8) iq(3)
 #endif
   real grad_max(3)[*],vmax(3),vf
-  real vdisp(506,2),sigma_vi
+  !real vdisp(506,2),sigma_vi
+  real(4) svz(500,2),svr(100,2)
+  real(8) sigma_vc,sigma_vf,sigma_vres,sigma_vi
+  real(8) std_vsim_c,std_vsim_res,std_vsim
 
   character (10) :: img_s, z_s
 
@@ -452,13 +455,28 @@ print*, r3(1:2,1,1)**2
 
   sync all
 
-  open(23,file='../velocity_conversion/vdisp.bin',access='stream')
-  read(23) vdisp
+  open(23,file='../velocity_conversion/sigmav_z.bin',access='stream')
+  read(23) svz
   close(23)
-  vdisp(:,2)=vdisp(:,2)*vdisp_boost
-  vdisp(:,2)=vdisp(:,2)*vdisp(:,1)/1.5/box/h0/sqrt(omega_m)*real(nf_global)/sqrt(3.)
-  sigma_vi=interp_vdisp(a)
-  if (head) print*,'sigma_vi',sigma_vi
+  open(24,file='../velocity_conversion/sigmav_r.bin',access='stream')
+  read(24) svr
+  close(43)
+
+  !svz(:,2)=svz(:,2)/sim%vsim2phys/sqrt(3.)
+  sigma_vf=interp_sigmav(a,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
+  sigma_vc=interp_sigmav(a,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
+  sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
+  sigma_vi=sigma_vres/sim%vsim2phys/sqrt(3.) ! sigma(v_i) residual, in sim unit
+
+  sim%sigma_vres=sigma_vres
+  sim%sigma_vi=sigma_vi
+
+  if (head) then
+    print*,'sigma_vf(a=',a,', r=',box/nf_global,'Mpc/h)=',sigma_vf,'km/s'
+    print*,'sigma_vc(a=',a,', r=',box/nc_global,'Mpc/h)=',sigma_vc,'km/s'
+    print*,'sigma_vres=',sigma_vres,'km/s'
+    print*,'sigma_vi =',sigma_vi,'(simulation unit)'
+endif
 
 
   sync all
@@ -475,6 +493,7 @@ print*, r3(1:2,1,1)**2
   open(15,file=ic_name('vfield'),status='replace',access='stream') !!!
   write(12) sim ! occupying 128 bytes
 
+  vfield=0
   nplocal=0
   do itz=1,nnt
   do ity=1,nnt
@@ -501,9 +520,9 @@ print*, r3(1:2,1,1)**2
     enddo
     enddo
     enddo
-    vfield(1,:,:,:)=vfield(1,:,:,:)/rhoce !!!
-    vfield(2,:,:,:)=vfield(2,:,:,:)/rhoce !!!
-    vfield(3,:,:,:)=vfield(3,:,:,:)/rhoce !!!
+    vfield(1,:,:,:)=vfield(1,:,:,:)/rhoce
+    vfield(2,:,:,:)=vfield(2,:,:,:)/rhoce
+    vfield(3,:,:,:)=vfield(3,:,:,:)/rhoce
 
     cume=cumsum3(rhoce)
 
@@ -525,26 +544,11 @@ print*, r3(1:2,1,1)**2
       vreal=-gradphi/(8*pi)*vf
       vreal=vreal-vfield(:,g(1),g(2),g(3)) !!!
       v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
-
-!print*, x_resolution
-!print*, xq
-!print*, -gradphi/(8*pi*ncell)
-!print*, xq-gradphi/(8*pi*ncell)
-!print*, floor( (xq-gradphi/(8*pi*ncell))/x_resolution ,8)
-!print*, x(:,idx)
-!stop
-
-#ifdef PID
-      iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
-      iq = modulo(iq,nf_global)
-      pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
-      !if (i==1 .and. j==2 .and. k==1) then
-      !  print*, iq,idx,pid(idx); stop
-      !endif
-      !pid(1,idx)=image
-      !pid(2:4,idx)=floor(( ((/itx,ity,itz/)-1)*nft+(ncell/np_nc)*((/i,j,k/)-1)+0.5+imove ) &
-      !/nf*int(2,8)**(8*izipx)-int(2,8)**(8*izipx-1))
-#endif
+#     ifdef PID
+        iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
+        iq = modulo(iq,nf_global)
+        pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
+#     endif
     enddo
     enddo
     enddo
@@ -558,17 +562,34 @@ print*, r3(1:2,1,1)**2
       iright=ileft+nlen-1
       x(:,ileft:iright)=x(:,nlast-nlen+1:nlast)
       v(:,ileft:iright)=v(:,nlast-nlen+1:nlast)
-#ifdef PID
-      pid(ileft:iright)=pid(nlast-nlen+1:nlast)
-#endif
+#     ifdef PID
+        pid(ileft:iright)=pid(nlast-nlen+1:nlast)
+#     endif
+    enddo
+    enddo
+
+    ! velocity analysis
+    ip=0
+    do k=1,nt
+    do j=1,nt
+    do i=1,nt
+      std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
+      do l=1,rhoce(i,j,k)
+        ip=ip+1
+        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        std_vsim_res=std_vsim_res+sum(vreal**2)
+        vreal=vreal+vfield(:,i,j,k)
+        std_vsim=std_vsim+sum(vreal**2)
+      enddo
+    enddo
     enddo
     enddo
 
     write(10) x(:,1:iright)
     write(11) v(:,1:iright)
-#ifdef PID
-    write(14) pid(1:iright)
-#endif
+#   ifdef PID
+      write(14) pid(1:iright)
+#   endif
     write(12) rhoce(1:nt,1:nt,1:nt)
     write(15) vfield(:,1:nt,1:nt,1:nt)
 
@@ -576,19 +597,30 @@ print*, r3(1:2,1,1)**2
 
   enddo
   enddo
-  enddo
+  enddo ! end of tile loop
 
   close(10)
   close(11)
-#ifdef PID
-  close(14)
-#endif
+# ifdef PID
+    close(14)
+# endif
   close(15)
 
   sim%nplocal=nplocal
   rewind(12)
   write(12) sim
   close(12)
+
+  if (head) then
+    print*,'velocity analysis on head node'
+    std_vsim_res=sqrt(std_vsim_res/nplocal)
+    std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
+    std_vsim=sqrt(std_vsim/nplocal)
+    print*,'std_vsim',std_vsim*sim%vsim2phys,'km/s'
+    print*,'std_vsim_c',std_vsim_c*sim%vsim2phys,'km/s'
+    print*,'std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
+    print*,'std_vi (sim unit)',std_vsim_res/sqrt(3.),'(simulation unit)'
+  endif
 
   print*,'image',image,', nplocal',nplocal
   sync all
@@ -624,21 +656,34 @@ print*, r3(1:2,1,1)**2
     enddo
   endfunction
 
-  real function interp_vdisp(aa)
+  real function interp_sigmav(aa,rr)
     implicit none
     integer(8) ii,i1,i2
-    real aa
+    real aa,rr,term_z,term_r
     i1=1
-    i2=506
+    i2=500
     do while (i2-i1>1)
       ii=(i1+i2)/2
-      if (aa>vdisp(ii,1)) then
+      if (aa>svz(ii,1)) then
         i1=ii
       else
         i2=ii
       endif
     enddo
-    interp_vdisp=vdisp(i1,2)+(vdisp(i2,2)-vdisp(i1,2))*(aa-vdisp(i1,1))/(vdisp(i2,1)-vdisp(i1,1))
+    term_z=svz(i1,2)+(svz(i2,2)-svz(i1,2))*(aa-svz(i1,1))/(svz(i2,1)-svz(i1,1))
+    i1=1
+    i2=100
+    do while (i2-i1>1)
+      ii=(i1+i2)/2
+      if (rr>svz(ii,1)) then
+        i1=ii
+      else
+        i2=ii
+      endif
+    enddo
+    term_r=svr(i1,2)+(svr(i2,2)-svr(i1,2))*(rr-svr(i1,1))/(svr(i2,1)-svr(i1,1))
+    interp_sigmav=term_z*term_r
+    print*,term_z,term_r
   endfunction
 
   real function interp_tf(kr,ix,iy)

@@ -73,10 +73,26 @@ subroutine particle_initialization
 
   print*,'  from image',this_image(),'read',nplocal,' particles'
   sync all
+
+  !sigma_vfi=interp_sigmav(a_i,box/nf_global) ! sigma(v) on scale of fine grid
+  !sigma_vci=interp_sigmav(a_i,box/nc_global) ! sigma(v) on scale of coarse grid
+
+  !print*, sigma_vfi, sim%vsim2phys; stop
+
+  sigma_vi=sim%sigma_vi
+  !sigma_vres=sqrt(sigma_vfi**2-sigma_vci**2) ! sigma(v) residual
+  !sigma_vci_old=sigma_vci
+  !sigma_vfi_old=sigma_vfi
+  !sigma_vres_old=sigma_vres
+
   if (head) then
-    print*, '  npglobal =', npglobal
-    print*, '  mass_p=', mass_p
-    print*, '  vsim2phy =',sim%vsim2phys, ' (km/s)/(1.0)'
+    print*,'  npglobal =', npglobal
+    print*,'  mass_p=', mass_p
+    print*,'  vsim2phy =',sim%vsim2phys, ' (km/s)/(1.0)'
+    !print*,'  std_vf(a=',a_i,', r=',box/nf_global,'Mpc/h)',sqrt(3.)*sigma_vfi*sim%vsim2phys,'km/s'
+    !print*,'  std_vc(a=',a_i,', r=',box/nc_global,'Mpc/h)',sqrt(3.)*sigma_vci*sim%vsim2phys,'km/s'
+    !print*,'  std_vres',sqrt(3.)*sigma_vres*sim%vsim2phys,'km/s'
+    print*,'  sigma_vi =',sigma_vi,'(simulation unit)'
   endif
   sync all
 endsubroutine

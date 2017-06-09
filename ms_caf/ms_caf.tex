@@ -49,6 +49,12 @@ $N$-body simulation is a powerful tool to solve the highly nonlinear dynamic pro
 
 \section{Algorithm}
 The most memory consuming part of a $N$-body simulation is usually the phase space coordinates of each $N$-body particles -- 24 bpp (4 single precision real numbers) must be used to store each particles' position and velocity. A memory-lite parallel $N$-body code {\tt CUBEP3M} can use as low as 40 bpp in sacrificing the speed. This includes the phase coordinates (24 bpp) for particles in physical domain and buffered region, a linked list (4 bpp), and a global coarse mesh and local fine mesh. We attempt to replace the coordinates and linked list 24+4=28 bpp memory usage with a integer based storage, described as follows.
+\begin{figure}[t]
+\centering
+  \includegraphics[width=0.95\linewidth]{fig_tile.pdf}
+ \caption{Spacial decomposition.}
+\label{fig.tile}
+\end{figure}
 
 \subsection{Particle location storage}
 Instead of storing the particle's global coordinates, we store its relative position respective to the coarse cell who contains the particle. We divide the coarse cell, in each dimension, evenly into $2^8=256$ bins, and we use a 1-byte integer (with range 0 to 255 or -128 to 127) to show which bin it locates in this dimension. Next, global locations of particles are given by cell-ordered format in memory space, and a complimentary number count of particle number in this coarse mesh (coarse density field) will give complete information of particle distribution in cells. Since the this field is usually coarser than particle distribution, it takes negligible memory. This coarse density field can be further compressed into 1-byte integer format, such that a 1-byte unsigned integer show the particle number in this coarse cell in range 0 to 255. In the densest cells (rarely happened) where there are $\ge 255$ particles, we can just write 255, and write the actual number as a 4-byte integer in another file. In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle positions are stored with a precision of $L/(256N_c)$, which is usually 10 times finer than the force resolution.
@@ -58,8 +64,8 @@ Velocities, in each dimension, are compressed to 2-byte integers representing th
 
 \begin{figure}[t]
 \centering
-  \includegraphics[width=0.95\linewidth]{fig_tile.pdf}
- \caption{Spacial decomposition.}
+  \includegraphics[width=1.0\linewidth]{vdisp.pdf}
+ \caption{Velocity dispersion.}
 \label{fig.tile}
 \end{figure}
 
