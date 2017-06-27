@@ -87,31 +87,17 @@ subroutine buffer_density
     stop
   endif
 
-  !print*, 'x before shift =', sum(x*unit8)
-  !print*, 'v before shift =', sum(v*unit8)
 
-  ! move xv to the end, leave enough space for buffer
-  !print*,sum(rhoc),np_image_max
   nshift=np_image_max-nplocal
   x(:,nshift+1:np_image_max)=x(:,1:nplocal)
   v(:,nshift+1:np_image_max)=v(:,1:nplocal)
-  !x(:,:nshift)=0 ! redundant
-  !v(:,:nshift)=0 ! redundant
 
-#ifdef PID
-  pid(nshift+1:np_image_max)=pid(1:nplocal)
-#endif
-
-  !print*, 'x after shift=', sum(x*unit8)
+# ifdef PID
+    pid(nshift+1:np_image_max)=pid(1:nplocal)
+# endif
 
   cum=cumsum6(rhoc)
-  !print*, 'cumsum of all particles =', cum(nt+ncb,nt+ncb,nt+ncb,nnt,nnt,nnt)
-  ! create extended zip
-
-  ! redistribute local particles -----------------
-
-  ! nshift is the offset between local (backed up at the end) and extented
-  ifrom=nshift ! ifrom is the index of shifted particles, contiuous
+  ifrom=nshift
 
   do itz=1,nnt
   do ity=1,nnt
@@ -124,9 +110,9 @@ subroutine buffer_density
       nlen=nlast-cum(0,iy,iz,itx,ity,itz)
       x(:,nlast-nlen+1:nlast)=x(:,ifrom+1:ifrom+nlen)
       v(:,nlast-nlen+1:nlast)=v(:,ifrom+1:ifrom+nlen)
-#ifdef PID
+#     ifdef PID
         pid(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
-#endif
+#     endif
       ifrom=ifrom+nlen
     enddo
     enddo
