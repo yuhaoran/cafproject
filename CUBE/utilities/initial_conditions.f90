@@ -1,7 +1,7 @@
 #define mkdir
 #define READ_SEED
 #define WRITE_NOISE
-!#define READ_NOISE
+#define READ_NOISE
 !#define DO_2LPT
 
 program initial_conditions
@@ -206,6 +206,8 @@ program initial_conditions
     open(11,file=output_dir()//'seed'//output_suffix(),status='replace',access='stream')
     write(11) iseed
     close(11)
+    ! execute the following line if you want to save seeds
+    !call system('cp ../output/universe1/image*/seed* ../configs/')
 #endif
   call random_number(r3)
   deallocate(iseed)
@@ -383,11 +385,7 @@ program initial_conditions
   enddo
   dvarg=dvarg/nf_global/nf_global/nf_global
 
-print*, r3(1:2,1,1)
-print*, r3(1:2,1,1)**2
   r3=r3-f_nl*(r3**2-dvarg)
-print*, dvarg
-print*, r3(1:2,1,1)**2
 
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
@@ -515,7 +513,7 @@ endif
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1
       vreal=-gradphi/(8*pi)*vf
-      vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal !!!
+      vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal ! record vfield according to real particles
     enddo
     enddo
     enddo
@@ -542,7 +540,7 @@ endif
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
       x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
       vreal=-gradphi/(8*pi)*vf
-      vreal=vreal-vfield(:,g(1),g(2),g(3)) !!!
+      vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
       v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
 #     ifdef PID
         iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove

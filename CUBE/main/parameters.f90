@@ -3,11 +3,11 @@ module parameters
   save
 
   ! output directory for both IC and snapshots
-  character(*),parameter :: opath='../output/universe5/'
+  character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
-  integer(8),parameter :: izipx=1
-  integer(8),parameter :: izipv=1
+  integer(8),parameter :: izipx=2
+  integer(8),parameter :: izipv=2
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
   integer(8),parameter :: ishift=-(int(2,8)**(izipx*8-1))
   real(8),parameter :: rshift=0.5-ishift
@@ -15,10 +15,10 @@ module parameters
   ! (hereafter 'number of fine cells' = 'nf')
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
-  integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
+  integer(8),parameter :: nn=2 ! number of imgages (nodes) /dim
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96

@@ -6,12 +6,6 @@ subroutine buffer_density
   save
   integer(8) nshift,nlen,nlast,ifrom
 
-  ! the following variables are introduced because
-  ! gcc only allows <= 7 ranks in arrays
-  real(4) vtransx(3,ncb,nt+2*ncb,nt+2*ncb,nnt,nnt)[*]
-  real(4) vtransy(3,nt+2*ncb,ncb,nt+2*ncb,nnt,nnt)[*]
-  real(4) vtransz(3,nt+2*ncb,nt+2*ncb,ncb,nnt,nnt)[*]
-
   if (head) print*, 'buffer_density'
   overhead_image=0
   ! sync buffer regions in rhoc for each tile
