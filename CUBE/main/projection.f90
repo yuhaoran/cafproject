@@ -34,7 +34,7 @@ subroutine projection
       !             +4.0*((/i,j,k/)-1) &
       !             +0.015625*((x(:,ip)+int(-128,1))+128.5) )
       idxf=ceiling(nft*((/itx,ity,itz/)-1)+ncell*((/i,j,k/)-1) &
-                   +(int(x(:,ip)+ishift,izipx)+rshift)*ncell*x_resolution)
+                   +(int(xp(:,ip)+ishift,izipx)+rshift)*ncell*x_resolution)
       proj_yz(idxf(2),idxf(3))=proj_yz(idxf(2),idxf(3))+1
       proj_xz(idxf(1),idxf(3))=proj_xz(idxf(1),idxf(3))+1
       proj_xy(idxf(1),idxf(2))=proj_xy(idxf(1),idxf(2))+1

@@ -13,7 +13,7 @@ program cicpower
   integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt)
   real(4) rho_grid(0:ng+1,0:ng+1,0:ng+1)[*],rho0(ng,ng,ng),rho1(ng,ng,ng)
   real(4) mass_p,pos1(3),dx1(3),dx2(3)
-  integer(izipx) x(3,npmax)
+  integer(izipx) xp(3,npmax)
 
   real xi(10,nbin)[*]
 
@@ -63,7 +63,7 @@ program cicpower
     if (head) print*, 'nplocal =',nplocal
 
     open(10,file=output_name('zip0'),status='old',action='read',access='stream')
-    read(10) x(:,:nplocal) ! particle Eulerian positions
+    read(10) xp(:,:nplocal) ! particle Eulerian positions
     close(10)
 
     rho0=0
@@ -78,7 +78,7 @@ program cicpower
         np=rhoc(i,j,k,itx,ity,itz)
         do l=1,np
           ip=nlast+l
-          pos1=nt*((/itx,ity,itz/)-1)+ ((/i,j,k/)-1) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
+          pos1=nt*((/itx,ity,itz/)-1)+ ((/i,j,k/)-1) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
           pos1=pos1*real(ng)/real(nc) - 0.5
 
           idx1=floor(pos1)+1

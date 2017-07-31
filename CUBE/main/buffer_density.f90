@@ -83,8 +83,8 @@ subroutine buffer_density
 
 
   nshift=np_image_max-nplocal
-  x(:,nshift+1:np_image_max)=x(:,1:nplocal)
-  v(:,nshift+1:np_image_max)=v(:,1:nplocal)
+  xp(:,nshift+1:np_image_max)=xp(:,1:nplocal)
+  vp(:,nshift+1:np_image_max)=vp(:,1:nplocal)
 
 # ifdef PID
     pid(nshift+1:np_image_max)=pid(1:nplocal)
@@ -102,8 +102,8 @@ subroutine buffer_density
       nlast=cum(nt,iy,iz,itx,ity,itz)
       ! nlen is the number of particle in this x-slot
       nlen=nlast-cum(0,iy,iz,itx,ity,itz)
-      x(:,nlast-nlen+1:nlast)=x(:,ifrom+1:ifrom+nlen)
-      v(:,nlast-nlen+1:nlast)=v(:,ifrom+1:ifrom+nlen)
+      xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
+      vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
 #     ifdef PID
         pid(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
 #     endif

@@ -33,7 +33,7 @@ subroutine particle_initialization
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)
-    read(10) x(:,nplow:nphigh)
+    read(10) xp(:,nplow:nphigh)
   enddo
   close(10)
 
@@ -42,7 +42,7 @@ subroutine particle_initialization
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)
-    read(11) v(:,nplow:nphigh)
+    read(11) vp(:,nplow:nphigh)
   enddo
   close(11)
 

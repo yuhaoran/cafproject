@@ -24,8 +24,8 @@ subroutine update_particle
     rholocal=0
     ! for empty coarse cells, use previous-step vfield
     vfield_new(:,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb)=vfield(:,:,:,:,itx,ity,itz)*weight_v
-    x_new=0
-    v_new=0
+    xp_new=0
+    vp_new=0
 #   ifdef PID
     pid_new=0
 #   endif
@@ -37,8 +37,8 @@ subroutine update_particle
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np
         ip=nlast-np+l
-        xq=((/i,j,k/)-1d0) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
+        xq=((/i,j,k/)-1d0) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
+        vreal=tan((pi*real(vp(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
@@ -73,16 +73,16 @@ subroutine update_particle
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np
         ip=nlast-np+l
-        xq=((/i,j,k/)-1d0) + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan((pi*real(v(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
+        xq=((/i,j,k/)-1d0) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
+        vreal=tan((pi*real(vp(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
         rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
         idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-        x_new(:,idx)=x(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell))
+        xp_new(:,idx)=xp(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell))
         vreal=vreal-vfield_new(:,g(1),g(2),g(3))
-        v_new(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+        vp_new(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
 #       ifdef PID
           pid_new(idx)=pid(ip)
 #       endif
@@ -99,8 +99,8 @@ subroutine update_particle
       nlast=cume(nt,j,k)
       nlen=nlast-cume(0,j,k)
       iright=ileft+nlen-1
-      x(:,ileft:iright)=x_new(:,nlast-nlen+1:nlast)
-      v(:,ileft:iright)=v_new(:,nlast-nlen+1:nlast)
+      xp(:,ileft:iright)=xp_new(:,nlast-nlen+1:nlast)
+      vp(:,ileft:iright)=vp_new(:,nlast-nlen+1:nlast)
 #     ifdef PID
         pid(ileft:iright)=pid_new(nlast-nlen+1:nlast)
 #     endif
@@ -128,7 +128,7 @@ subroutine update_particle
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k,itx,ity,itz)**2)
       do l=1,rhoc(i,j,k,itx,ity,itz)
         ip=ip+1
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         std_vsim=std_vsim+sum(vreal**2)

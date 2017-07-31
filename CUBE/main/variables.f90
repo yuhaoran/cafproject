@@ -38,8 +38,8 @@ module variables
   real(8) sigma_vci,sigma_vfi,sigma_vres,sigma_vci_old,sigma_vfi_old,sigma_vres_old
   real(8) std_vsim_c,std_vsim_res,std_vsim
   ! n^3
-  integer(izipx) x(3,np_image_max)[*], x_new(3,np_tile_max)
-  integer(izipv) v(3,np_image_max)[*], v_new(3,np_tile_max)
+  integer(izipx) xp(3,np_image_max)[*], xp_new(3,np_tile_max)
+  integer(izipv) vp(3,np_image_max)[*], vp_new(3,np_tile_max)
 #ifdef PID
     integer(8) pid(np_image_max)[*], pid_new(np_tile_max)
 #endif

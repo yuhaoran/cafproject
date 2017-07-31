@@ -51,7 +51,7 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=4.*((/i,j,k/)-1)+4*(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
+        tempx=4.*((/i,j,k/)-1)+4*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
         idx2 = idx1 + 1
         dx1 = idx1 - tempx
@@ -92,14 +92,14 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=4.*((/i,j,k/)-1)+4*(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
+        tempx=4.*((/i,j,k/)-1)+4*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
         idx2 = idx1 + 1
         dx1 = idx1 - tempx
         dx2 = 1 - dx1
         idx1=idx1+nfb
         idx2=idx2+nfb
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
 
         vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
@@ -110,7 +110,7 @@ subroutine particle_mesh
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
 
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
+        vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 
     enddo
@@ -139,7 +139,7 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=((/i,j,k/)-1)+(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
+        tempx=((/i,j,k/)-1)+(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:) ! CIC contribution to idx1
@@ -203,12 +203,12 @@ subroutine particle_mesh
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
-        tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(x(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
+        tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:)
         dx2(:)=1-dx1(:)
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         vreal=vreal+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
         vreal=vreal+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
@@ -218,7 +218,7 @@ subroutine particle_mesh
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
         vmax=max(vmax,maxval(vreal))
-        v(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+        vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
     enddo
     enddo

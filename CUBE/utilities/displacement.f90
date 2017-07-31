@@ -12,7 +12,7 @@ program displacement
   integer(4) rho0(ng,ng,ng) !!!! for checking there is one and only one particle per fine grid
   real dsp(3,ng,ng,ng),dsp0(3,ng,ng,ng),mass_p,pos0(3),pos1(3),dpos(3)
 
-  integer(izipx) x(3,npmax)
+  integer(izipx) xp(3,npmax)
   integer(8)   pid(npmax)
 
   call geometry
@@ -59,7 +59,7 @@ program displacement
     if (head) print*, 'nplocal =',nplocal
 
     open(10,file=output_name('zip0'),status='old',action='read',access='stream')
-    read(10) x(:,:nplocal) ! particle Eulerian positions
+    read(10) xp(:,:nplocal) ! particle Eulerian positions
     close(10)
 
     open(14,file=output_name('zipid'),status='old',action='read',access='stream')
@@ -86,7 +86,7 @@ program displacement
           iq(1)=modulo(pid8,int(nf_global,4))
 
           pos0=iq+0.5
-          pos1=nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (int(x(:,ip)+ishift,izipx)+rshift)*x_resolution
+          pos1=nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
           pos1=real(ng)*((/icx,icy,icz/)-1) + pos1*real(ng)/real(nc)
 
           dpos=pos1-pos0

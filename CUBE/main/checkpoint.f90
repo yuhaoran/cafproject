@@ -45,7 +45,7 @@ subroutine checkpoint
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)
-    write(10) x(:,nplow:nphigh)
+    write(10) xp(:,nplow:nphigh)
   enddo
   close(10)
 
@@ -55,7 +55,7 @@ subroutine checkpoint
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)
-    write(11) v(:,nplow:nphigh)
+    write(11) vp(:,nplow:nphigh)
   enddo
   close(11)
 

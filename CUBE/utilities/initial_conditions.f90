@@ -55,8 +55,8 @@ program initial_conditions
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer(izipx) x(3,npmax)
-  integer(izipv) v(3,npmax)
+  integer(izipx) xp(3,npmax)
+  integer(izipv) vp(3,npmax)
 #ifdef PID
     integer(8) pid(npmax)
     integer(8) iq(3)
@@ -538,10 +538,10 @@ endif
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-      x(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
+      xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
       vreal=-gradphi/(8*pi)*vf
       vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
-      v(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+      vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
 #     ifdef PID
         iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
         iq = modulo(iq,nf_global)
@@ -558,8 +558,8 @@ endif
       nlast=cume(nt,j,k)
       nlen=nlast-cume(0,j,k)
       iright=ileft+nlen-1
-      x(:,ileft:iright)=x(:,nlast-nlen+1:nlast)
-      v(:,ileft:iright)=v(:,nlast-nlen+1:nlast)
+      xp(:,ileft:iright)=xp(:,nlast-nlen+1:nlast)
+      vp(:,ileft:iright)=vp(:,nlast-nlen+1:nlast)
 #     ifdef PID
         pid(ileft:iright)=pid(nlast-nlen+1:nlast)
 #     endif
@@ -574,7 +574,7 @@ endif
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
       do l=1,rhoce(i,j,k)
         ip=ip+1
-        vreal=tan(pi*real(v(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k)
         std_vsim=std_vsim+sum(vreal**2)
@@ -583,8 +583,8 @@ endif
     enddo
     enddo
 
-    write(10) x(:,1:iright)
-    write(11) v(:,1:iright)
+    write(10) xp(:,1:iright)
+    write(11) vp(:,1:iright)
 #   ifdef PID
       write(14) pid(1:iright)
 #   endif
