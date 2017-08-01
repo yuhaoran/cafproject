@@ -139,10 +139,32 @@ subroutine update_particle
   enddo
   enddo
   enddo
-  std_vsim=sqrt(std_vsim/nplocal)
-  std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
-  std_vsim_res=sqrt(std_vsim_res/nplocal)
+  sync all
+
+  ! co_sum
+  if (head) then
+    do i=2,nn**3
+      std_vsim_c=std_vsim_c+std_vsim_c[i]
+      std_vsim_res=std_vsim_res+std_vsim_res[i]
+      std_vsim=std_vsim+std_vsim[i]
+    enddo
+  endif
+  sync all
+
+  ! broadcast
+  std_vsim_c=std_vsim_c[1]
+  std_vsim_res=std_vsim_res[1]
+  std_vsim=std_vsim[1]
+  sync all
+
+  ! divide
+  std_vsim=sqrt(std_vsim/npglobal)
+  std_vsim_c=sqrt(std_vsim_c/nc/nc/nc/nn/nn/nn)
+  std_vsim_res=sqrt(std_vsim_res/npglobal)
+
+  ! set sigma_vi_new according to particle statistics
   sigma_vi_new=std_vsim_res/sqrt(3.)
+
   print*,'  std_vsim    ',std_vsim*sim%vsim2phys,'km/s'
   print*,'  std_vsim_c  ',std_vsim_c*sim%vsim2phys,'km/s'
   print*,'  std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'

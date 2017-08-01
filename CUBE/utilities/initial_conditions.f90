@@ -450,7 +450,6 @@ program initial_conditions
       stop
     endif
   endif
-
   sync all
 
   open(23,file='../velocity_conversion/sigmav_z.bin',access='stream')
@@ -468,18 +467,20 @@ program initial_conditions
 
   sim%sigma_vres=sigma_vres
   sim%sigma_vi=sigma_vi
-
+  sync all
   if (head) then
+    print*, ''
     print*,'sigma_vf(a=',a,', r=',box/nf_global,'Mpc/h)=',sigma_vf,'km/s'
     print*,'sigma_vc(a=',a,', r=',box/nc_global,'Mpc/h)=',sigma_vc,'km/s'
     print*,'sigma_vres=',sigma_vres,'km/s'
     print*,'sigma_vi =',sigma_vi,'(simulation unit)'
-endif
+  endif
 
 
   sync all
 
   ! create particles (no communication) ----------------------------
+  if (head) print*,''
   if (head) print*, 'Create particles'
   open(10,file=ic_name('zip0'),status='replace',access='stream')
   open(11,file=ic_name('zip1'),status='replace',access='stream')
@@ -610,15 +611,18 @@ endif
   close(12)
 
   if (head) then
+    print*,''
     print*,'velocity analysis on head node'
     std_vsim_res=sqrt(std_vsim_res/nplocal)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
     std_vsim=sqrt(std_vsim/nplocal)
-    print*,'std_vsim',std_vsim*sim%vsim2phys,'km/s'
-    print*,'std_vsim_c',std_vsim_c*sim%vsim2phys,'km/s'
-    print*,'std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
-    print*,'std_vi (sim unit)',std_vsim_res/sqrt(3.),'(simulation unit)'
+    print*,'  std_vsim',std_vsim*sim%vsim2phys,'km/s'
+    print*,'  std_vsim_c',std_vsim_c*sim%vsim2phys,'km/s'
+    print*,'  std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
+    print*,'  std_vi (sim unit)',std_vsim_res/sqrt(3.),'(simulation unit)'
+    print*,''
   endif
+  sync all
 
   print*,'image',image,', nplocal',nplocal
   sync all
@@ -681,7 +685,6 @@ endif
     enddo
     term_r=svr(i1,2)+(svr(i2,2)-svr(i1,2))*(rr-svr(i1,1))/(svr(i2,1)-svr(i1,1))
     interp_sigmav=term_z*term_r
-    print*,term_z,term_r
   endfunction
 
   real function interp_tf(kr,ix,iy)
