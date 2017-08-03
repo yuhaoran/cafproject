@@ -1,5 +1,3 @@
-!#define debug
-!#define redundant
 subroutine buffer_density
   use variables
   implicit none
@@ -18,10 +16,13 @@ subroutine buffer_density
   vtransx=vfield(:,nt-ncb+1:nt,:,:,nnt,:,:)
   sync all
   vfield(:,:0,:,:,1,:,:)=vtransx(:,:,:,:,:,:)[image1d(inx,icy,icz)]
+  sync all
   vfield(:,:0,:,:,2:,:,:)=vfield(:,nt-ncb+1:nt,:,:,:nnt-1,:,:)
+
   vtransx=vfield(:,1:ncb,:,:,1,:,:)
   sync all
   vfield(:,nt+1:,:,:,nnt,:,:)=vtransx(:,:,:,:,:,:)[image1d(ipx,icy,icz)]
+  sync all
   vfield(:,nt+1:,:,:,:nnt-1,:,:)=vfield(:,1:ncb,:,:,2:,:,:)
 
   sync all
@@ -37,11 +38,16 @@ subroutine buffer_density
   vtransy=vfield(:,:,nt-ncb+1:nt,:,:,nnt,:)
   sync all
   vfield(:,:,:0,:,:,1,:)=vtransy(:,:,:,:,:,:)[image1d(icx,iny,icz)]
+  sync all
   vfield(:,:,:0,:,:,2:,:)=vfield(:,:,nt-ncb+1:nt,:,:,1:nnt-1,:)
+
   vtransy=vfield(:,:,1:ncb,:,:,1,:)
   sync all
   vfield(:,:,nt+1:,:,:,nnt,:)=vtransy(:,:,:,:,:,:)[image1d(icx,ipy,icz)]
+  sync all
   vfield(:,:,nt+1:,:,:,:nnt-1,:)=vfield(:,:,1:ncb,:,1:,2:,:)
+
+  sync all
   !print*, 'sync y done', sum(rhoc)
 
   !z
@@ -54,11 +60,16 @@ subroutine buffer_density
   vtransz=vfield(:,:,:,nt-ncb+1:nt,:,:,nnt)
   sync all
   vfield(:,:,:,:0,:,:,1)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,inz)]
+  sync all
   vfield(:,:,:,:0,:,:,2:)=vfield(:,:,:,nt-ncb+1:nt,:,:,:nnt-1)
+
   vtransz=vfield(:,:,:,1:ncb,:,:,1)
   sync all
   vfield(:,:,:,nt+1:,:,:,nnt)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,ipz)]
+  sync all
   vfield(:,:,:,nt+1:,:,:,:nnt-1)=vfield(:,:,:,1:ncb,:,:,2:)
+
+  sync all
   !print*, 'sync z done', sum(rhoc)
 
   overhead_image=sum(rhoc*unit8)/real(np_image_max,8)

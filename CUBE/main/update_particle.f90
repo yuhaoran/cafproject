@@ -3,12 +3,11 @@ subroutine update_particle
   implicit none
   save
 
-  ! x(1:3,:)
   integer(8) ileft,iright,nlast,nlen,idx
   integer(8) g(3),np ! index of grid
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
   real(4) vfield_new(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  real(4) :: weight_v=0.1 ! how previous-step vfield is mostly weighted
+  real(8),parameter :: weight_v=0.1 ! how previous-step vfield is mostly weighted
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
 
@@ -114,6 +113,9 @@ subroutine update_particle
   enddo
   enddo ! end looping over tiles
   nplocal=iright
+  !nplocal=sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
+  !print*, iright,sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
+  !stop
   sync all
 
   ! calculate std of the velocity field
@@ -164,13 +166,14 @@ subroutine update_particle
 
   ! set sigma_vi_new according to particle statistics
   sigma_vi_new=std_vsim_res/sqrt(3.)
-
-  print*,'  std_vsim    ',std_vsim*sim%vsim2phys,'km/s'
-  print*,'  std_vsim_c  ',std_vsim_c*sim%vsim2phys,'km/s'
-  print*,'  std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
-  print*,'  sigma_vi    ',sigma_vi,'(simulation unit)'
-  print*,'  sigma_vi_new',sigma_vi_new,'(simulation unit)'
-  write(77) a-da,real((/std_vsim,std_vsim_c,std_vsim_res/))
+  if (head) then
+    print*,'  std_vsim    ',std_vsim*sim%vsim2phys,'km/s'
+    print*,'  std_vsim_c  ',std_vsim_c*sim%vsim2phys,'km/s'
+    print*,'  std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
+    print*,'  sigma_vi    ',sigma_vi,'(simulation unit)'
+    print*,'  sigma_vi_new',sigma_vi_new,'(simulation unit)'
+    write(77) a-da,real((/std_vsim,std_vsim_c,std_vsim_res/))
+  endif
   sync all
 
   do i=1,nn**3

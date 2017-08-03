@@ -39,6 +39,7 @@ subroutine buffer_x
   enddo
   enddo
   enddo
+  sync all
 
   ! sync x+ buffer with node on the right
   do itz=1,nnt
@@ -104,6 +105,7 @@ subroutine buffer_x
   enddo
   enddo
   enddo
+  sync all
 
   ! sync y+
   do itz=1,nnt
@@ -161,6 +163,7 @@ subroutine buffer_x
   enddo
   enddo
   enddo
+  sync all
 
   ! sync z+
   do itz=nnt,nnt ! do only itz=nnt
