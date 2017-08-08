@@ -40,6 +40,7 @@ module pencil_fft
     call sfftw_execute(planz)
     call z2y
     call y2x
+    sync all
   endsubroutine
 
   subroutine pencil_fft_backward
@@ -55,6 +56,7 @@ module pencil_fft
     call sfftw_execute(iplanx)
     call x2c
     r3=r3/(ng*nn)/(ng*nn)/(ng*nn)
+    sync all
   endsubroutine
 
   subroutine c2x
@@ -152,8 +154,6 @@ module pencil_fft
       do i1=1,nn
         ctransfer1(:,:,i1)=cxyz(ng*(i1-1)/2+1:ng*i1/2,:,islab)
       enddo
-!if (this_image()==5) print*,ctransfer1
-!stop
       sync all
       do i1=1,nn
         c3(:,:,islab+(i1-1)*npen)=ctransfer1(:,:,m1)[image1d(m2,i1,m3)]
@@ -172,6 +172,7 @@ module pencil_fft
     call sfftw_plan_many_dft(iplany,1,ng*nn,(ng/2+1)*npen,cyyxz,NULL,1,ng*nn,cyyxz,NULL,1,ng*nn,FFTW_BACKWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(planz,1,ng*nn,(ng/2+1)*npen,czzzxy,NULL,1,ng*nn,czzzxy,NULL,1,ng*nn,FFTW_FORWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(iplanz,1,ng*nn,(ng/2+1)*npen,czzzxy,NULL,1,ng*nn,czzzxy,NULL,1,ng*nn,FFTW_BACKWARD,FFTW_MEASURE)
+    sync all
   endsubroutine
 
   subroutine destroy_penfft_plan
@@ -184,5 +185,6 @@ module pencil_fft
     call sfftw_destroy_plan(iplany)
     call sfftw_destroy_plan(planz)
     call sfftw_destroy_plan(iplanz)
+    sync all
   endsubroutine
 endmodule

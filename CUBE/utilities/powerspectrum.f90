@@ -20,17 +20,17 @@ complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 contains
 
 subroutine cross_power(xi,cube1,cube2)
-implicit none
+  implicit none
 
-integer(8) i,j,k,ig,jg,kg,ibin
-real kr,kx(3),sincx,sincy,sincz,sinc,rbin
+  integer(8) i,j,k,ig,jg,kg,ibin
+  real kr,kx(3),sincx,sincy,sincz,sinc,rbin
 
-real cube1(ng,ng,ng),cube2(ng,ng,ng)
-real xi(10,nbin)
-real amp11,amp12,amp22
-!complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
+  real cube1(ng,ng,ng),cube2(ng,ng,ng)
+  real xi(10,nbin)[*]
+  real amp11,amp12,amp22
+  !complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
-real,parameter :: nexp=4.0 ! CIC kernel
+  real,parameter :: nexp=4.0 ! CIC kernel
 
   xi=0
 
@@ -43,6 +43,8 @@ real,parameter :: nexp=4.0 ! CIC kernel
   cx2=cxyz
 
   xi=0
+  sync all
+
   do k=1,npen
   do j=1,ng
   do i=1,ng*nn/2+1
@@ -58,28 +60,42 @@ real,parameter :: nexp=4.0 ! CIC kernel
     sincy=merge(1.0,sin(pi*kx(2)/ng/nn)/(pi*kx(2)/ng/nn),kx(2)==0.0)
     sincz=merge(1.0,sin(pi*kx(3)/ng/nn)/(pi*kx(3)/ng/nn),kx(3)==0.0)
     sinc=sincx*sincy*sincz
-#ifdef linear_kbin
+#   ifdef linear_kbin
       ibin=nint(kr)
-#else
+#   else
       rbin=4.0/log(2.)*log(kr/0.95)
       ibin=merge(ceiling(rbin),floor(rbin),rbin<1)
-#endif
+#   endif
     xi(1,ibin)=xi(1,ibin)+1 ! number count
     xi(2,ibin)=xi(2,ibin)+kr ! k count
-    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! linear density field
-    amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! CIC'ed density field
-    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3 ! cross
+    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3
+    amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3
+    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3
 
     xi(3,ibin)=xi(3,ibin)+amp11 ! auto power 1
     xi(4,ibin)=xi(4,ibin)+amp22 ! auto power 2
     xi(5,ibin)=xi(5,ibin)+amp12 ! cross power
-    xi(6,ibin)=xi(6,ibin)+1/sinc**2.0 ! kernel
-    xi(7,ibin)=xi(7,ibin)+1/sinc**4.0 ! kernel
+    xi(6,ibin)=xi(6,ibin)+1/sinc**2.0 ! kernel 1
+    xi(7,ibin)=xi(7,ibin)+1/sinc**4.0 ! kernel 2
 
   enddo
   enddo
   enddo
+  sync all
 
+  ! co_sum
+  if (head) then
+    do i=2,nn**3
+      xi=xi+xi(:,:)[i]
+    enddo
+  endif
+  sync all
+
+  ! broadcast
+  xi=xi(:,:)[1]
+  sync all
+
+  ! divide and normalize
   xi(2,:)=xi(2,:)/xi(1,:)*(2*pi)/box ! k_phy
   xi(3,:)=xi(3,:)/xi(1,:) ! Delta_LL
   xi(4,:)=xi(4,:)/xi(1,:) ! Delta_RR
@@ -89,6 +105,7 @@ real,parameter :: nexp=4.0 ! CIC kernel
   xi(8,:)=xi(5,:)/sqrt(xi(3,:)*xi(4,:)) ! r
   xi(9,:)=sqrt(xi(4,:)/xi(3,:)) ! b
   xi(10,:)=xi(8,:)**4/xi(9,:)**2 * xi(4,:) ! P_RR*r^4/b^2 reco power
+  sync all
 endsubroutine
 
 endmodule
