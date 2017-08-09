@@ -8,11 +8,10 @@
 module powerspectrum
 use pencil_fft
 
-integer(8),parameter :: nk_ny=ng*nn/2 ! Nyquist wave number
 #ifdef linear_kbin
-  integer(8),parameter :: nbin=nint(nk_ny*sqrt(3.))
+  integer(8),parameter :: nbin=nint(nyquest*sqrt(3.))
 #else
-  integer(8),parameter :: nbin=floor(4*log(nk_ny*sqrt(3.)/0.95)/log(2.))
+  integer(8),parameter :: nbin=floor(4*log(nyquest*sqrt(3.)/0.95)/log(2.))
 #endif
 complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
@@ -47,18 +46,18 @@ subroutine cross_power(xi,cube1,cube2)
 
   do k=1,npen
   do j=1,ng
-  do i=1,ng*nn/2+1
+  do i=1,nyquest+1
     kg=(nn*(icz-1)+icy-1)*npen+k
     jg=(icx-1)*ng+j
     ig=i
-    kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
+    kx=mod((/ig,jg,kg/)+nyquest-1,ng_global)-nyquest
     if (ig==1.and.jg==1.and.kg==1) cycle ! zero frequency
     if ((ig==1.or.ig==ng*nn/2+1) .and. jg>ng*nn/2+1) cycle
     if ((ig==1.or.ig==ng*nn/2+1) .and. (jg==1.or.jg==ng*nn/2+1) .and. kg>ng*nn/2+1) cycle
     kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
-    sincx=merge(1.0,sin(pi*kx(1)/ng/nn)/(pi*kx(1)/ng/nn),kx(1)==0.0)
-    sincy=merge(1.0,sin(pi*kx(2)/ng/nn)/(pi*kx(2)/ng/nn),kx(2)==0.0)
-    sincz=merge(1.0,sin(pi*kx(3)/ng/nn)/(pi*kx(3)/ng/nn),kx(3)==0.0)
+    sincx=merge(1.0,sin(pi*kx(1)/ng_global)/(pi*kx(1)/ng_global),kx(1)==0.0)
+    sincy=merge(1.0,sin(pi*kx(2)/ng_global)/(pi*kx(2)/ng_global),kx(2)==0.0)
+    sincz=merge(1.0,sin(pi*kx(3)/ng_global)/(pi*kx(3)/ng_global),kx(3)==0.0)
     sinc=sincx*sincy*sincz
 #   ifdef linear_kbin
       ibin=nint(kr)
@@ -68,9 +67,9 @@ subroutine cross_power(xi,cube1,cube2)
 #   endif
     xi(1,ibin)=xi(1,ibin)+1 ! number count
     xi(2,ibin)=xi(2,ibin)+kr ! k count
-    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3
-    amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3
-    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng**3)/(ng**3)/(sinc**4.0)*4*pi*kr**3
+    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng_global**3)/(ng_global**3)/(sinc**4.0)*4*pi*kr**3
+    amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng_global**3)/(ng_global**3)/(sinc**4.0)*4*pi*kr**3
+    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng_global**3)/(ng_global**3)/(sinc**4.0)*4*pi*kr**3
 
     xi(3,ibin)=xi(3,ibin)+amp11 ! auto power 1
     xi(4,ibin)=xi(4,ibin)+amp22 ! auto power 2

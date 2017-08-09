@@ -1,7 +1,7 @@
 #define mkdir
-#define READ_SEED
+!#define READ_SEED
 #define WRITE_NOISE
-#define READ_NOISE
+!#define READ_NOISE
 !#define DO_2LPT
 
 program initial_conditions
@@ -76,6 +76,7 @@ program initial_conditions
   call geometry
 
   if (head) then
+    print*, ''
     print*, 'CUBE Initial Conditions'
     print*, 'on',nn**3,' images'
     print*, 'Resolution', ng*nn
@@ -226,8 +227,9 @@ program initial_conditions
   open(11,file=output_dir()//'noise'//output_suffix(),status='replace',access='stream')
   write(11) r3
   close(11)
-  print*, 'noise',r3(1:4,1,1),image
+  print*, 'noise',int(image,1),r3(1:2,1,1)
 #endif
+  sync all
 
   ! Box-Muller transform ----------------------------------------------
   if (head) print*,'Box-Muller transform'
@@ -249,7 +251,8 @@ program initial_conditions
   !close(11)
 
   ! delta_field ----------------------------------------------------
-  if (head) print*, 'delta_field'
+  if (head) print*, ''
+  if (head) print*, 'Delta field'
   if (head) print*, 'Start ftran'
   call pencil_fft_forward
   if (head) print*, 'Wiener filter on white noise'
@@ -274,14 +277,14 @@ program initial_conditions
 
   ! print*,icx,icy,icz,ig,jg,kg; stop ! check last frequency
   sync all
-  print*,'cxyz',cxyz(ng*nn/2+1,ng,npen)
+  !print*,'cxyz',cxyz(ng*nn/2+1,ng,npen)
 
   cx_temp=cxyz ! backup delta_L
 
   if (head) print*,'Start btran'
   call pencil_fft_backward
-  print*,'r3',r3(1,1,1)
-  print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
+  !print*,'r3',r3(1,1,1)
+  !print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'Write delta_L into file'
   if (head) print*,'Growth factor Dgrow(',a,') =',Dgrow(a)
@@ -294,6 +297,7 @@ program initial_conditions
 
 
   ! Potential field ----------------------------------------------------
+  if (head) print*, ''
   if (head) print*, 'Potential field'
   do k=1,npen
   do j=1,nf
@@ -612,7 +616,7 @@ program initial_conditions
 
   if (head) then
     print*,''
-    print*,'velocity analysis on head node'
+    print*,'Velocity analysis on head node'
     std_vsim_res=sqrt(std_vsim_res/nplocal)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
     std_vsim=sqrt(std_vsim/nplocal)

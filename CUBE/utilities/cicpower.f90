@@ -23,6 +23,7 @@ program cicpower
   if (head) then
     print*, 'cicpower on resolution:'
     print*, 'ng=',ng
+    print*, 'ng*nn=',ng*nn
   endif
   sync all
 
@@ -120,6 +121,7 @@ program cicpower
     rho1=rho_grid(1:ng,1:ng,1:ng)
     !print*, 'check: min,max,sum of rho_grid = '
     !print*, minval(rho1),maxval(rho1),sum(rho1*1d0)
+    
     rho8=sum(rho1*1d0)
     sync all
 
@@ -128,14 +130,18 @@ program cicpower
       do i=2,nn**3
         rho8=rho8+rho8[i]
       enddo
-      print*,'rho_global',rho8
+      print*,'rho_global',rho8,ng_global
     endif
     sync all
     rho8=rho8[1]
     sync all
 
     ! convert to density contrast
-    rho1=rho1/(rho8/ng/ng/ng)-1
+    rho1=rho1/(rho8/ng_global/ng_global/ng_global)-1
+
+    ! check normalization
+    print*, minval(rho1),maxval(rho1),sum(rho1*1d0)/ng/ng/ng
+    sync all
 
     if (head) print*,'Write rho_grid into file'
     open(15,file=output_name('delta_N'),status='replace',access='stream')
@@ -144,7 +150,7 @@ program cicpower
     sync all
 
     ! cross correlate correct density field
-    open(15,file='../output/universe1/image1/0.000delta_N_1.bin',access='stream')
+    open(15,file=output_name('delta_N'),access='stream')
     read(15) rho0
     close(15)
     print*, 'mean error', sum(abs(rho1-rho0)*1d0)/ng/ng/ng

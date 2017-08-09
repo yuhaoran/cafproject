@@ -10,8 +10,8 @@ module pencil_fft
   ! fft arrays
   real        r3(ng,ng,ng),r0(ng,ng)
   complex     c3(ng/2,ng,ng)
-  real        rxyz(ng*nn+2  ,ng,npen)
-  complex     cxyz(ng*nn/2+1,ng,npen)
+  real        rxyz(ng_global+2  ,ng,npen)
+  complex     cxyz(ng_global/2+1,ng,npen)
   complex     cyyyxz(npen,nn,nn,ng/2+1,npen)
   complex     cyyxz(ng,     nn,ng/2+1,npen)
   complex     czzzxy(npen,nn,nn,ng/2+1,npen)
@@ -55,7 +55,7 @@ module pencil_fft
     call y2x
     call sfftw_execute(iplanx)
     call x2c
-    r3=r3/(ng*nn)/(ng*nn)/(ng*nn)
+    r3=r3/ng_global/ng_global/ng_global
     sync all
   endsubroutine
 
