@@ -2,12 +2,14 @@ module parameters
   implicit none
   save
 
-  ! output directory for both IC and snapshots
-  character(*),parameter :: opath='../output/universe1/'
+  include 'universe1.fh'
+  !! output directory for both IC and snapshots
+  !character(*),parameter :: opath='../output/universe1/'
+  !
+  !! simulation parameters
+  !integer(8),parameter :: izipx=2
+  !integer(8),parameter :: izipv=2
 
-  ! simulation parameters
-  integer(8),parameter :: izipx=2
-  integer(8),parameter :: izipv=2
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
   integer(8),parameter :: ishift=-(int(2,8)**(izipx*8-1))
   real(8),parameter :: rshift=0.5-ishift
@@ -15,10 +17,10 @@ module parameters
   ! (hereafter 'number of fine cells' = 'nf')
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
-  integer(8),parameter :: nn=2 ! number of imgages (nodes) /dim
+  integer(8),parameter :: nn=4 ! number of imgages (nodes) /dim
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -52,15 +54,15 @@ module parameters
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
-  real,parameter :: image_buffer=1.5
-  real,parameter :: tile_buffer=2.0
+  real,parameter :: image_buffer=2.0
+  real,parameter :: tile_buffer=3.0
 
   ! cosmological parameters
   real,parameter :: z_i=49.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=300.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim

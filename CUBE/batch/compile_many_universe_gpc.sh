@@ -1,8 +1,8 @@
 ##!/bin/bash
 
 # Note that this is in Fortran convension
-n1=1  # first universe to compile
-n2=1  # last universe to compile
+n1=5  # first universe to compile
+n2=8  # last universe to compile
 
 # make directories for executables
 mkdir -p many/
@@ -21,15 +21,16 @@ do
   cd ../utilities/
   source module_load_intel.sh
   make clean
-  make ic.x
+  make
   mv ic.x ../batch/many/ic_universe$i.x
   #mv dsp.x ../batch/many/dsp_universe$i.x
   #mv convert.x ../batch/many/convert_universe$i.x
+  mv cicpower.x ../batch/many/cicpower_universe$i.x  
 
   cd ../main/
-  make clean
-  make
-  mv cafcube.x ../batch/many/cube_universe$i.x
+  #make clean
+  #make
+  #mv cafcube.x ../batch/many/cube_universe$i.x
 
   # change file parameter.f90 to next version ('sed' has system dependency)
   sed -i 's/universe'"$i"'/universe'"$((i+1))"'/g' ../main/parameters.f90

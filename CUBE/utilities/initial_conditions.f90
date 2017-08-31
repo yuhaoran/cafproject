@@ -1,5 +1,5 @@
 #define mkdir
-!#define READ_SEED
+#define READ_SEED
 #define WRITE_NOISE
 !#define READ_NOISE
 !#define DO_2LPT
@@ -184,9 +184,8 @@ program initial_conditions
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
-    ! Read seeds from ../configs
-    call system('cp ../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image)) ! for Xin
-    ! need to use seed[image_number].dat for parallel
+    if (head) print*, 'Copy and read seeds from ../confings/'
+    call system('cp ../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image))
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
     read(11) iseed
     close(11)
@@ -637,6 +636,7 @@ program initial_conditions
   if (head) print*, 'npglobal =',npglobal
   sim%mass_p=real(nf_global**3,kind=8)/npglobal
   call print_header(sim)
+  sync all
 
   if (head) print*, 'initial condition done'
 

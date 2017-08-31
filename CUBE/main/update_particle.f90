@@ -10,6 +10,7 @@ subroutine update_particle
   real(8),parameter :: weight_v=0.1 ! how previous-step vfield is mostly weighted
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
+  integer(8) checkv0,checkv1
 
   if (head) print*,'update_particle'
   dt_mid=(dt_old+dt)/2
@@ -22,6 +23,7 @@ subroutine update_particle
     rhoce=0
     rholocal=0
     ! for empty coarse cells, use previous-step vfield
+    vfield_new=0
     vfield_new(:,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb)=vfield(:,:,:,:,itx,ity,itz)*weight_v
     xp_new=0
     vp_new=0
@@ -113,6 +115,11 @@ subroutine update_particle
   enddo
   enddo ! end looping over tiles
   nplocal=iright
+  xp(:,nplocal+1:)=0
+  vp(:,nplocal+1:)=0
+# ifdef PID
+    pid(nplocal+1:)=0
+# endif
   !nplocal=sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   !print*, iright,sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   !stop

@@ -1,6 +1,9 @@
 module purge
 module load gcc/5.2.0 openmpi/gcc/1.8.3 use.experimental caf/gcc/5.2.0-openmpi
 module load fftw/3.3.0-gcc-openmpi
+
+#module load gcc/6.2.0  openmpi/gcc6/1.10.6 use.experimental fftw/3.3.0-gcc-openmpi
+
 #module list
 
 export FC='caf'

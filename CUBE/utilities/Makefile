@@ -1,6 +1,6 @@
 OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
-OPTIONS+=-DPID
+#OPTIONS+=-DPID
 
 all: ic.x dsp.x cicpower.x #convert.x
 	@echo "done"

@@ -166,7 +166,11 @@ module pencil_fft
     implicit none
     save
     include 'fftw3.f'
+print*,'a'
+sync all
     call sfftw_plan_many_dft_r2c(planx,1,ng*nn,ng*npen,cxyz,NULL,1,ng*nn+2,cxyz,NULL,1,ng*nn/2+1,FFTW_MEASURE)
+print*,'b'
+sync all
     call sfftw_plan_many_dft_c2r(iplanx,1,ng*nn,ng*npen,cxyz,NULL,1,ng*nn/2+1,cxyz,NULL,1,ng*nn+2,FFTW_MEASURE)
     call sfftw_plan_many_dft(plany,1,ng*nn,(ng/2+1)*npen,cyyxz,NULL,1,ng*nn,cyyxz,NULL,1,ng*nn,FFTW_FORWARD,FFTW_MEASURE)
     call sfftw_plan_many_dft(iplany,1,ng*nn,(ng/2+1)*npen,cyyxz,NULL,1,ng*nn,cyyxz,NULL,1,ng*nn,FFTW_BACKWARD,FFTW_MEASURE)

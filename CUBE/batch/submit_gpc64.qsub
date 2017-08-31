@@ -1,0 +1,22 @@
+#!/bin/bash
+# MOAB/Torque submission script for GPC
+#
+#PBS -l nodes=64:ppn=8,walltime=13:00:00
+#PBS -N CUBE
+
+# DIRECTORY TO RUN - $PBS_O_WORKDIR is directory job was submitted from
+cd $PBS_O_WORKDIR
+
+# EXECUTION COMMAND; -np = nodes*ppn
+
+cd ../utilities/
+source module_load_intel.sh
+#time cafrun  -N 1 ./ic3.x > ../batch/log_ic_64node.log
+
+cd ../main/
+time cafrun  -N 1 ./cafcube3.x > ../batch/log_cube_64node.log
+
+cd ../utilities/
+time cafrun -N 1 ./cicpower3.x > ../batch/log_power_64node.log
+
+cd ../batch/

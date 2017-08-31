@@ -2,7 +2,7 @@ subroutine buffer_density
   use variables
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom
+  integer(8) nshift,nlen,nlast,ifrom,checkxp0,checkxp1
 
   if (head) print*, 'buffer_density'
   overhead_image=0
@@ -92,13 +92,25 @@ subroutine buffer_density
     stop
   endif
 
+  
 
   nshift=np_image_max-nplocal
+
+  checkxp0=sum(xp*int(1,kind=8))
+
   xp(:,nshift+1:np_image_max)=xp(:,1:nplocal)
   vp(:,nshift+1:np_image_max)=vp(:,1:nplocal)
+  xp(:,1:np_image_max-nplocal)=0
+  vp(:,1:np_image_max-nplocal)=0
+
+  checkxp1=sum(xp*int(1,kind=8))
+  if (checkxp0/=checkxp1) then
+    print*, 'wrong1',image,checkxp0,checkxp1
+  endif
 
 # ifdef PID
     pid(nshift+1:np_image_max)=pid(1:nplocal)
+    pid(1:np_image_max-nplocal)=0
 # endif
 
   cum=cumsum6(rhoc)
@@ -115,8 +127,11 @@ subroutine buffer_density
       nlen=nlast-cum(0,iy,iz,itx,ity,itz)
       xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
       vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
+      xp(:,ifrom+1:ifrom+nlen)=0
+      vp(:,ifrom+1:ifrom+nlen)=0
 #     ifdef PID
         pid(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
+        pid(ifrom+1:ifrom+nlen)=0
 #     endif
       ifrom=ifrom+nlen
     enddo
@@ -124,6 +139,11 @@ subroutine buffer_density
   enddo
   enddo
   enddo
+
+  checkxp1=sum(xp*int(1,kind=8))
+  if (checkxp0/=checkxp1) then
+    print*, 'wrong2',image,checkxp0,checkxp1
+  endif
   !print*, 'redistributed local particles', sum(x*unit8)
   sync all
 endsubroutine buffer_density

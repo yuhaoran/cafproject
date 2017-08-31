@@ -17,9 +17,8 @@ program cicpower
   integer(izipx) xp(3,npmax)
 
   real xi(10,nbin)[*]
-
+  character(20) str_z,str_i
   call geometry
-
   if (head) then
     print*, 'cicpower on resolution:'
     print*, 'ng=',ng
@@ -146,17 +145,26 @@ program cicpower
     if (head) print*,'Write rho_grid into file'
     open(15,file=output_name('delta_N'),status='replace',access='stream')
     write(15) rho1
+!print*, rho1(1,1,1)
     close(15)
     sync all
 
+
+    
     ! cross correlate correct density field
-    open(15,file=output_name('delta_N'),access='stream')
+    write(str_i,'(i6)') image
+    write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
+    !open(15,file=output_name('delta_N'),access='stream')
+    open(15,file='../output/universe5/image'//&
+                  trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'delta_N'//&
+                  output_suffix(),access='stream')
     read(15) rho0
     close(15)
     print*, 'mean error', sum(abs(rho1-rho0)*1d0)/ng/ng/ng
     sync all
 
     call cross_power(xi,rho1,rho0)
+    sync all
     if (head) then
       open(15,file=output_name('cicpower'),status='replace',access='stream')
       write(15) xi
@@ -166,5 +174,7 @@ program cicpower
 
   enddo
   call destroy_penfft_plan
+  sync all
   if (head) print*,'cicpower done'
+  sync all
 end
