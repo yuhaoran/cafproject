@@ -114,6 +114,13 @@ Next, {\tt buffer\_density} and {\tt buffer\_x} are called again to synchronize 
 
 A standard particle-mesh scheme is then performed in the {\tt PM} subroutine. First, by looping over tiles, fine force is calculated and velocities are updated on the physical region of each tile. The memory overhead of fine-mesh arrays are well controlled by $1/{\tt nnt}^3$. Next, global coarse force is solved by using a coarser (usually by factor of 4) mesh by dimensional splitting -- a distributed-memory cubic decomposed 3D coarse density field is interpolated by particles, and we Fourier transform data in consecutive three dimensions with global transposition in between (known as the pencil decomposition). After the multiplication of force kernels, the inverse transform takes place to get the cubic distributed coarse force field, upon which velocities are updated again. The memory usage of coarse arrays are negligible. An optional particle-particle (PP) force can be called to increase the force resolution and the velocities are updated last time according to this. As discussed in \S\ref{s.velocity}, updating velocities use model predicted velocity distribution, thus ${\tt v}={\tt v}+{\tt dv}$ is executed only once, scaling directly to the velocity distribution of the next time step ${\tt d}+{\tt dt}$. During each of these force calculations, maximum accelerations are collected serving for the {\tt timestep} in the next iteration, controlling next {\tt dt}.
 
+\begin{figure}[t]
+\centering
+  \includegraphics[width=0.95\linewidth]{overplotparticles.pdf}
+ \caption{particles.}
+\label{fig.particles}
+\end{figure}
+
 By far, particle velocities in the physical regions of each tile are updated. Particle locations in the buffer regions has updated before {\tt PM} and remained unchanged. So we simply call {\tt buffer\_v} again, such that the {\tt update\_x} in the next iteration will be done correctly.
 
 If a desired redshift is reached, we call {\tt checkpoint} and/or exit the main loop. The corresponding logical variables are controlled in {\tt timestep}. Finally, in {\tt finalize} subroutine we destroy all the FFT plans and finish up any timing or statistics taken in the simulation.
@@ -125,6 +132,7 @@ If a desired redshift is reached, we call {\tt checkpoint} and/or exit the main 
 \label{fig.dsp}
 \end{figure}
 
+
 \subsection{Memory layout}
 Here we summarize the memory usage in unit of bpp (byte per particle).
 
@@ -135,28 +143,19 @@ Results of {\tt izipx=1}
 
 Results of {\tt izipx=2}
 
-\begin{figure}[h]
-\begin{verbatim}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\end{verbatim}
-
-\caption{Power spectrum differential plot}
+\begin{figure}
+\centering
+  \includegraphics[width=0.95\linewidth]{power_universe1-8_z0and1.pdf}
+ \caption{power spectrum.}
 \label{fig.power}
+\end{figure}
+
+
+\begin{figure}
+\centering
+  \includegraphics[width=0.95\linewidth]{ccc.pdf}
+ \caption{power spectrum and cross correlation.}
+\label{fig.ccc}
 \end{figure}
 
 \section{Discussion and Conclusion}
@@ -175,7 +174,7 @@ Phi, GPU.
 \section{A. Velocity distribution function}
 To optimize the storage of the velocity field, we need to estimate the velocity dispersion at each snapshot. At non-linear scale, the velocity distribution function is surely non-Gaussian. However, to the first order approximation, we simply assume it as Gaussian and characterized by the variance
 \begin{eqnarray}
-\sigma_v = \frac{1}{3}  (a H f D)^2 \int d^3q \frac{P_{L}(q)}{q^2} 
+\sigma_v = \frac{1}{3}  (a H f D)^2 \int d^3q \frac{P_{L}(q)}{q^2}
 \end{eqnarray}
 where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the linear growth factor, $f=d \ln D/d\ln a$, 
 and $P_L(k)$ is the linear power spectrum of density contrast at redshift zero. 
