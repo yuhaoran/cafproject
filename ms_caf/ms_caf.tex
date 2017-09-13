@@ -14,7 +14,7 @@
 
 \shortauthors{Yu et al.} \shorttitle{CUBE}
 \begin{document}
-\title{CUBE: Memory-lite Cosmological $N$-body Algorithm}
+\title{CUBE: A Memory-lite Cosmological $N$-body Algorithm}
 \author{
 Hao-Ran Yu$^{1,2}$,
 Ue-Li Pen$^{2,3,4,5}$,
@@ -32,7 +32,21 @@ $^5$Perimeter Institute for Theoretical Physics, Waterloo, ON N2L 2Y5, Canada
 \email{haoran@cita.utoronto.ca}
 
 \begin{abstract}
-Cosmological large scale structure $N$-body simulations are computation-light but memory-heavy imbalanced problems in supercomputing. Traditional $N$-body simulation algorithms use at least 24-byte per particle in memory, where six 4-byte single precision real numbers keep track of each particle's phase space coordinate. This is usually the bottleneck of scaling-up of a $N$-body problem on modern supercomputers whose core/memory ratio is high. Here we present a parallel, memory-lite Particle-Mesh based $N$-body code, in which each particle can occupy as low as 6-byte memory. This is accomplished by storing only particles' relative location respect to a mesh-grid, and their velocity relative to a predictable distribution function. The remaining information is given by the ordering of particles, and a complimentary density field, which is negligible in memory space. Our numerical experiments show that this algorithm provides acceptable accuracy compared to traditional algorithm in cosmological simulations.
+Cosmological large scale structure $N$-body simulations are computation-light,
+memory-heavy problems in supercomputing. Traditional $N$-body simulation
+algorithms use at least 24-byte memory per particle, of which six 4-byte single 
+precision floating point numbers keep track phase space coordinates of each particle.
+Here we present the algorithm and accuracy of a new parallel, memory-lite, Particle-
+Mesh based $N$-body code, where each particle can occupy as low as 6-byte memory. This 
+is accomplished by storing relative position and relative velocity of each particle, 
+in the format of 1-byte-integer, respect to their averaged value of a mesh-grid. The 
+remaining information is given by complimentary density and velocity fields, which are 
+negligible in memory space, and proper ordering of particles, which gives no extra 
+memory. Our numerical experiments show that this integer based $N$-body algorithm 
+provides acceptable accuracy compared to traditional algorithm in cosmological 
+simulations. This significant lowering of memory-to-computation ratio breaks the 
+bottleneck of scaling up and speeding up large cosmological $N$-body simulations on 
+multi-core and heterogenous computing systems.
 
 \end{abstract}
 
@@ -42,10 +56,44 @@ Cosmological large scale structure $N$-body simulations are computation-light bu
 
 
 \section{Introduction}
-$N$-body simulation is a powerful tool to solve the highly nonlinear dynamic problems \citep{1988csup.book.....H}. It is widely used in cosmology to model the formation and evolution of the large scale structure (LSS). With the fast development of parallel supercomputers, we are able to simulate a system of more than a trillion ($10^{12}$) $N$-body particles. To date the largest $N$-body simulation in application is the ``TianNu'' simulation run on the TianHe-2 supercomputer by cosmological simulation code {\tt CUBEP3M} \citep{2013MNRAS.436..540H}. It uses nearly $3\times 10^{12}$ particles to simulate the cold dark matter (CDM) and cosmic neutrino evolution through the cosmic age. However {\tt CUBEP3M} and TianNu did not fully use TianHe-2's computing power -- 87\% of the computing power on TianHe-2 are given by the Intel Xeon-Phi coprocessors while they occupy only 27\% of the total memory. Although we accomplished preliminary works on developing native and offload modes of {\tt CUBEP3M} on Xeon-Phi many integrated core (MIC) architecture, the memory problem is still the bottle neck of scaling up the $N$-body problem on the heterogeneous architectures. Lower the memory usage per particle will solve this problem, and will also help the $N$-body problem development on GPUs, which are even more massive parallelized and memory limited. In this paper we present a $N$-body algorithm which uses as low as 6 byte per particle (here after we use ``bpp'' referring to ``byte per particle'') and show that it can give accurate cosmological LSS simulations. The algorithm is presented in \S 2, and a comparison between this method and traditional method is shown in \S 3. Discussions and conclusions are in \S 4.
+$N$-body simulation is a powerful tool to solve the highly nonlinear dynamic problems 
+\citep{1988csup.book.....H}. It is widely used in cosmology to model the formation and 
+evolution of the large scale structure (LSS). With the fast development of parallel 
+supercomputers, we are able to simulate a system of more than a trillion ($10^{12}$) 
+$N$-body particles. To date the largest $N$-body simulation in application is the 
+``TianNu'' simulation \citep{2017NatAs...1E.143Y,2017RAA....17...85E} run on the 
+TianHe-2 supercomputer by cosmological simulation code 
+{\tt CUBEP3M} \citep{2013MNRAS.436..540H}. It uses nearly $3\times 10^{12}$ particles 
+to simulate the cold dark matter (CDM) and cosmic neutrino evolution through the 
+cosmic age.
+
+The $N$-body simulations use considerable amount of memory, because the phase space 
+coordinates $(x,y,z,v_x,v_y,v_z)$ of each $N$-body particle must be stored as, at 
+least, six single precision floating point numbers (24 bytes). Contrarily, their 
+computing workload can be alleviated by many algorithms, like Particle-Mesh [cite] and 
+Tree [cite], scale as $o(N\log N)$ or even $o(N)$. On the other hand, modern 
+supercomputer systems use multi cores, many integrated cores (MIC) and even densely 
+parallelized GPUs, bringing orders of magnitude higher computing power, whereas these 
+architectures usually have limited memory allocation. Thus, the computation-light but 
+memory-heavy applications, compared to matrix multiplication and decomposition 
+calculations, are less suitable for fully usage of the computing power of modern 
+supercomputers. For example, although native and offload modes of {\tt CUBEP3M} are 
+able to run on the Intel Xeon-PHI MIC architectures, with the requirement of enough 
+memory, TianNu simulation were done on TianHe-2 with only its CPUs -- 73\% of the 
+total memory but only 13\% of the total computing power.
+
+We present a new $N$-body simulation code {\tt CUBE}, using as low as 6 byte per particle (here after we use ``bpp'' referring to ``byte per particle''). We show that it gives accurate results cosmological LSS simulations. The algorithm is presented in \S 2, and a comparison between this method and traditional method is shown in \S 3. Discussions and conclusions are in \S 4.
 
 \section{Algorithm}
-The most memory consuming part of a $N$-body simulation is usually the phase space coordinates of each $N$-body particles -- 24 bpp (4 single precision real numbers) must be used to store each particles' position and velocity. A memory-lite parallel $N$-body code {\tt CUBEP3M} can use as low as 40 bpp in sacrificing the speed. This includes the phase coordinates (24 bpp) for particles in physical domain and buffered region, a linked list (4 bpp), and a global coarse mesh and local fine mesh. We attempt to replace the coordinates and linked list 24+4=28 bpp memory usage with a integer based storage, described as follows.
+The most memory consuming part of a $N$-body simulation is usually the phase space 
+coordinates of $N$-body particles -- 24 bpp (4 single precision floating numbers) must 
+be used to store each particles' 3D position and velocity vectors. {\tt CUBEP3M}, an 
+example of a memory-lite parallel $N$-body code, can use as low as 40 bpp in 
+sacrificing computing speed \citep{2013MNRAS.436..540H}. This includes the phase 
+coordinates (24 bpp) for particles in physical domain and buffered region, a linked 
+list (4 bpp), and a global coarse mesh and local fine mesh. We attempt to replace the 
+coordinates and linked list 24+4=28 bpp memory usage with a integer based storage, 
+described as follows.
 \begin{figure}[t]
 \centering
   \includegraphics[width=0.95\linewidth]{fig_tile.pdf}
@@ -54,7 +102,7 @@ The most memory consuming part of a $N$-body simulation is usually the phase spa
 \end{figure}
 
 \subsection{Particle location storage}
-Instead of storing the particle's global coordinates, we store its relative position respective to the coarse cell who contains the particle. We divide the coarse cell, in each dimension, evenly into $2^8=256$ bins, and we use a 1-byte integer (with range 0 to 255 or -128 to 127) to show which bin it locates in this dimension. Next, global locations of particles are given by cell-ordered format in memory space, and a complimentary number count of particle number in this coarse mesh (coarse density field) will give complete information of particle distribution in cells. Since the this field is usually coarser than particle distribution, it takes negligible memory. This coarse density field can be further compressed into 1-byte integer format, such that a 1-byte unsigned integer show the particle number in this coarse cell in range 0 to 255. In the densest cells (rarely happened) where there are $\ge 255$ particles, we can just write 255, and write the actual number as a 4-byte integer in another file. In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle positions are stored with a precision of $L/(256N_c)$, which is usually 10 times finer than the force resolution.
+Instead of storing the global coordinates of each particle, we store its offset relative to its parent coarse cell which contains the particle. We divide the coarse cell, in each dimension, evenly into $2^8=256$ bins, and use a 1-byte integer (with range 0 to 255 or -128 to 127) to indicate which bin it locates in this dimension. Next, global locations of particles are given by cell-ordered format in memory space, and a complimentary number count of particle number in this coarse mesh (coarse density field) will give complete information of particle distribution in cells. Since the this field is usually coarser than particle distribution, it takes negligible memory. This coarse density field can be further compressed into 1-byte integer format, such that a 1-byte unsigned integer show the particle number in this coarse cell in range 0 to 255. In the densest cells (rarely happened) where there are $\ge 255$ particles, we can just write 255, and write the actual number as a 4-byte integer in another file. In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle positions are stored with a precision of $L/(256N_c)$, which is usually 10 times finer than the force resolution.
 
 \subsection{Particle velocity storage}\label{s.velocity}
 Velocities, in each dimension, are compressed to 2-byte integers representing their index within a histogram containing $2^{16}$ equally spaced bins ranging from $-v_{\rm max}$ to $v_{\rm max}$, where $v_{\rm max}$ is the maximum absolute particle velocity. $v_{\rm max}$ can be derived from either computation or prediction. We prefer the latter case. In cosmological simulations, velocity distribution of matter fluids can be predicted by linear theory, given a model and redshift $z$ (time of the simulation). Then by any time step, we have a cumulative distribution function (CDF) $F(|\bs{v}|)$ of particles' velocity (see appendix A). We, instead, equally divide the $y$-axis of this CDF into $2^{16}$ bins, and the 2-byte integer shows which velocity bin the particle locates, in each dimension. This step does finer sampling on low-velocity end in velocity space and increases the simulation accuracy. This CDF may introduce velocity cutoffs, that particle cannot exceed some certain $\bs{v}_{\rm max}(z)$ given by the model. This process prevents the nonphysical scattering behaviours of particles, which do not exist in fluids. Practically, simulation results are very insensitive to the choice of velocity distribution. Even a top-hat distribution in range $-v_{\rm max}$ to $v_{\rm max}$ give accurate results. One can just assume a Gaussian distribution and whose standard deviation is given by the model and redshift $\sigma(\bs{\theta},z)$. Proper choice of model only optimizes the velocity space sampling, but does not affect the physics.
