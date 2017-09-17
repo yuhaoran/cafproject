@@ -22,7 +22,7 @@ Xin Wang$^{2}$
 }
 
 \affil{
-$^1$Kavli Institute for Astronomy and Astrophysics, Peking University, Beijing 100871, China\\
+$^1$Tsung-Dao Lee Institute, Shanghai Jiao Tong University, Shanghai, 200240, China\\
 $^2$Canadian Institute for Theoretical Astrophysics, University of Toronto, Toronto, ON M5H 3H8 Canada\\
 $^3$Dunlap Institute for Astronomy and Astrophysics, University of Toronto, Toronto, ON M5S 3H4, Canada\\
 $^4$Canadian Institute for Advanced Research, CIFAR Program in Gravitation and Cosmology, Toronto, ON M5G 1Z8, Canada\\
@@ -78,11 +78,15 @@ architectures usually have limited memory allocation. Thus, the computation-ligh
 memory-heavy applications, compared to matrix multiplication and decomposition 
 calculations, are less suitable for fully usage of the computing power of modern 
 supercomputers. For example, although native and offload modes of {\tt CUBEP3M} are 
-able to run on the Intel Xeon-PHI MIC architectures, with the requirement of enough 
+able to run on the Intel Xeon-PHI MIC architectures, with the require ment of enough 
 memory, TianNu simulation were done on TianHe-2 with only its CPUs -- 73\% of the 
 total memory but only 13\% of the total computing power.
 
-We present a new $N$-body simulation code {\tt CUBE}, using as low as 6 byte per particle (here after we use ``bpp'' referring to ``byte per particle''). We show that it gives accurate results cosmological LSS simulations. The algorithm is presented in \S 2, and a comparison between this method and traditional method is shown in \S 3. Discussions and conclusions are in \S 4.
+We present a new $N$-body simulation code {\tt CUBE}, using as low as 6 byte per particle 
+(here after we use ``bpp'' referring to ``byte per particle''). We show that it gives 
+accurate results in cosmological LSS simulations. The algorithm is presented in \S 2, and 
+a comparison between this method and traditional method is shown in \S 3. Discussions and 
+conclusions are in \S 4.
 
 \section{Algorithm}
 The most memory consuming part of a $N$-body simulation is usually the phase space 
@@ -91,35 +95,135 @@ be used to store each particles' 3D position and velocity vectors. {\tt CUBEP3M}
 example of a memory-lite parallel $N$-body code, can use as low as 40 bpp in 
 sacrificing computing speed \citep{2013MNRAS.436..540H}. This includes the phase 
 coordinates (24 bpp) for particles in physical domain and buffered region, a linked 
-list (4 bpp), and a global coarse mesh and local fine mesh. We attempt to replace the 
-coordinates and linked list 24+4=28 bpp memory usage with a integer based storage, 
-described as follows.
-\begin{figure}[t]
-\centering
-  \includegraphics[width=0.95\linewidth]{fig_tile.pdf}
- \caption{Spacial decomposition.}
-\label{fig.tile}
-\end{figure}
+list (4 bpp), and a global coarse mesh and local fine mesh. 4-byte real numbers are 
+not necessarily adequate in representing the {\it global} coordinates in simulations.
+If the box size is many orders of magnitude larger than interactive distance
+between particles, especially in the field of re-simulation of dense subregions,
+double precision (8-byte) coordinates are needed to avoid truncation errors.
+Another solution is to record {\it relative} coordinates for both position and velocity.
+{\tt CUBE} replaces the coordinates and linked list 24+4=28 bpp memory usage
+with an integer based storage, reduces the basic memory usage from 28 bpp down to
+6 bpp, described as following subsections.
 
-\subsection{Particle location storage}
-Instead of storing the global coordinates of each particle, we store its offset relative to its parent coarse cell which contains the particle. We divide the coarse cell, in each dimension, evenly into $2^8=256$ bins, and use a 1-byte integer (with range 0 to 255 or -128 to 127) to indicate which bin it locates in this dimension. Next, global locations of particles are given by cell-ordered format in memory space, and a complimentary number count of particle number in this coarse mesh (coarse density field) will give complete information of particle distribution in cells. Since the this field is usually coarser than particle distribution, it takes negligible memory. This coarse density field can be further compressed into 1-byte integer format, such that a 1-byte unsigned integer show the particle number in this coarse cell in range 0 to 255. In the densest cells (rarely happened) where there are $\ge 255$ particles, we can just write 255, and write the actual number as a 4-byte integer in another file. In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle positions are stored with a precision of $L/(256N_c)$, which is usually 10 times finer than the force resolution.
+\subsection{Particle position storage}
+We construct a uniform mesh throughout the space and each particle belongs 
+to its parent cell of the mesh. Instead of storing global coordinates of 
+each particle, we store its offset relative to its parent cell which 
+contains the particle. We divide the cell, in each dimension $d$, evenly into 
+$2^8=256$ bins, and use a 1-byte (8 bits) integer $\chi_d \in \{-128,-127,...,127\}$ to 
+indicate which bin it locates in this dimension. The global locations of 
+particles are given by cell-ordered format in memory space, and a 
+complimentary number count of particle number in this mesh (density field) 
+will give complete information of particle distribution in the mesh. Then 
+the global coordinate in $d$th dimension $x_d$ is given by $x_d=(n_c-1)+
+(\chi_d+128+1/2)/256$, where $n_c=1,2,...,N_c$ 
+is the index of the coarse grid. The mesh 
+is chosen to be coarse enough such that the density field takes negligible 
+memory. This coarse density field can be further compressed into 1-byte 
+integer format, such that a 1-byte integer show the particle number in this 
+coarse cell in range 0 to 255. In the densest cells (rarely happened) where 
+there are $\ge 255$ particles, we can just write 255, and write the actual 
+number as a 4-byte integer in another file.
+
+In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle 
+positions are stored with a precision of $L/(256N_c)$. The force calculation 
+(e.g. softening length) should be configured much finer than this 
+resolution, discussed in later sections. On the other hand, particle 
+position can also be stored as 2-byte (16 bits) integers to increase the resolution. 
+In this case, each coarse cell is divided into $2^{16}=65536$ bins and the 
+position precision is $L/(65536N_c)$, precise enough compared to using
+4-byte global coordinates, see later results. We denote this case ``x2'' and 
+denote using 1-byte integers for positions ``x1''.
+
+We collectively write the general position conversion formulae
+\begin{equation}
+	\chi_d=\left[2^{8n_\chi}(x_d-\left[x_d\right])\right]-2^{8n_\chi-1},
+\end{equation}
+\begin{equation}
+	x_d=(n_c-1)+2^{-8n_\chi}\left(\chi_d+2^{8n_\chi-1}+1/2\right),
+\end{equation}
+where $[\ ]$ is the operator to take the integer part. $n_\chi\in\{1,2\}$ is the number of bytes used for each integer, $x_d$ and $\chi_d$ are floating and integer version of the coordinate. Similarly, in section \ref{s.velocity}, the velocity counterpart of them are $n_\nu=1,2$, $v_d$ and $\nu_d$. Position resolution for $n_\chi$-byte integer, ``x$n_\chi$'', is $2^{-8n_\chi}L/N_c$.
+
 
 \subsection{Particle velocity storage}\label{s.velocity}
-Velocities, in each dimension, are compressed to 2-byte integers representing their index within a histogram containing $2^{16}$ equally spaced bins ranging from $-v_{\rm max}$ to $v_{\rm max}$, where $v_{\rm max}$ is the maximum absolute particle velocity. $v_{\rm max}$ can be derived from either computation or prediction. We prefer the latter case. In cosmological simulations, velocity distribution of matter fluids can be predicted by linear theory, given a model and redshift $z$ (time of the simulation). Then by any time step, we have a cumulative distribution function (CDF) $F(|\bs{v}|)$ of particles' velocity (see appendix A). We, instead, equally divide the $y$-axis of this CDF into $2^{16}$ bins, and the 2-byte integer shows which velocity bin the particle locates, in each dimension. This step does finer sampling on low-velocity end in velocity space and increases the simulation accuracy. This CDF may introduce velocity cutoffs, that particle cannot exceed some certain $\bs{v}_{\rm max}(z)$ given by the model. This process prevents the nonphysical scattering behaviours of particles, which do not exist in fluids. Practically, simulation results are very insensitive to the choice of velocity distribution. Even a top-hat distribution in range $-v_{\rm max}$ to $v_{\rm max}$ give accurate results. One can just assume a Gaussian distribution and whose standard deviation is given by the model and redshift $\sigma(\bs{\theta},z)$. Proper choice of model only optimizes the velocity space sampling, but does not affect the physics.
+Similarly, actual velocity in $d$th dimension $v_d$ is decomposed into an 
+averaged velocity field on the same coarse grid $v_c$ and a residual $\Delta v$ 
+relative to this field: $v_d=v_c+\Delta v$. $v_c$ is always recorded and 
+kept updated, and occupies negligible memory. We then divide velocity space 
+$\Delta v$ into uneven bins, and use a $n_\nu$-byte integer to indicate
+which $\Delta v$ bin the particle is located.
 
-\begin{figure}[t]
-\centering
-  \includegraphics[width=1.0\linewidth]{vdisp.pdf}
- \caption{Velocity dispersion.}
-\label{fig.tile}
-\end{figure}
+The reason why we use uneven bins is that, slower particles are more 
+abundant compared to faster ones, and one should better resolve slower 
+particles tracing at least linear evolution. On the other hand, there could 
+be extreme scattering particles (in case of particle-particle force), and we 
+can safely ignore or less resolve those nonphysical particles. One of the 
+solution is that, if we know the probability distribution function (PDF) 
+$f(\Delta v)$ we divide its cumulative distribution function (CDF) $F(\Delta 
+v)\in(0,1)$ into $2^{8n_\nu}$ bins to determine the boundary of $\Delta v$ 
+bins, and particles should evenly distribute in the corresponding uneven $
+\Delta v$ bins. Practically we find that either $f(v_d)$ or $f(\Delta v)$ is 
+close to Gaussian, so we can use Gaussian CDF, or any convenient analytic 
+functions which are close to Gaussian, to convert velocity between real 
+numbers and integers.
+
+The essential parameter of the velocity distribution is its variance. On 
+non-linear scale, the velocity distribution function is non-Gaussian. 
+However, to the first order approximation, we simply assume it as Gaussian 
+and characterized by the variance
+\begin{eqnarray}\label{eq.vdisp}
+\sigma_v(a,k) = \frac{1}{3}  (a H f D)^2 \int_0^k d^3q \frac{P_{L}(q)}{q^2},
+\end{eqnarray}
+where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the 
+linear growth factor, $f=d \ln D/d\ln a$, and $P_L(k)$ is the linear power 
+spectrum of density contrast at redshift zero.
+$\sigma_v(a,k)$ is a function of cosmic evolution $a$ and a smoothing scale 
+$k$, or $r$. $\Delta v$
+is the velocity dispersion relative to the coarse grid, so we approximate 
+its variance as
+\begin{equation}\label{eq.vdelta}
+	\sigma^2_{\Delta}(a)=\sigma^2_v(a,r_c)-\sigma^2_v(a,r_p), 
+\end{equation}
+where $r_c$ is the scale of
+coarse grid, and $r_p$ is the scale of average particle separation. In each
+dimension of 3D velocity field, we use $\sigma^2_{\Delta}(a)/3$ according 
+to the equipartition therorem. On different scales, we measure the 
+statistics of $v_d$, $v_c$ and $\Delta v$ and find good agreement with the 
+above model.
+
+The simulation results are very insensitive if we manually tune the variance of the model $\sigma_\Delta$ within an order of magnitude. However, the method of using uneven bins gets much better results than simply using equal bins between minimum and maximum values $[\min(\Delta v),\max(\Delta v)]$. So, one can safely use a standard $\Lambda$CDM (Cold Dark Matter with a cosmological constant) for slightly different cosmological models, in equation (\ref{eq.vdisp}). In {\tt CUBE}, the velocity conversion takes the formula
+\begin{eqnarray}\label{eq.vconvert}
+	&&\nu_d=\left\lfloor(2^{8n_\nu}-1)\pi^{-1}\tan^{-1}\left(v_d\sqrt{\pi/2\sigma_\Delta^2}\right)\right\rfloor,\\
+	&&v_d=\tan\left(\frac{\pi \nu_d}{2^{8n_\nu}-1}\right)\sqrt{2\sigma_\Delta^2/\pi},
+\end{eqnarray}
+where $\lfloor\ \rfloor$ is the operator to take the nearest integer. 
+Tangent functions are convenient and compute very fast. Compared to error 
+functions used in Gaussian case, they take the same variance at $v_d=0$ but 
+resolve high velocities relatively better.
+Note again that proper choice of conversion formulae and $\sigma_\Delta$ 
+only optimizes the velocity space sampling, but does not affect the physics. 
+
+Initially, particles are generated by initial condition generator, at a higher redshift. The coarse grid density field $v_c$ is also generated at this step by averaging all particles in the coarse cell. A global $\sigma_\Delta$ is calculated by equation (\ref{eq.vdelta}), where linear approximation is hold. Then velocities are stored by equation (\ref{eq.vconvert}). During the simulation, $v_c$ is updated every time step, and a nonlinear $\sigma_\Delta$ is measured directly from the simulation, and can be simply used in the next time step, after scaled by the ratio of growth factors between two adjacent time steps. More details see section \ref{ss.code}.
 
 \subsection{Spacial decomposition}
 {\tt CUBE} uses cubic decomposition structures. The global simulation volume is decomposed into ${\tt nn}^3$ cubic sub-volumes, and each of these are assigned to a coarray {\it image}\footnote{Images are the concept of computing nodes or MPI tasks in Coarray Fortran. We use this terminology in this paper.}. Inside of an image, the sub-volume is further decomposed into ${\tt nnt}^3$ cubic {\it tiles}. Each tile is surrounded by a {\it buffer} region which is usually ${\tt ncb}$ coarse cells thick. The buffer is designed for two reasons: (1) computing the fine mesh force, whose cut-off ${\tt nforce\_cutoff}\leq{\tt ncb}$, and (2) collecting all possible particles travelling from a tiles buffer region to its center, {\it physical} region. Thus, a integer-based coarse mesh density is defined as
 \begin{equation*}
 {\tt integer(1)\ rho\_c(nex,nex,nex,nnt,nnt,nnt)[nn,nn,*]}\\
 \end{equation*}
-where ${\tt nex}={\tt nt}+2{\tt ncb}$ covers the buffer region on both sides, {\tt nnt} is the tile dimemsions, and {\tt nn} is the image {\it codimensions}\footnote{Coarray Fortran concept. Codimensions can do communications between images.}. Particles' phase coordinates {\tt x} and {\tt v} are copied between tiles and images, when necessary. Figure \ref{fig.tile} shows the spacial decomposition in a 2-dimensional analogy, with ${\tt nn=2}$ and ${\tt nnt=2}$.
+where ${\tt nex}={\tt nt}+2{\tt ncb}$ covers the buffer region on both sides, {\tt nnt} is the tile dimemsions, and {\tt nn} is the image {\it codimensions}\footnote{Coarray Fortran concept. Codimensions can do communications between images.}. Particles' phase coordinates {\tt xp} and {\tt vp} are copied between tiles and images, when necessary. Figure \ref{fig.tile} shows the spacial decomposition in a 2-dimensional analogy, with ${\tt nn=2}$ and ${\tt nnt=2}$.
+\begin{figure}
+\centering
+  \includegraphics[width=0.95\linewidth]{fig_tile.pdf}
+ \caption{Spacial decomposition.}
+\label{fig.tile}
+\end{figure}
+
+\begin{figure}
+\centering
+  \includegraphics[width=1.0\linewidth]{vdisp.pdf}
+ \caption{Velocity dispersion.}
+\label{fig.tile}
+\end{figure}
 
 \begin{figure}[t]
 \begin{verbatim}
@@ -151,7 +255,7 @@ where ${\tt nex}={\tt nt}+2{\tt ncb}$ covers the buffer region on both sides, {\
 \label{fig.code}
 \end{figure}
 
-\subsection{Code overview}
+\subsection{Code overview}\label{ss.code}
 By using the previous compact format storage, we modified the {\tt CUBEP3M} and utilized it in the outputs TianNu simulation. On average, 9.125 bpp is used for all outputs and saves 62 \% hard drive space on Tianhe-2. The compact version of {\tt CUBEP3M}, named {\tt CUBE}, accomplished the compact format in memory, and the code keeps only integer format for storing particles' phase space coordinates. {\tt CUBE} is written in Coarray Fortran, where the coarray features are used to do MPI communications. Here we review the methodology of solving this integer based $N$-body problem. Like its predecessor {\tt CUBEP3M}, {\tt CUBE} uses two-level mesh grids for solving the Poisson equations. The advantages of this are described in \cite{2013MNRAS.436..540H}.
 
 Figure \ref{fig.code} shows the overall structure of the code. Subroutine {\tt initialize} creates necessary FFT plans and read in configuration files telling the program at which redshifts we need to do checkpoints, halofinds, or stop the simulation. Force kernels are also created or read in here. In {\tt particle\_initialize}, for each image, we read in initial positions and velocities in the compressed format.  A initial condition generator is also written in the compressed format (see Appendix B). When this step is done by all images (synchronized by ``{\tt sync all}'', which is equivalent to a {\tt mpi\_barrier}), the density fields {\tt rho\_c} are buffered between tiles (communications between images are needed) by subroutine {\tt buffer\_density}. Then, particles' phase space coordinates {\tt x} and {\tt v} are also buffered, by {\tt buffer\_x} and {\tt buffer\_v} respectively. In these steps, {\tt x} and {\tt v}'s ordering is changed according to the updated {\tt rho\_c}.
@@ -220,12 +324,6 @@ Phi, GPU.
 
 \appendix
 \section{A. Velocity distribution function}
-To optimize the storage of the velocity field, we need to estimate the velocity dispersion at each snapshot. At non-linear scale, the velocity distribution function is surely non-Gaussian. However, to the first order approximation, we simply assume it as Gaussian and characterized by the variance
-\begin{eqnarray}
-\sigma_v = \frac{1}{3}  (a H f D)^2 \int d^3q \frac{P_{L}(q)}{q^2}
-\end{eqnarray}
-where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the linear growth factor, $f=d \ln D/d\ln a$, 
-and $P_L(k)$ is the linear power spectrum of density contrast at redshift zero. 
 
  
 
