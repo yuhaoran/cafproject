@@ -373,14 +373,14 @@ Finally, in {\tt finalize} subroutine we destroy all the FFT plans and finish up
 \begin{figure}[t]
 \centering
   \includegraphics[width=0.95\linewidth]{overplotparticles.pdf}
- \caption{particles.}
+ \caption{Difference between using {\tt CUBEP3M} (grey dots) and {\tt CUBE}-x1v1 (red dots). The box shows a projected $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ region of the simulation. }
 \label{fig.particles}
 \end{figure}
 
 \begin{figure}[t]
 \centering
   \includegraphics[width=0.95\linewidth]{ddsp_pcdf_256_box80.pdf}
- \caption{Displacement.}
+ \caption{Error of the displacement of particles.}
 \label{fig.dsp}
 \end{figure}
 
@@ -402,15 +402,15 @@ where $\left\langle {\tt nplocal} \right\rangle$ is the average number of partic
 where, recall that {\tt nnt} is the number of tiles per image per dimension, and similarly $\epsilon_{\rm tile}$ controls the inhomogeneity on scale of tiles. Larger {\tt nnt} causes more inhomogeneity on smaller tiles, and $\epsilon_{\rm tile}$ can be much larger than $\epsilon_{\rm image}$, however the term ${\tt nnt}^{-3}$ decreases much faster. So, the majority memory is occupied by {\tt xvp}.
 
 \subsubsection{Coarse mesh arrays}
-On coarse mesh, {\tt rho\_c}, {\tt vfield} and force kernel {\tt kern\_c} should always be kept. They are usually configured to be 4 times coarser than fine grids and particle number density. In this case, each coarse grid, 3D {\tt vfield} takes only 12 bytes, and 64 particles will at least take 384 bytes ($n_\chi=n_\nu=1$ case). Similarly, pencil-FFT arrays, coarse force arrays etc. are memory-light and temporary. The total coarse mesh arrays take less than 10\% of the memory of {\tt xvp}.
+On coarse mesh, {\tt rho\_c}, {\tt vfield} and force kernel {\tt kern\_c} should always be kept. They are usually configured to be 4 times coarser than fine grids and particle number density. In this case, each coarse grid, 3D {\tt vfield} takes only 12 bytes, and 64 particles will at least take 384 bytes ($n_\chi=n_\nu=1$ case). Similarly, pencil-FFT arrays, coarse force arrays etc. are memory-light and temporary.
 
 \subsubsection{Fine mesh arrays}
-On the local fine mesh, only a force kernel array needs to be kept. The fine mesh density arrays, force field arrays are temporary. Since {\tt xvp\_new}, coarse force arrays, pencil-FFT arrays are also temporary and are not used in any calculation simultaneously, they can be overlapped in memory by using equivalent statements. The total fine mesh arrays take less than 5\% of the memory of {\tt xvp}.
+On the local fine mesh, only a force kernel array needs to be kept. The fine mesh density arrays, force field arrays are temporary. Since {\tt xvp\_new}, coarse force arrays, pencil-FFT arrays are also temporary and are not used in any calculation simultaneously, they can be overlapped in memory by using equivalent statements.
 
 \subsubsection{Compare with traditional algorithms}
 To show the improvement of memory usage, we give an example of TianNu simulation \citep{2017NatAs...1E.143Y} on the Tianhe-2 supercomputer, which used a traditional {\tt CUBEP3M} code. TianNu's particles number is limited by memory per computing node -- per computing node, an average of $576^3$ neutrino particles and $288^3$ CDM particles are used, and consumes about 40 GB of memory\footnote{Additional memory is used for OpenMP parallelization and for particle IDs to differentiate different particle spices.}, or about 186 bpp. A memory efficient case of {\tt CUBEP3M} by using large physical scales and at costs of speed, still uses about 40 bpp.
 
-By using {\tt CUBE}, with parameters $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt}=4$, ${\tt ncb}=6$, $\epsilon_{\rm image}=10\%$, $\epsilon_{\rm tile}=100\%$ and $\left\langle {\tt nplocal} \right\rangle=1536^3$, we use about 38.3 GB of memory, corresponding to 10.6 bpp. This can be done on most of the supercomputers, even laptops.
+By using {\tt CUBE}, with parameters $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt}=3$, ${\tt ncb}=6$, $\epsilon_{\rm image}=5\%$, $\epsilon_{\rm tile}=200\%$ and $\left\langle {\tt nplocal} \right\rangle=1536^3$, we use about 35.6 GB of memory, corresponding to 9.84 bpp. This can be done on most of the supercomputers, even modern laptops.
 
 \begin{table}[]
 \centering
@@ -422,27 +422,27 @@ By using {\tt CUBE}, with parameters $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt
 \cline{3-5}
 Type     & Array & /GB & /bpp & Percentage \\
 \hline
-Particles  & \tt xvp          & 29.9   & 8.24   & 87.4\%     \\
-           & \tt xvp\_new     & \underline{1.69}   & \underline{0.465}  & \underline{4.93\%}`     \\
+Particles  & \tt xvp          & 29.9   & 8.24   & 83.8\%     \\
+           & \tt xvp\_new     & \underline{3.16}   & \underline{0.872}  & \underline{8.87\%}     \\
            & \tt PID          & 0      & 0      &    0\%     \\
-           & Subtotal         & 31.5   & 8.71   & 92.4\%     \\
+           & Subtotal         & 33.0   & 9.12   & 92.7\%     \\
 \hline
-Coarse mesh& \tt rho\_c       & 0.296  & 0.0818 & 0.870\%    \\
-           & \tt vfield       & 0.889  & 0.245  & 2.60\%     \\
-           & \tt kern\_c      & 0.340  & 0.0939 & 0.996\%    \\
-           & \tt force\_c     & (0.690)  & (0.190)  & (2.02\%)    \\
-           & \tt rho\_c\_new  & 0.0140 & 0.00388  & 0.0411\% \\
-           & Pencil-FFT       & (0.454)  & (0.125) & (1.33\%)      \\
-           & Subtotal         & 1.55   & 0.429 & 4.55\%     \\
+Coarse mesh& \tt rho\_c       & 0.296  & 0.0818 & 0.831\%    \\
+           & \tt vfield       & 0.889  & 0.245  & 2.49\%     \\
+           & \tt kern\_c      & 0.340  & 0.0939 & 0.954\%    \\
+           & \tt force\_c     & (0.690)  & (0.190)  & (1.94\%)    \\
+           & \tt rho\_c\_new  & 0.0140 & 0.00388  & 0.0394\% \\
+           & Pencil-FFT       & (0.454)  & (0.125) & (1.27\%)      \\
+           & Subtotal         & 1.55   & 0.429 & 4.36\%     \\
 \hline
-Fine mesh  & \tt kern\_f      & 1.06   & 0.292 & 3.09\%      \\
-           & \tt force\_f     & (1.63) & (0.450) & (4.77\%)     \\
-           & Fine-FFT     &   (1.41) & (0.389) & (4.13\%)     \\
-           & Subtotal      & 1.06   & 0.292 & 3.09\%      \\
+Fine mesh  & \tt kern\_f      & 1.06   & 0.292 & 2.97\%      \\
+           & \tt force\_f     & (1.63) & (0.450) & (4.57\%)     \\
+           & Fine-FFT     &   (1.41) & (0.389) & (3.96\%)     \\
+           & Subtotal      & 1.06   & 0.292 & 2.97	\%      \\
 \hline
-Total &                      & 34.2 & 9.43 & 100\%\\
+Total &                      & 35.6 & 9.84 & 100\%\\
 \hline
-\multicolumn{2}{l} {Optimal limit} & 21.7 & 6 & 63.6\%\\
+\multicolumn{2}{l} {Optimal limit} & 21.7 & 6 & 61.0\%\\
 \hline
 \end{tabular}
 \end{table}
@@ -451,14 +451,11 @@ Total &                      & 34.2 & 9.43 & 100\%\\
 \section{Results}\label{s.results}
 We use the same initial conditions, and use {\tt CUBEP3M} and {\tt CUBE} to simulate the large scale structure formation separately and compare their results.
 
-Results of {\tt izipx=1}
-
-Results of {\tt izipx=2}
 
 \begin{figure}
 \centering
   \includegraphics[width=0.95\linewidth]{power_universe1-8_z0and1.pdf}
- \caption{power spectrum.}
+ \caption{We don't need this figure.}
 \label{fig.power}
 \end{figure}
 
@@ -466,7 +463,7 @@ Results of {\tt izipx=2}
 \begin{figure}
 \centering
   \includegraphics[width=1.1\linewidth]{diff_power.pdf}
- \caption{power spectrum and cross correlation.}
+ \caption{Fractional error on power spectrum and cross correlations.}
 \label{fig.ccc}
 \end{figure}
 
