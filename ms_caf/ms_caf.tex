@@ -326,9 +326,6 @@ end
 \label{fig.update_xp}
 \end{figure}
 
-{\tt update\_vp} -- 
-After {\tt update\_xp}, or drift $D$, we call {\tt buffer\_density} and {\tt buffer\_xp} in order that particle positions are in buffered state, based on which, we update velocities (kick $K$) of particles in physical region of each tile. {\tt CUBE} uses a 2-level particle mesh scheme \citep{2013MNRAS.436..540H}. Local fine forces have a force cutoff ${\tt nforce\_cutoff}\leq{\tt ncb}$, i.e., $F_{\rm fine}(r>{\tt ncb})=0$. So, if we apply a fine-grid particle-mesh on an extended tile with buffered-depth {\tt ncb} (see Figure \ref{fig.tile} and regard it periodic), the force on physical regions does not depend on the false periodic boundary assumption, and the resulting fine force $F_{\rm fine}$ and velocity update on physical region is correct.
-
 \begin{figure}[t]
 \begin{verbatim}
 
@@ -355,6 +352,9 @@ end
 \label{fig.update_vp}
 \end{figure}
 
+{\tt update\_vp} -- 
+After {\tt update\_xp}, or drift $D$, we call {\tt buffer\_density} and {\tt buffer\_xp} in order that particle positions are in buffered state, based on which, we update velocities (kick $K$) of particles in physical region of each tile. {\tt CUBE} uses a 2-level particle mesh scheme \citep{2013MNRAS.436..540H}. Local fine forces have a force cutoff ${\tt nforce\_cutoff}\leq{\tt ncb}$, i.e., $F_{\rm fine}(r>{\tt ncb})=0$. So, if we apply a fine-grid particle-mesh on an extended tile with buffered-depth {\tt ncb} (see Figure \ref{fig.tile} and regard it periodic), the force on physical regions does not depend on the false periodic boundary assumption, and the resulting fine force $F_{\rm fine}$ and velocity update on physical region is correct.
+
 
 The compensating coarse grid force $F_{\rm coarse}$ is globally computed by using a coarser (usually by factor of 4) mesh by dimensional splitting -- a distributed-memory cubic decomposed 3D coarse density field is interpolated by particles, and we Fourier transform data in consecutive three dimensions with global transposition in between (known as the pencil decomposition). After the multiplication of force kernels, the inverse transform takes place to get the cubic distributed coarse force field $F_{\rm coarse}$, upon which velocities are updated again.
 
@@ -370,47 +370,27 @@ If a desired redshift is reached, we execute the last drift step in the $(DKKD)^
 {\tt finalize} --
 Finally, in {\tt finalize} subroutine we destroy all the FFT plans and finish up any timing or statistics taken in the simulation.
 
-\begin{figure}[t]
-\centering
-  \includegraphics[width=0.95\linewidth]{overplotparticles.pdf}
- \caption{Difference between using {\tt CUBEP3M} (grey dots) and {\tt CUBE}-x1v1 (red dots). The box shows a projected $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ region of the simulation. }
-\label{fig.particles}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-  \includegraphics[width=0.95\linewidth]{ddsp_pcdf_256_box80.pdf}
- \caption{Error of the displacement of particles.}
-\label{fig.dsp}
-\end{figure}
-
-
 \subsection{Memory layout}\label{ss.memory}
 Here we list the memory-consuming arrays and how they scale with different configurations of the simulation. We classify them into (1) arrays of particles, (2) coarse mesh arrays and (3) fine mesh arrays.
 
 \subsubsection{Arrays of particles}
 The arrays of particles contains {\tt xvp(6,npmax)} and a temporary {\tt xvp\_new(6,nptile)}\footnote{We use ``{\tt xvp}'' to represent $\{{\tt xp},{\tt vp}\}$, and use ``{\tt xvp\_new}'' to represent $\{{\tt xp\_new},{\tt vp\_new}\}$.}. {\tt npmax} is the number of particles {\tt xvp} can store:
-\begin{equation}
+\begin{equation}\label{eq.npmax}
 	{\tt npmax}=\left\langle {\tt nplocal} \right\rangle \left( 1+\frac{2\times {\tt ncb}}{\tt nt} \right)^3(1+\epsilon_{\rm image}),
 \end{equation}
 where $\left\langle {\tt nplocal} \right\rangle$ is the average number of particles per image. The second term above let us store particles in buffer regions, and the third term $1+\epsilon_{\rm image}$ takes into account the inhomogeneity of {\tt nplocal} on different images. When each image models smaller physical scales, $\epsilon_{\rm image}$ should be set larger. 
 
 {\tt xvp\_new} stores temporary particles only on tiles:
-\begin{equation}
+\begin{equation}\label{eq.nptile}
 	{\tt nptile}=\left\langle {\tt nplocal} \right\rangle \left( \frac{1}{\tt nnt} \right)^3(1+\epsilon_{\rm tile}),
 \end{equation}
 where, recall that {\tt nnt} is the number of tiles per image per dimension, and similarly $\epsilon_{\rm tile}$ controls the inhomogeneity on scale of tiles. Larger {\tt nnt} causes more inhomogeneity on smaller tiles, and $\epsilon_{\rm tile}$ can be much larger than $\epsilon_{\rm image}$, however the term ${\tt nnt}^{-3}$ decreases much faster. So, the majority memory is occupied by {\tt xvp}.
 
 \subsubsection{Coarse mesh arrays}
-On coarse mesh, {\tt rho\_c}, {\tt vfield} and force kernel {\tt kern\_c} should always be kept. They are usually configured to be 4 times coarser than fine grids and particle number density. In this case, each coarse grid, 3D {\tt vfield} takes only 12 bytes, and 64 particles will at least take 384 bytes ($n_\chi=n_\nu=1$ case). Similarly, pencil-FFT arrays, coarse force arrays etc. are memory-light and temporary.
+On coarse mesh, {\tt rho\_c}, {\tt vfield} and force kernel {\tt kern\_c} should always be kept. They are usually configured to be 4 times coarser than fine grids and particle number density. In this case, each coarse grid, 3D {\tt vfield} takes only 12 bytes, and 64 particles will at least take 384 bytes ($n_\chi=n_\nu=1$ case). Similarly, pencil-FFT arrays, coarse force arrays etc. are memory-light and/or temporary.
 
 \subsubsection{Fine mesh arrays}
 On the local fine mesh, only a force kernel array needs to be kept. The fine mesh density arrays, force field arrays are temporary. Since {\tt xvp\_new}, coarse force arrays, pencil-FFT arrays are also temporary and are not used in any calculation simultaneously, they can be overlapped in memory by using equivalent statements.
-
-\subsubsection{Compare with traditional algorithms}
-To show the improvement of memory usage, we give an example of TianNu simulation \citep{2017NatAs...1E.143Y} on the Tianhe-2 supercomputer, which used a traditional {\tt CUBEP3M} code. TianNu's particles number is limited by memory per computing node -- per computing node, an average of $576^3$ neutrino particles and $288^3$ CDM particles are used, and consumes about 40 GB of memory\footnote{Additional memory is used for OpenMP parallelization and for particle IDs to differentiate different particle spices.}, or about 186 bpp. A memory efficient case of {\tt CUBEP3M} by using large physical scales and at costs of speed, still uses about 40 bpp.
-
-By using {\tt CUBE}, with parameters $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt}=3$, ${\tt ncb}=6$, $\epsilon_{\rm image}=5\%$, $\epsilon_{\rm tile}=200\%$ and $\left\langle {\tt nplocal} \right\rangle=1536^3$, we use about 35.6 GB of memory, corresponding to 9.84 bpp. This can be done on most of the supercomputers, even modern laptops.
 
 \begin{table}[]
 \centering
@@ -447,10 +427,67 @@ Total &                      & 35.6 & 9.84 & 100\%\\
 \end{tabular}
 \end{table}
 
+\subsubsection{Compare with traditional algorithms}
+To illustrate the improvement of memory usage, we give an example of TianNu simulation \citep{2017NatAs...1E.143Y} on the Tianhe-2 supercomputer, which used a traditional {\tt CUBEP3M} code. TianNu's particles number is limited by memory per computing node -- per computing node, an average of $576^3$ neutrino particles and $288^3$ CDM particles are used, and consumes about 40 GB of memory\footnote{Additional memory is used for OpenMP parallelization and for particle IDs to differentiate different particle spices.}, or about 186 bpp. A memory efficient case of {\tt CUBEP3M} by using large physical scales and at costs of speed, still uses about 40 bpp. 
 
-\section{Results}\label{s.results}
-We use the same initial conditions, and use {\tt CUBEP3M} and {\tt CUBE} to simulate the large scale structure formation separately and compare their results.
+By using {\tt CUBE}, with parameters $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt}=3$, ${\tt ncb}=6$, $\epsilon_{\rm image}=5\%$, $\epsilon_{\rm tile}=200\%$ and $\left\langle {\tt nplocal} \right\rangle=1536^3$, we use about 35.6 GB of memory, corresponding to 9.84 bpp. This can be done on most of the supercomputers, even modern laptops.
 
+Table \ref{t.memory} shows the memory consumption for this test simulation. The memory-consuming arrays are listed and classified into the three types above mentioned, and their memory usages are in unit of GB ($10^9$ bytes), byte per particle (bpp), and their percentage to the total memory usage. The parenthesized numbers show overlapped memory, which is saved by equivalencing them with the underscored numbers. There are other, unlisted variables which are memory-light, and can also be equivalenced with listed variables. For this $1536^3$ per image simulation, using ${\tt nnt}^3=27$ tiles per image optimizes the memory usage, because it well controls the balance between the second terms in Equations (\ref{eq.npmax},\ref{eq.nptile}). A great amount of temporary memory in coarse and fine mesh force calculations is equivalenced to {\tt xvp\_new}.
+
+In the bottom of Table \ref{t.memory} we stress that the optimal memory usage is 6 bpp, or 21.7 GB, 61\% of the actual memory usage in this test simulation. The most prominent departure from this limit is that {\tt xvp} already uses 8.24 bpp, and all other variables occupy only additional 8\%. Of coarse, on modern super computers, the memory per computing node is usually much larger, by scaling up the number of particles per node, the buffer ratio ${\tt ncb}/{\tt nt}$ will be lowered and we can approach closer to the 6 bpp limit.
+
+\section{Accuracy}\label{s.results}
+We run a group of simulations to test the accuracy of {\tt CUBE}. We use same seeds to generate same Gaussian random fields in the initial condition generators of {\tt CUBEP3M} and {\tt CUBE}, and then they produce initial conditions of their own format respectively. Then the main $N$-body codes run their own initial conditions to redshift $z=0$.
+
+First, by using different configurations -- different number of computing nodes, box sizes, particle resolutions, different number of tiles per node/image etc., we find that by using 2-byte integers for both positions and velocities ($n_\chi=n_\nu=2$, or x2v2) {\tt CUBE} gives exact results compared to {\tt CUBEP3M}. So, if memory usage is not a problem, one can always double the memory usage to get exact results, and the optimal memory limit of this case is 12 bpp, still much lower than traditional methods. Next, we focus on the accuracy of the other three cases -- x1v2, x2v1 and x1v1.
+
+We list the names and configurations of simulations used in Table \ref{t.sim}, where $N_{\rm image}$, $L$, $z_i$, $z_{\rm checkpoint}$ and $N_p$ are respectively the number of computing nodes used, length of the side of the box, initial redshift, redshift where we do checkpoint and total number of particles. These configurations are run by {\tt CUBEP3M}, x2v2, x1v2, x2v1 and x1v1 versions of {\tt CUBE}. Using different number of tiles per image gives exact same results.
+
+\begin{table}[]
+\centering
+\caption{Simulation configurations}
+\label{t.sim}
+\begin{tabular}{lrrrrr}
+\hline
+& \multicolumn{5}{c}{Configurations}\\
+\cline{2-6}
+Name  & $N_{\rm image}$ & $L/(h^{-1}{\rm Mpc})$ & $z_i$ & $z_{\rm checkpoint}$ & $N_p$ \\
+\hline
+S512   & 8     & 200.0   & 49.0 & 0      & $512^3$     \\
+S256   & 1     & 80.0    & 49.0 & 0      & $256^3$     \\
+S2048S & 64    & 300.0   & 49.0 & 1.0, 0  & $2048^3$     \\
+S2048L & 64    & 1200.0  & 49.0 & 1.0, 0  & $2048^3$     \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+  \includegraphics[width=0.95\linewidth]{overplotparticles.pdf}
+ \caption{Difference between using {\tt CUBEP3M} (grey dots) and {\tt CUBE}-x1v1 (red dots). The box shows a projected $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ region of the simulation. }
+\label{fig.particles}
+\end{figure}
+
+\subsection{Displacement of particles}
+In S512, we zoom into a small region of $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ and compare the particle distribution between {\tt CUBEP3M} and {\tt CUBE}-x1v1 in Figure \ref{fig.particles}. For clarity, {\tt CUBEP3M} particles are marked with bigger, grey dots, whereas smaller red dots are {\tt CUBE}-x1v1 particles over-plotted onto them. One can see the difference between them. 1 ${\rm Mpc}/h$, fine grid and coarse grid scales are shown in the figure. The position resolution of particles in {\tt CUBE}-x1v1 is 1/256 of a coarse grid, or 1/64 of a fine grid.
+
+To quantify the offset in the final particle distributions, we use PIDs to track the displacement ${\bs \Psi}({\bs q})\equiv{\bs x}-{\bs q}$ of every particle \citep{2017PhRvD..95d3501Y}, where ${\bs x}$ and ${\bs q}$ are Eulerian and Lagrangian coordinates of the particle. Then we calculate the absolute value of the offset vector
+\begin{equation}\label{eq.offset}
+	\Delta\Psi\equiv|{\bs\Psi}_i-{\bs\Psi}_0|.
+\end{equation}
+Here, ${\bs\Psi}_0$ stands for {\tt CUBEP3M} and subscript $_i$ can stand for x2v2, x1v2, x2v1 or x1v1. The probability distribution functions (PDFs) and cumulative distribution functions (CDFs) of $\Delta\Psi$ in S256 are shown in Figure \ref{fig.dsp}. Results from x2v2, x1v2, x2v1 or x1v1 are in black, red, blue and green respectively. The results from absolute displacement of particles (by replacing ${\bs\Psi}_i$ with ${\bs q}$ in Equation (\ref{eq.offset})) are shown in grey for comparison.
+
+For x2v2, almost all particles are accurate up to 1/100 of a fine grid, and the worst particle is $\sim 1/10$ of a fine grid away from its counterpart in {\tt CUBEP3M}. The difference is caused by truncation errors and is negligible in physical and cosmological applications. The accuracy of x1v2 is between x2v2 and x1v1, and x2v1 gives only minor improvement from x1v1. 
+
+\subsection{Power spectrum}
+
+
+\begin{figure}[t]
+\centering
+  \includegraphics[width=0.95\linewidth]{ddsp_pcdf_256_box80.pdf}
+ \caption{Error of the displacement of particles.}
+\label{fig.dsp}
+\end{figure}
 
 \begin{figure}
 \centering
