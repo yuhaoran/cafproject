@@ -19,17 +19,18 @@
 \begin{document}
 \title{CUBE: A Memory-lite Cosmological $N$-body Algorithm}
 \author{
-Hao-Ran Yu$^{1,2}$,
-Ue-Li Pen$^{2,3,4,5}$,
+Hao-Ran Yu$^{1,2,3}$,
+Ue-Li Pen$^{2,4,5,6}$,
 Xin Wang$^{2}$
 }
 
 \affil{
 $^1$Tsung-Dao Lee Institute, Shanghai Jiao Tong University, Shanghai, 200240, China\\
 $^2$Canadian Institute for Theoretical Astrophysics, University of Toronto, Toronto, ON M5H 3H8 Canada\\
-$^3$Dunlap Institute for Astronomy and Astrophysics, University of Toronto, Toronto, ON M5S 3H4, Canada\\
-$^4$Canadian Institute for Advanced Research, CIFAR Program in Gravitation and Cosmology, Toronto, ON M5G 1Z8, Canada\\
-$^5$Perimeter Institute for Theoretical Physics, Waterloo, ON N2L 2Y5, Canada
+$^3$Department of Physics and Astronomy, Shanghai Jiao Tong University, Shanghai, 200240, China\\
+$^4$Dunlap Institute for Astronomy and Astrophysics, University of Toronto, Toronto, ON M5S 3H4, Canada\\
+$^5$Canadian Institute for Advanced Research, CIFAR Program in Gravitation and Cosmology, Toronto, ON M5G 1Z8, Canada\\
+$^6$Perimeter Institute for Theoretical Physics, Waterloo, ON N2L 2Y5, Canada
 }
 
 \email{haoran@cita.utoronto.ca}
@@ -244,6 +245,8 @@ The algorithm is described in this language.
 \end{eqnarray*}
 where ${\tt nex}={\tt nt}+2\times{\tt ncb}$ covers the buffer region on both sides, {\tt nnt} is the tile dimemsions, and {\tt nn} is the image {\it codimensions}\footnote{Coarray Fortran concept. Codimensions can do communications between images.}. We denote actual number of particles in a given image {\tt nplocal}, and ${\tt npmax}>{\tt nplocal}$ is a value (discussed in Section \ref{ss.memory}) large enough to store particles. The particle position and velocity arrays {\tt xp} and {\tt vp} (equivalent to $\chi_d$ and $\nu_d$ in \ref{ss.position} and \ref{ss.velocity} respectively) are required to be sorted according to the same memory layout of {\tt rho\_c}, such that $n_c$ and thus global positions of particles $x_d$ can be obtained by equation (\ref{eq.x}). $\{{\tt rho\_c},{\tt xp},{\tt vfield},{\tt vp}\}$ provides a complete information of positions and velocities of particles, and we call it a snapshot, or checkpoint.
 
+\subsubsection{Initial conditions}
+The cosmological initial condition generator is compiled and run separately from the main $N$-body code. Here we briefly describe it for completeness, and declare that it uses less memory than the main $N$-body code.
 
 \subsubsection{Algorithm}\label{sss.algorithm}
 Figure \ref{fig.code} shows the overall structure of the code and these subroutines are described in following paragraphs. 
@@ -280,7 +283,7 @@ Figure \ref{fig.code} shows the overall structure of the code and these subrouti
       call finalize
     end
 \end{verbatim}
-\caption{Overall structure of {\tt CUBE}.}
+\caption{Overall structure of {\tt CUBE}. Sections of the code are grouped into Fortran subroutines, which are described in paragraphs of Section \ref{sss.algorithm}.}
 \label{fig.code}
 \end{figure}
 
@@ -427,6 +430,13 @@ Total &                      & 35.6 & 9.84 & 100\%\\
 \end{tabular}
 \end{table}
 
+\begin{figure*}[t]
+\centering
+  \includegraphics[width=0.75\linewidth]{overplotparticles.pdf}
+ \caption{Offset in the particle distribution induced by integer-1 based algorithm (x1v1). In S512's subregion of volume $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$, particles from {\tt CUBEP3M} (bigger grey dots in the background) and {\tt CUBE}-x1v1 (smaller red dots) are projected onto the plane of $(15.625\ {\rm Mpc}/h)^2$. The comparing rules show 1 ${\rm Mpc}/h$, fine grid and coarse grid respectively, and position resolution of x1v1 is 1/64 of a fine grid.}
+\label{fig.particles}
+\end{figure*}
+
 \subsubsection{Compare with traditional algorithms}
 To illustrate the improvement of memory usage, we give an example of TianNu simulation \citep{2017NatAs...1E.143Y} on the Tianhe-2 supercomputer, which used a traditional {\tt CUBEP3M} code. TianNu's particles number is limited by memory per computing node -- per computing node, an average of $576^3$ neutrino particles and $288^3$ CDM particles are used, and consumes about 40 GB of memory\footnote{Additional memory is used for OpenMP parallelization and for particle IDs to differentiate different particle spices.}, or about 186 bpp. A memory efficient case of {\tt CUBEP3M} by using large physical scales and at costs of speed, still uses about 40 bpp. 
 
@@ -441,68 +451,75 @@ We run a group of simulations to test the accuracy of {\tt CUBE}. We use same se
 
 First, by using different configurations -- different number of computing nodes, box sizes, particle resolutions, different number of tiles per node/image etc., we find that by using 2-byte integers for both positions and velocities ($n_\chi=n_\nu=2$, or x2v2) {\tt CUBE} gives exact results compared to {\tt CUBEP3M}. So, if memory usage is not a problem, one can always double the memory usage to get exact results, and the optimal memory limit of this case is 12 bpp, still much lower than traditional methods. Next, we focus on the accuracy of the other three cases -- x1v2, x2v1 and x1v1.
 
-We list the names and configurations of simulations used in Table \ref{t.sim}, where $N_{\rm image}$, $L$, $z_i$, $z_{\rm checkpoint}$ and $N_p$ are respectively the number of computing nodes used, length of the side of the box, initial redshift, redshift where we do checkpoint and total number of particles. These configurations are run by {\tt CUBEP3M}, x2v2, x1v2, x2v1 and x1v1 versions of {\tt CUBE}. Using different number of tiles per image gives exact same results.
+We list the names and configurations of simulations used in Table \ref{t.sim}, where $N_{\rm node}$, $L$, $z_i$, $z_{\rm ckpt}$, $N_p$ and $m_p$ are respectively the number of computing nodes used, length of the side of the box, initial redshift, redshift where we do checkpoint, total number of particles and particle mass. These configurations are run by {\tt CUBEP3M}, x2v2, x1v2, x2v1 and x1v1 versions of {\tt CUBE}. Using different number of tiles per image gives exact same results.
 
 \begin{table}[]
 \centering
 \caption{Simulation configurations}
 \label{t.sim}
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \hline
-& \multicolumn{5}{c}{Configurations}\\
-\cline{2-6}
-Name  & $N_{\rm image}$ & $L/(h^{-1}{\rm Mpc})$ & $z_i$ & $z_{\rm checkpoint}$ & $N_p$ \\
+& \multicolumn{6}{c}{Configurations}\\
+\cline{2-7}
+Name  & $N_{\rm node}$ & $L/({\rm Mpc}/h)$ & $z_i$ & $z_{\rm ckpt}$ & $N_p$ & $m_p/\Msun$ \\
 \hline
-S512   & 8     & 200.0   & 49.0 & 0      & $512^3$     \\
-S256   & 1     & 80.0    & 49.0 & 0      & $256^3$     \\
-S2048S & 64    & 300.0   & 49.0 & 1.0, 0  & $2048^3$     \\
-S2048L & 64    & 1200.0  & 49.0 & 1.0, 0  & $2048^3$     \\
+S512   & 8     & 200   & 49 & 0    & $512^3$  & $7.5\times 10^9$    \\
+S256   & 1     & 80    & 49 & 0    & $256^3$  & $3.8\times 10^9$    \\
+S2048S & 64    & 300   & 49 & 1, 0  & $2048^3$ & $4.0\times 10^8$    \\
+S2048L & 64    & 1200  & 49 & 1, 0  & $2048^3$ & $2.5\times 10^{10}$    \\
 \hline
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\subsection{Displacement of particles}
+In S512, we zoom into a small region of $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ and compare the particle distribution between {\tt CUBEP3M} and {\tt CUBE}-x1v1 in Figure \ref{fig.particles}. For clarity, {\tt CUBEP3M} particles are marked with bigger, grey dots, whereas smaller red dots are {\tt CUBE}-x1v1 particles over-plotted onto them. One can see the difference between them. The 1 ${\rm Mpc}/h$, fine grid and coarse grid scales are shown in the figure. The position resolution of particles in {\tt CUBE}-x1v1 is 1/256 of a coarse grid, or 1/64 of a fine grid.
+\begin{figure}[]
 \centering
-  \includegraphics[width=0.95\linewidth]{overplotparticles.pdf}
- \caption{Difference between using {\tt CUBEP3M} (grey dots) and {\tt CUBE}-x1v1 (red dots). The box shows a projected $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ region of the simulation. }
-\label{fig.particles}
+  \includegraphics[width=0.95\linewidth]{ddsp_pcdf_256_box80.pdf}
+ \caption{Statistics of the error in particle displacement $\Delta{\bs\Psi}$ induced by integer based algorithms in {\tt CUBE}. The PDF and CDF of $|\Delta{\bs\Psi}|$ from S256 are shown in the upper and lower axes, as functions of fine grids. Black, red, blue and green correspond to x2v2, x1v2, x2v1 and x1v1 respectively. The grey lines, marked with ``initial'', shows the distribution of actual displacement of particles in {\tt CUBEP3M}, $|{\bs\Psi}_0|$, which is orders of magnitudes larger than $|\Delta{\bs\Psi}|$. }
+\label{fig.dsp}
 \end{figure}
 
-\subsection{Displacement of particles}
-In S512, we zoom into a small region of $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ and compare the particle distribution between {\tt CUBEP3M} and {\tt CUBE}-x1v1 in Figure \ref{fig.particles}. For clarity, {\tt CUBEP3M} particles are marked with bigger, grey dots, whereas smaller red dots are {\tt CUBE}-x1v1 particles over-plotted onto them. One can see the difference between them. 1 ${\rm Mpc}/h$, fine grid and coarse grid scales are shown in the figure. The position resolution of particles in {\tt CUBE}-x1v1 is 1/256 of a coarse grid, or 1/64 of a fine grid.
 
 To quantify the offset in the final particle distributions, we use PIDs to track the displacement ${\bs \Psi}({\bs q})\equiv{\bs x}-{\bs q}$ of every particle \citep{2017PhRvD..95d3501Y}, where ${\bs x}$ and ${\bs q}$ are Eulerian and Lagrangian coordinates of the particle. Then we calculate the absolute value of the offset vector
 \begin{equation}\label{eq.offset}
 	\Delta\Psi\equiv|{\bs\Psi}_i-{\bs\Psi}_0|.
 \end{equation}
-Here, ${\bs\Psi}_0$ stands for {\tt CUBEP3M} and subscript $_i$ can stand for x2v2, x1v2, x2v1 or x1v1. The probability distribution functions (PDFs) and cumulative distribution functions (CDFs) of $\Delta\Psi$ in S256 are shown in Figure \ref{fig.dsp}. Results from x2v2, x1v2, x2v1 or x1v1 are in black, red, blue and green respectively. The results from absolute displacement of particles (by replacing ${\bs\Psi}_i$ with ${\bs q}$ in Equation (\ref{eq.offset})) are shown in grey for comparison.
+Here, ${\bs\Psi}_0$ stands for {\tt CUBEP3M} and subscript $_i$ can stand for x2v2, x1v2, x2v1 or x1v1. The probability distribution functions (PDFs) and cumulative distribution functions (CDFs) of $\Delta\bs\Psi$ in S256 are shown in Figure \ref{fig.dsp}. Results from x2v2, x1v2, x2v1 or x1v1 are in black, red, blue and green respectively. The results from absolute displacement of particles (by replacing ${\bs\Psi}_i$ with ${\bs q}$ in Equation (\ref{eq.offset})) are shown in grey for comparison.
 
-For x2v2, almost all particles are accurate up to 1/100 of a fine grid, and the worst particle is $\sim 1/10$ of a fine grid away from its counterpart in {\tt CUBEP3M}. The difference is caused by truncation errors and is negligible in physical and cosmological applications. The accuracy of x1v2 is between x2v2 and x1v1, and x2v1 gives only minor improvement from x1v1. 
+For x2v2, almost all particles are accurate up to 1/100 of a fine grid, and the worst particle is $\sim 1/10$ of a fine grid away from its counterpart in {\tt CUBEP3M}. The difference is caused by truncation errors and is negligible in physical and cosmological applications. The accuracy of x1v2 is between x2v2 and x1v1, and x2v1 gives only minor improvement from x1v1. We also run a simulation with same number of particles but with $L=600\ {\rm Mpc}/h$ ($m_p=1.2\times 10^{12}\Msun$), and find that the accuracy of x1v2 is in turn between x2v1 and x1v1. We interpret that, in this latter case, particles have lower mass resolution, so they move slower and need higher position resolution but need lower velocity resolution, then x2v1 outperforms x1v2.
 
-\subsection{Power spectrum}
-
-
-\begin{figure}[t]
+\begin{figure*}
 \centering
-  \includegraphics[width=0.95\linewidth]{ddsp_pcdf_256_box80.pdf}
- \caption{Error of the displacement of particles.}
-\label{fig.dsp}
-\end{figure}
-
-\begin{figure}
-\centering
-  \includegraphics[width=0.95\linewidth]{power_universe1-8_z0and1.pdf}
- \caption{We don't need this figure.}
-\label{fig.power}
-\end{figure}
-
-
-\begin{figure}
-\centering
-  \includegraphics[width=1.1\linewidth]{diff_power.pdf}
- \caption{Fractional error on power spectrum and cross correlations.}
+  \includegraphics[width=1.0\linewidth]{diff_power.pdf}
+ \caption{Fractional deviations in the power spectrum $\Delta^2(k)/\Delta^2_0(k)-1$ (upper axes) and decorrelation $\xi$ (lower axes) induced by the integer-based algorithms in {\tt CUBE}. The four panels show the results of two redshifts in S2048S and S2048L: $\{ z=1, z=0 \} \times \{ L=300{\rm Mpc}/h, L=1200{\rm Mpc}/h \}$. The four solid lines show the results from \{x2v2,x1v2,x2v1,x1v1\}, whose colors are shown in the legends in the last panel. The orange dashed lines show the scale $k=0.2\ k_{\rm Nyquist}$, and smaller scales are beyond our interest.}
 \label{fig.ccc}
-\end{figure}
+\end{figure*}
+\subsection{Power spectrum}
+In S2048S and S2048L are two simulations with $2048^3$ particles on a small ($L=300\ {\rm Mpc}/h$) and large ($L=1200\ {\rm Mpc}/h$) box sizes. We compare their accuracy by their power spectra and their cross correlations with {\tt CUBEP3M} at two checkpoints $z=1$ and $z=0$. For each simulation the particles are firstly cloud-in-cell (CIC) interpolated onto the fine mesh grid of simulation, and from the density field $\rho$ we define the density contrast $\delta\equiv \rho/\left\langle \rho \right\rangle-1$. More generally we define the cross power spectrum $P_{\alpha\beta}(k)$ between two fields $\delta_\alpha$ and $\delta_\beta$ ($\delta_\alpha=\delta_\beta$ for auto power spectrum) in Fourier space as
+\begin{equation}\label{eq.cps}
+	\left\langle \delta_\alpha^\dagger({\bs k})\delta_\beta({\bs k}') \right\rangle=
+    (2\pi)^3 P_{\alpha\beta}(k){\bs \delta}_{\rm 3D}({\bs k}-{\bs k}'),
+\end{equation}
+where ${\bs \delta}_{\rm 3D}$ is the three-dimensional Dirac delta function. In cosmology we usually consider the dimensionless power spectrum $\Delta^2_{\alpha\beta}(k)\equiv k^3 P_{\alpha\beta}(k)/(2\pi^2)$. The cross correlation coefficient is defined as
+\begin{equation}\label{eq.ccc}
+	\xi(k)\equiv P_{\alpha\beta}/\sqrt{P_{\alpha\alpha}P_{\beta\beta}}.
+\end{equation}
+
+We study the fractional power spectrum deviations $\Delta^2(k)/\Delta^2_0(k)-1$ (where $\Delta^2_0(k)$ denotes the {\tt CUBEP3M} power spectrum) and the cross correlation coefficient functions $\xi(k)$ between {\tt CUBE} and {\tt CUBEP3M}, and show the results in Figure \ref{fig.ccc}. For the four panels, the left shows S2048S and right shows S2048L; the upper shows $z=1$ and lower shows $z=0$. We label $k=0.2\ k_{\rm Nyquist}$ as dashed lines, where $k_{\rm Nyquist}$ is the fine mesh scale, and the average particle separation scale. On the scale $k=0.2\ k_{\rm Nyquist}$, the power spectrum is suppressed by $\sim 20\%$ compared to higher resolution simulations by Poisson noise of particles and we do not consider $k>0.2\ k_{\rm Nyquist}$.
+
+The upper parts of the four panels show the fractional power spectrum deviations. Because x2v2 gives exact results as {\tt CUBEP3M}, $\Delta^2_{\rm x2v2}(k)/\Delta^2_0(k)-1=0$ for both simulations and redshifts, shown by the four black straight lines. Similar to the results form Figure \ref{fig.dsp}, x1v2 (red) curves give better results than x2v1 (blue) and x1v1 (green), and x2v1 and x1v1 give nearly same results. Another trend is that higher redshifts and/or larger box sizes gives much better results. The worst case is S2048S, $z=0$ case -- There is a $<2\%$ deviation in the power spectrum.
+
+The lower parts of the four panels show the cross correlation coefficient function between {\tt CUBE} and {\tt CUBEP3M}. Again, x2v2 performs perfect in all the four cases. For x1v2, $\xi(k)>99.5\%$ for all cases within our scale of interest. For x1v2 and x1v1, $\xi(k)$ are very close, and they perform worst in S2048S, $z=0$ case -- on scale $k=0.2\ k_{\rm Nyquist}$, the correlation drops to $90\%$.
+
+
+\section{Discussion and conclusion}\label{s.discussion}
+We present an open-source parallel integer-based $N$-body algorithm that needs use very low memory usage, approaching 6 byte per particle (6 bpp). The accuracy of this 6pp configuration is acceptable on most scales of our interest. The accuracy is also adjustable in that we can choose 1-byte/2-byte integers separately for positions and velocities of particles. In the case of using 2-byte integers for both positions and velocities (``x2v2'', and memory can be 12 bpp), the algorithm gives exact results given by traditional $N$-body algorithms.
+
+We analyze the deviation of power spectrum and de-correlation caused by integer-1 based algorithms in two simulations S2048S and S2048L. They have comparable number of particles per computing as the TianNu simulation. S2048S focuses on mass resolution -- it simulates a very small physical volume and its mass resolution $m_p=4\times 10^8\Msun$ is even higher than TianNu ($7\times 10^8\Msun$ for its CDM particles), whereas S2048L focuses on simulation volume and have higher particle mass. In the power spectra and cross correlations, S2048L performs better, and we conclude that in high-$m_p$ cases, we can safely use x1v1 in cosmological simulations.
+
+Another benefit for this algorithm is cosmological simulations with neutrinos, although the neutrino modules of {\tt CUBE} is in development. Neutrinos have a high velocity dispersion and move much faster than CDM, and their small scale errors are dominated by their Poisson noise. We expect that, compared to CDM, x1v1 gives less power spectrum deviation to neutrinos, as they behave more Gaussian and less clustered. A cosmological $N$-body simulation with neutrinos, like TianNu, contains much more (for TianNu, 8 times more) neutrino $N$-body particles than CDM, which dominates the memory. For a TianNu-like simulation, one can safely use x1v2 or x2v2 for CDM and x1v1 for neutrinos, and the memory usage can approach 6 bpp. This allows much more particles in the simulation and can lower the Poisson noise of neutrinos prominently.
+
 
  Cosmological simulation, PM method.
 
@@ -513,11 +530,19 @@ Summarize memory.
 Phi, GPU.
 
 
-\clearpage
+\begin{figure}
+\centering
+  \includegraphics[width=0.95\linewidth]{power_universe1-8_z0and1.pdf}
+ \caption{\tcb{We don't need this figure in submission.} The solid lines show the power spectra of S2048L and S2048S at $z=0$, and dotted lines show the $z=1$ counterparts. For $z=0$, the two data tips are at $k=0.2\ k_{\rm Nyquist}$, where the power spectrum is suppressed by more than 20\% compared to higher resolution simulations.}
+\label{fig.power}
+\end{figure}
 
-\appendix
 
-\section{A. Initial condition generator}
+%\clearpage
+
+%\appendix
+
+%\section{A.}
 
 
 \acknowledgements
