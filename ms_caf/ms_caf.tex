@@ -1,6 +1,6 @@
 \documentclass[10pt,twocolumn,preprint]{emulateapj}
 \usepackage[english]{babel}
-\usepackage{amsmath,color}
+\usepackage{amsmath,color,aas_macros}
 
 \newcommand{\bs}{\boldsymbol}
 \newcommand{\diff}{{\mathrm d}}
@@ -40,8 +40,8 @@ Cosmological large scale structure $N$-body simulations are computation-light,
 memory-heavy problems in supercomputing. Traditional $N$-body simulation
 algorithms use at least 24-byte memory per particle, of which six 4-byte single 
 precision floating point numbers keep track phase space coordinates of each particle.
-Here we present the algorithm and accuracy of a new parallel, memory-lite, Particle-
-Mesh based $N$-body code, where each particle can occupy as low as 6-byte memory. This 
+Here we present the algorithm and accuracy of a new parallel, memory-lite, Particle-Mesh
+based $N$-body code, where each particle can occupy as low as 6-byte memory. This 
 is accomplished by storing relative position and relative velocity of each particle, 
 in the format of 1-byte-integer, respect to their averaged value of a mesh-grid. The 
 remaining information is given by complimentary density and velocity fields, which are 
@@ -60,9 +60,11 @@ multi-core and heterogenous computing systems.
 
 
 \section{Introduction}\label{s.intro}
-$N$-body simulation is a powerful tool to solve the highly nonlinear dynamic problems 
-\citep{1988csup.book.....H}. It is widely used in cosmology to model the formation and 
-evolution of the large scale structure (LSS). With the fast development of parallel 
+The $N$-body simulation, a dynamical simulation of a group of particles, is a powerful tool in physics and astronomy \citep{1988csup.book.....H}. It is widely used in cosmology to model the large scale structure (LSS) of the Universe \citep{1985ApJ...292..371D}. Current percent and sub-percent level LSS measurements of cosmological parameters, via the matter power spectrum \citep{2005MNRAS.360L..82R,2011ApJ...726....7T}, baryonic acoustic oscillations (BAO) \citep{2005ApJ...633..560E,2009ApJ...700..479T}, weak gravitational lensing \citep{2003ApJ...592..699V,2009A&A...499...31H,2009ApJ...701..945S} etc., require understandings of nonlinear dynamics of the cosmic structure, and rely on high-resolution and high dynamic range $N$-body simulations.
+
+When $N$ is large, the brute force pairwise particle-particle (PP) force brings unaffordable $o(N^2)$ computations. The workload can be alleviated by many algorithms, for example, the ``tree'' algorithms like {\tt GADGET} \citep{2001NewA....6...79S,2005MNRAS.364.1105S} and its simulation ``Millennium'' \citep{2005Natur.435..629S,2012MNRAS.426.2046A}, {\tt TPM} \citep{1995ApJS...98..355X} and {\tt GOTPM} \citep{2004NewA....9..111D}, adaptive grid algorithm including {\tt HYDRA} \citep{1995ApJ...452..797C} and {\tt RAMSES} \citep{2010ascl.soft11007T}, as well as mesh-refined codes \citep{1991ApJ...368L..23C} and moving adaptive particle-mesh codes \citep{1995ApJS..100..269P}. Among these, the standard particle-mesh (PM) algorithm \citep{1988csup.book.....H} is most memory and computational efficient if we focus on large cosmological scales. The load balancing problem is minimized as the matter distribution is rather homogeneous, and the speed benefits from the fast Fourier transform (FFT) libraries, such as {\tt FFTW3} \citep{Frigo05thedesign}. Based on PM, the parallel code {\tt PMFAST} \citep{2005NewA...10..393M} uses a two-level PM algorithm to reduce the global communication and memory. After subsequent developments, {\tt CUBEP3M} \citep{2013MNRAS.436..540H} uses cubic spatial decomposition, and adds in-cell or adjacent-cell PP force and many other features.
+
+With the fast development of parallel 
 supercomputers, we are able to simulate a system of more than a trillion ($10^{12}$) 
 $N$-body particles. To date the largest $N$-body simulation in application is the 
 ``TianNu'' simulation \citep{2017NatAs...1E.143Y,2017RAA....17...85E} run on the 
@@ -71,7 +73,7 @@ TianHe-2 supercomputer by cosmological simulation code
 to simulate the cold dark matter (CDM) and cosmic neutrino evolution through the 
 cosmic age.
 
-The $N$-body simulations use considerable amount of memory, because the phase space 
+$N$-body simulations use considerable amount of memory, because the phase space 
 coordinates $(x,y,z,v_x,v_y,v_z)$ of each $N$-body particle must be stored as, at 
 least, six single precision floating point numbers (24 bytes). Contrarily, their 
 computing workload can be alleviated by many algorithms, like Particle-Mesh [cite] and 
@@ -154,7 +156,7 @@ As a $n_\chi=1$, 1D ($d=1$), 4-coarse-cell ($N_c=4$) example, if $$\chi_1=(-128,
 \begin{figure}
 \centering
   \includegraphics[width=1.0\linewidth]{vdisp.pdf}
- \caption{\tcb{Xin, could you please check the units of both $y$-axis?}}
+ \caption{Variance of the velocity distribution given by Equation \ref{eq.vdisp}. The $x$-axis is the scale factor characterizing the cosmic evolution and the $y$-axis shows the $\sigma_v$ in unit of km/s. The 5 curves, from top to bottom, shows the $\sigma_v(a)$ with increasing smoothing scale $r$ from 0 to 20 Mpc$/h$.}
 \label{fig.vdisp}
 \end{figure}
 
@@ -189,7 +191,7 @@ non-linear scale, the velocity distribution function is non-Gaussian.
 However, to the first order approximation, we simply assume it as Gaussian 
 and characterized by the variance
 \begin{equation}\label{eq.vdisp}
-	\tcb{ \sigma_v(a,k) = \frac{1}{3}  (a H f D)^2 \int_0^kd^3q\frac{P_{L}(q)}{q^2}},
+	\sigma_v(a,k) = \frac{1}{3}  (a H f D)^2 \int_0^kd^3q\frac{P_{L}(q)}{q^2},
 \end{equation}
 where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the 
 linear growth factor, $f=d \ln D/d\ln a$, and $P_L(k)$ is the linear power 
@@ -494,12 +496,6 @@ Table \ref{t.memory} shows the memory consumption for this test simulation. The 
 
 In the bottom of Table \ref{t.memory} we stress that the optimal memory usage is 6 bpp, or 21.7 GB, 61\% of the actual memory usage in this test simulation. The most prominent departure from this limit is that {\tt xvp} already uses 8.24 bpp, and all other variables occupy only additional 8\%. Of coarse, on modern super computers, the memory per computing node is usually much larger, by scaling up the number of particles per node, the buffer ratio ${\tt ncb}/{\tt nt}$ will be lowered and we can approach closer to the 6 bpp limit.
 
-\section{Accuracy}\label{s.results}
-We run a group of simulations to test the accuracy of {\tt CUBE}. We use same seeds to generate same Gaussian random fields in the initial condition generators of {\tt CUBEP3M} and {\tt CUBE}, and then they produce initial conditions of their own format respectively. Then the main $N$-body codes run their own initial conditions to redshift $z=0$.
-
-First, by using different configurations -- different number of computing nodes, box sizes, particle resolutions, different number of tiles per node/image etc., we find that by using 2-byte integers for both positions and velocities ($n_\chi=n_\nu=2$, or x2v2) {\tt CUBE} gives exact results compared to {\tt CUBEP3M}. So, if memory usage is not a problem, one can always double the memory usage to get exact results, and the optimal memory limit of this case is 12 bpp, still much lower than traditional methods. Next, we focus on the accuracy of the other three cases -- x1v2, x2v1 and x1v1.
-
-We list the names and configurations of simulations used in Table \ref{t.sim}, where $N_{\rm node}$, $L$, $z_i$, $z_{\rm ckpt}$, $N_p$ and $m_p$ are respectively the number of computing nodes used, length of the side of the box, initial redshift, redshift where we do checkpoint, total number of particles and particle mass. These configurations are run by {\tt CUBEP3M}, x2v2, x1v2, x2v1 and x1v1 versions of {\tt CUBE}. Using different number of tiles per image gives exact same results. We also list the configurations for TianNu and TianZero \citep{2017NatAs...1E.143Y,2017RAA....17...85E} simulations as a reference.
 
 \begin{table}[]
 \centering
@@ -522,6 +518,13 @@ TianZero & 13824 & 1200 & 100& 0.01 & $6912^3$ & $7.0\times 10^8$\\
 \hline
 \end{tabular}
 \end{table}
+
+\section{Accuracy}\label{s.results}
+We run a group of simulations to test the accuracy of {\tt CUBE}. We use same seeds to generate same Gaussian random fields in the initial condition generators of {\tt CUBEP3M} and {\tt CUBE}, and then they produce initial conditions of their own format respectively. Then the main $N$-body codes run their own initial conditions to redshift $z=0$.
+
+First, by using different configurations -- different number of computing nodes, box sizes, particle resolutions, different number of tiles per node/image etc., we find that by using 2-byte integers for both positions and velocities ($n_\chi=n_\nu=2$, or x2v2) {\tt CUBE} gives exact results compared to {\tt CUBEP3M}. So, if memory usage is not a problem, one can always double the memory usage to get exact results, and the optimal memory limit of this case is 12 bpp, still much lower than traditional methods. Next, we focus on the accuracy of the other three cases -- x1v2, x2v1 and x1v1.
+
+We list the names and configurations of simulations used in Table \ref{t.sim}, where $N_{\rm node}$, $L$, $z_i$, $z_{\rm ckpt}$, $N_p$ and $m_p$ are respectively the number of computing nodes used, length of the side of the box, initial redshift, redshift where we do checkpoint, total number of particles and particle mass. These configurations are run by {\tt CUBEP3M}, x2v2, x1v2, x2v1 and x1v1 versions of {\tt CUBE}. Using different number of tiles per image gives exact same results. We also list the configurations for TianNu and TianZero \citep{2017NatAs...1E.143Y,2017RAA....17...85E} simulations as a reference.
 
 \subsection{Displacement of particles}
 In S512, we zoom into a small region of $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ and compare the particle distribution between {\tt CUBEP3M} and {\tt CUBE}-x1v1 in Figure \ref{fig.particles}. For clarity, {\tt CUBEP3M} particles are marked with bigger, grey dots, whereas smaller red dots are {\tt CUBE}-x1v1 particles over-plotted onto them. One can see the difference between them. The 1 ${\rm Mpc}/h$, fine grid and coarse grid scales are shown in the figure. The position resolution of particles in {\tt CUBE}-x1v1 is 1/256 of a coarse grid, or 1/64 of a fine grid.
@@ -548,7 +551,7 @@ For x2v2, almost all particles are accurate up to 1/100 of a fine grid, and the 
 \label{fig.ccc}
 \end{figure*}
 \subsection{Power spectrum}
-In S2048S and S2048L are two simulations with $2048^3$ particles on small ($L=400\ {\rm Mpc}/h$) and large ($L=1200\ {\rm Mpc}/h$) box sizes. We compare their accuracy by their power spectra and their cross correlations with {\tt CUBEP3M} at two checkpoints $z=1$ and $z=0$. The physical scale of S2048S is designed such that the particle mass resolution $m_p$ is comparable to TianNu and TianZero simulations (their parameters are also listed in Table \ref{t.sim}) to study halo properties. On the other hand, S2048L focuses on larger structures, on which scale one can study weak gravitational lensing, reconstruction of baryonic acoustic oscillation (BAO) \citep{2017ApJ...841L..29W} etc.
+In S2048S and S2048L are two simulations with $2048^3$ particles on small ($L=400\ {\rm Mpc}/h$) and large ($L=1200\ {\rm Mpc}/h$) box sizes. We compare their accuracy by their power spectra and their cross correlations with {\tt CUBEP3M} at two checkpoints $z=1$ and $z=0$. The physical scale of S2048S is designed such that the particle mass resolution $m_p$ is comparable to TianNu and TianZero simulations (their parameters are also listed in Table \ref{t.sim}) to study halo properties. On the other hand, S2048L focuses on larger structures, on which scale one can study weak gravitational lensing, baryonic acoustic oscillation (BAO) \citep{2005ApJ...633..560E} and its reconstruction \citep{2007ApJ...664..675E,2017ApJ...841L..29W} etc.
 
 For each simulation the particles are firstly cloud-in-cell (CIC) interpolated onto the fine mesh grid of simulation, and from the density field $\rho$ we define the density contrast $\delta\equiv \rho/\left\langle \rho \right\rangle-1$. More generally we define the cross power spectrum $P_{\alpha\beta}(k)$ between two fields $\delta_\alpha$ and $\delta_\beta$ ($\delta_\alpha=\delta_\beta$ for auto power spectrum) in Fourier space as
 \begin{equation}\label{eq.cps}
@@ -570,7 +573,8 @@ The lower parts of the four panels show the cross correlation coefficient functi
 \section{Discussion and conclusion}\label{s.discussion}
 We present an parallel integer-based $N$-body algorithm. This open-source code {\tt CUBE}, has recently been used in many studies of LSS, e.g. \cite{2017PhRvD..95d3501Y,2017ApJ...841L..29W,2017MNRAS.469.1968P}. It needs very low memory usage, approaching 6 byte per particle (6 bpp). The accuracy of this 6pp configuration is acceptable on most scales of our interest, e.g. BAO. The accuracy is also adjustable in that we can choose 1-byte/2-byte integers separately for positions and velocities of particles. In the case of using 2-byte integers for both positions and velocities (``x2v2'', and memory can be 12 bpp), the algorithm gives exact results given by traditional $N$-body algorithms.
 
-We analyze the deviation of power spectrum and de-correlation caused by integer-1 based algorithms in two simulations S2048S and S2048L. They have comparable number of particles per computing as the TianNu simulation. S2048S focuses on mass resolution -- comparable to TianNu and TianZero simulations, whereas S2048L focuses on simulation volume and have higher particle mass. In the power spectra and cross correlations, S2048L performs better, and we conclude that in high-$m_p$ cases, we can safely use x1v1 in cosmological simulations.
+We analyze the deviation of power spectrum and de-correlation caused by integer-1 based algorithms in two simulations S2048S and S2048L. They have comparable number of particles per computing as the TianNu simulation. S2048S focuses on mass resolution -- comparable to TianNu and TianZero simulations, whereas S2048L focuses on simulation volume and have high
+er particle mass. In the power spectra and cross correlations, S2048L performs better, and we conclude that in high-$m_p$ cases, we can safely use x1v1 in cosmological simulations.
 
 Another benefit for this algorithm is LSS simulations with neutrinos, although the neutrino modules of {\tt CUBE} is in development. Neutrinos have a high velocity dispersion and move much faster than CDM, and their small scale errors are dominated by their Poisson noise. We expect that, compared to CDM, x1v1 gives less power spectrum deviation to neutrinos, as they behave more Gaussian and less clustered. LSS-neutrino simulations, like TianNu, can contain much more (for TianNu, 8 times more) neutrino $N$-body particles than CDM, which dominates the memory. For a TianNu-like simulation, one can safely use x1v2 or x2v2 for CDM and x1v1 for neutrinos, and the memory usage can approach 6 bpp. This allows much more particles in the simulation and can lower the Poisson noise of neutrinos prominently. A 1-byte PID per particle increases minor memory usage and can differentiate 8 kinds of particles, or we can store different particles in different arrays without using PID.
 
@@ -579,12 +583,12 @@ We did not include PP force in {\tt CUBE} and {\tt CUBEP3M} in this paper. If on
 Traditional $N$-body codes consumes considerable memory while doing a relatively light computations. {\tt CUBE} prominently reduces the memory usage in $N$-body simulations and approaches toward a better balance between memory and computation. The next steps are optimization of the code and adapting it for various kinds of heterogeneous computing systems, e.g. MIC and GPUs. Optimizing the velocity storage may further improve the accuracy of x1v1, and whose effects on neutrino-LSS simulation is going to be discovered.
 
 
-\begin{figure}
-\centering
-  \includegraphics[width=0.95\linewidth]{power_universe1-8_z0and1.pdf}
- \caption{\tcb{We don't need this figure in submission. However we need to compare the results with nonlinear power spectrum by {\tt HALOFIT}.} The solid lines show the power spectra of S2048L and S2048XS ($L=300\ {\rm Mpc}/h$) at $z=0$, and dotted lines show the $z=1$ counterparts. For $z=0$, the two data tips are at $k=0.2\ k_{\rm Nyquist}$, where the power spectrum is suppressed by more than 20\% compared to higher resolution simulations.}
-\label{fig.power}
-\end{figure}
+%\begin{figure}
+%\centering
+%  \includegraphics[width=0.95\linewidth]{power_universe1-8_z0and1.pdf}
+% \caption{\tcb{We don't need this figure in submission. However we need to compare the results with nonlinear power spectrum by {\tt HALOFIT}.} The solid lines show the power spectra of S2048L and S2048XS ($L=300\ {\rm Mpc}/h$) at $z=0$, and dotted lines show the $z=1$ counterparts. For $z=0$, the two data tips are at $k=0.2\ k_{\rm Nyquist}$, where the power spectrum is suppressed by more than 20\% compared to higher resolution simulations.}
+%\label{fig.power}
+%\end{figure}
 
 
 %\clearpage
