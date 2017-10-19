@@ -17,7 +17,7 @@
 
 \shortauthors{Yu et al.} \shorttitle{CUBE}
 \begin{document}
-\title{CUBE: A Memory-lite Cosmological $N$-body Algorithm}
+\title{CUBE: A Memory-optimized Cosmological $N$-body Algorithm}
 \author{
 Hao-Ran Yu$^{1,2,3}$,
 Ue-Li Pen$^{2,4,5,6}$,
@@ -36,21 +36,7 @@ $^6$Perimeter Institute for Theoretical Physics, Waterloo, ON N2L 2Y5, Canada
 \email{haoran@cita.utoronto.ca}
  
 \begin{abstract}
-Cosmological large scale structure $N$-body simulations are computation-light,
-memory-heavy problems in supercomputing. Traditional $N$-body simulation
-algorithms use at least 24-byte memory per particle, of which six 4-byte single 
-precision floating point numbers keep track phase space coordinates of each particle.
-Here we present the algorithm and accuracy of a new parallel, memory-lite, Particle-Mesh
-based $N$-body code, where each particle can occupy as low as 6-byte memory. This 
-is accomplished by storing relative position and relative velocity of each particle, 
-in the format of 1-byte-integer, respect to their averaged value of a mesh-grid. The 
-remaining information is given by complimentary density and velocity fields, which are 
-negligible in memory space, and proper ordering of particles, which gives no extra 
-memory. Our numerical experiments show that this integer based $N$-body algorithm 
-provides acceptable accuracy compared to traditional algorithm in cosmological 
-simulations. This significant lowering of memory-to-computation ratio breaks the 
-bottleneck of scaling up and speeding up large cosmological $N$-body simulations on 
-multi-core and heterogenous computing systems.
+Cosmological large scale structure $N$-body simulations are computation-light, memory-heavy problems in supercomputing. Traditional $N$-body simulation algorithms use at least 24-byte memory per particle, of which six 4-byte single precision floating point numbers keep track phase space coordinates of each particle. Here we present the algorithm and accuracy of a new parallel, memory-lite, Particle-Mesh based $N$-body code, where each particle can occupy as low as 6-byte memory. This is accomplished by storing relative position and relative velocity of each particle, in the format of 1-byte-integer, respect to their averaged value of a mesh-grid. The remaining information is given by complimentary density and velocity fields, which are negligible in memory space, and proper ordering of particles, which gives no extra memory. Our numerical experiments show that this integer based $N$-body algorithm provides acceptable accuracy compared to traditional algorithm in cosmological simulations. This significant lowering of memory-to-computation ratio breaks the bottleneck of scaling up and speeding up large cosmological $N$-body simulations on multi-core and heterogenous computing systems.
 
 \end{abstract}
 
@@ -62,85 +48,21 @@ multi-core and heterogenous computing systems.
 \section{Introduction}\label{s.intro}
 The $N$-body simulation, a dynamical simulation of a group of particles, is a powerful tool in physics and astronomy \citep{1988csup.book.....H}. It is widely used in cosmology to model the large scale structure (LSS) of the Universe \citep{1985ApJ...292..371D}. Current percent and sub-percent level LSS measurements of cosmological parameters, via the matter power spectrum \citep{2005MNRAS.360L..82R,2011ApJ...726....7T}, baryonic acoustic oscillations (BAO) \citep{2005ApJ...633..560E,2009ApJ...700..479T}, weak gravitational lensing \citep{2003ApJ...592..699V,2009A&A...499...31H,2009ApJ...701..945S} etc., require understandings of nonlinear dynamics of the cosmic structure, and rely on high-resolution and high dynamic range $N$-body simulations.
 
-When $N$ is large, the brute force pairwise particle-particle (PP) force brings unaffordable $o(N^2)$ computations. The workload can be alleviated by many algorithms, for example, the ``tree'' algorithms like {\tt GADGET} \citep{2001NewA....6...79S,2005MNRAS.364.1105S} and its simulation ``Millennium'' \citep{2005Natur.435..629S,2012MNRAS.426.2046A}, {\tt TPM} \citep{1995ApJS...98..355X} and {\tt GOTPM} \citep{2004NewA....9..111D}, adaptive grid algorithm including {\tt HYDRA} \citep{1995ApJ...452..797C} and {\tt RAMSES} \citep{2010ascl.soft11007T}, as well as mesh-refined codes \citep{1991ApJ...368L..23C} and moving adaptive particle-mesh codes \citep{1995ApJS..100..269P}. Among these, the standard particle-mesh (PM) algorithm \citep{1988csup.book.....H} is most memory and computational efficient if we focus on large cosmological scales. The load balancing problem is minimized as the matter distribution is rather homogeneous, and the speed benefits from the fast Fourier transform (FFT) libraries, such as {\tt FFTW3} \citep{Frigo05thedesign}. Based on PM, the parallel code {\tt PMFAST} \citep{2005NewA...10..393M} uses a two-level PM algorithm to reduce the global communication and memory. After subsequent developments, {\tt CUBEP3M} \citep{2013MNRAS.436..540H} uses cubic spatial decomposition, and adds in-cell or adjacent-cell PP force and many other features.
+When $N$ is large, the brute force pairwise particle-particle (PP) force brings unaffordable $o(N^2)$ computations. However the workload can be alleviated to $o(N\log N)$ by many algorithms. For example, the ``tree'' algorithms like {\tt GADGET} \citep{2001NewA....6...79S,2005MNRAS.364.1105S} and its simulation ``Millennium'' \citep{2005Natur.435..629S,2012MNRAS.426.2046A}, {\tt TPM} \citep{1995ApJS...98..355X} and {\tt GOTPM} \citep{2004NewA....9..111D}, adaptive grid algorithm including {\tt HYDRA} \citep{1995ApJ...452..797C} and {\tt RAMSES} \citep{2010ascl.soft11007T}, as well as mesh-refined codes \citep{1991ApJ...368L..23C} and moving adaptive particle-mesh codes \citep{1995ApJS..100..269P}. Among these, the standard particle-mesh (PM) algorithm \citep{1988csup.book.....H} is most memory and computational efficient if we focus on large cosmological scales. The load balancing problem is minimized as the matter distribution is rather homogeneous, and the speed benefits from the fast Fourier transform (FFT) libraries, such as {\tt FFTW3} \citep{Frigo05thedesign}. {\tt PMFAST} \citep{2005NewA...10..393M} is first codes to use a 2-level PM algorithm, aiming to put PM codes toward speed, memory compactness and scalability. After subsequent developments on {\tt PMFAST}, {\tt CUBEP3M} \citep{2013MNRAS.436..540H} uses cubic spatial decomposition, and adds PP force and many other features.
 
-With the fast development of parallel 
-supercomputers, we are able to simulate a system of more than a trillion ($10^{12}$) 
-$N$-body particles. To date the largest $N$-body simulation in application is the 
-``TianNu'' simulation \citep{2017NatAs...1E.143Y,2017RAA....17...85E} run on the 
-TianHe-2 supercomputer by cosmological simulation code 
-{\tt CUBEP3M} \citep{2013MNRAS.436..540H}. It uses nearly $3\times 10^{12}$ particles 
-to simulate the cold dark matter (CDM) and cosmic neutrino evolution through the 
-cosmic age.
+Beside the methodology, the fast development of parallel supercomputers enable us to simulate a system of more than a trillion ($10^{12}$) $N$-body particles. To date the largest $N$-body simulation in application is the ``TianNu'' \citep{2017NatAs...1E.143Y,2017RAA....17...85E} run on the TianHe-2 supercomputer. With the code {\tt CUBEP3M} adding neutrino modules, it uses $3\times 10^{12}$ particles to simulate the cold dark matter (CDM) and cosmic neutrino evolution through the cosmic age.
 
-$N$-body simulations use considerable amount of memory, because the phase space 
-coordinates $(x,y,z,v_x,v_y,v_z)$ of each $N$-body particle must be stored as, at 
-least, six single precision floating point numbers (24 bytes). Contrarily, their 
-computing workload can be alleviated by many algorithms, like Particle-Mesh [cite] and 
-Tree [cite], scale as $o(N\log N)$ or even $o(N)$. On the other hand, modern 
-supercomputer systems use multi cores, many integrated cores (MIC) and even densely 
-parallelized GPUs, bringing orders of magnitude higher computing power, whereas these 
-architectures usually have limited memory allocation. Thus, the computation-light but 
-memory-heavy applications, compared to matrix multiplication and decomposition 
-calculations, are less suitable for fully usage of the computing power of modern 
-supercomputers. For example, although native and offload modes of {\tt CUBEP3M} are 
-able to run on the Intel Xeon-PHI MIC architectures, with the require ment of enough 
-memory, TianNu simulation were done on TianHe-2 with only its CPUs -- 73\% of the 
-total memory but only 13\% of the total computing power.
+Relative to the optimized computation optimizations, $N$-body simulations use considerable amount of memory, because the phase space coordinates $(x,y,z,v_x,v_y,v_z)$ of each $N$-body particle must be stored as at least six single precision floating point numbers (24 bytes). On the other hand, modern supercomputer systems use multi cores, many integrated cores (MIC) and even densely parallelized GPUs, bringing orders of magnitude higher computing power, whereas these architectures usually have limited memory allocation. Thus, the computation-light but memory-heavy applications, compared to matrix multiplication and decomposition calculations, are less suitable for fully usage of the computing power of modern supercomputers. For example, although native and offload modes of {\tt CUBEP3M} are able to run on the Intel Xeon-PHI MIC architectures, with the require ment of enough memory, TianNu simulation were done on TianHe-2 with only its CPUs -- 73\% of the total memory but only 13\% of the total computing power.
 
-We present a new $N$-body simulation code {\tt CUBE}, using as low as 6 byte
-per particle (here after we use ``bpp'' referring to ``byte per particle'').
-We show that it gives accurate results in cosmological LSS simulations.
-The method is presented in \S\ref{s.method}, and a comparison between this method
-and traditional method is shown in \S\ref{s.results}. Discussions and 
-conclusions are in \S\ref{s.discussion}.
+We present a new $N$-body simulation code {\tt CUBE}, using as low as 6 byte per particle (here after we use ``bpp'' referring to ``byte per particle''). We show that it gives accurate results in cosmological LSS simulations. In \S\ref{s.method} we show how the memory can be saved by using a ``integer-based storage'' and how the PM $N$-body algorithm is adapted with this storage format. In \S\ref{s.results} we quantify the accuracy of this algorithm by groups of simulations by {\tt CUBEP3M} and {\tt CUBE}. Discussions and conclusions are in \S\ref{s.discussion}.
 
 \section{Method}\label{s.method}
-The most memory consuming part of a $N$-body simulation is usually the phase space 
-coordinates of $N$-body particles -- 24 bpp (4 single precision floating numbers) must 
-be used to store each particles' 3D position and velocity vectors. {\tt CUBEP3M}, an 
-example of a memory-efficient parallel $N$-body code, can use as low as 40 bpp in 
-sacrificing computing speed \citep{2013MNRAS.436..540H}. This includes the phase 
-coordinates (24 bpp) for particles in physical domain and buffered region, a linked 
-list (4 bpp), and a global coarse mesh and local fine mesh. 4-byte real numbers are 
-not necessarily adequate in representing the {\it global} coordinates in simulations.
-If the box size is many orders of magnitude larger than interactive distance
-between particles, especially in the field of re-simulation of dense subregions,
-double precision (8-byte) coordinates are needed to avoid truncation errors.
-Another solution is to record {\it relative} coordinates for both position and velocity.
-{\tt CUBE} replaces the coordinates and linked list 24+4=28 bpp memory usage
-with an integer based storage, reduces the basic memory usage from 28 bpp down to
-6 bpp, described as following \ref{ss.position} and \ref{ss.velocity}. The algorithm is described in \ref{ss.overview}.
+The most memory consuming part of a $N$-body simulation is usually the phase space coordinates of $N$-body particles -- 24 bpp (4 single precision floating numbers) must be used to store each particles' 3D position and velocity vectors. {\tt CUBEP3M}, an example of a memory-efficient parallel $N$-body code, can use as low as 40 bpp in sacrificing computing speed \citep{2013MNRAS.436..540H}. This includes the phase coordinates (24 bpp) for particles in physical domain and buffered region, a linked list (4 bpp), and a global coarse mesh and local fine mesh. 4-byte real numbers are not necessarily adequate in representing the {\it global} coordinates in simulations.If the box size is many orders of magnitude larger than interactive distance between particles, especially in the field of re-simulation of dense subregions, double precision (8-byte) coordinates are needed to avoid truncation errors. Another solution is to record {\it relative} coordinates for both position and velocity. {\tt CUBE} replaces the coordinates and linked list 24+4=28 bpp memory usage with an integer based storage, reduces the basic memory usage from 28 bpp down to 6 bpp, described as following \ref{ss.position} and \ref{ss.velocity}. The algorithm is described in \ref{ss.overview}.
 
 \subsection{Particle position storage}\label{ss.position}
-We construct a uniform mesh throughout the space and each particle belongs 
-to its parent cell of the mesh. Instead of storing global coordinates of 
-each particle, we store its offset relative to its parent cell which 
-contains the particle. We divide the cell, in each dimension $d$, evenly into 
-$2^8=256$ bins, and use a 1-byte (8 bits) integer $\chi_d \in \{-128,-127,...,127\}$ to 
-indicate which bin it locates in this dimension. The global locations of 
-particles are given by cell-ordered format in memory space, and a 
-complimentary number count of particle number in this mesh (density field) 
-will give complete information of particle distribution in the mesh. Then 
-the global coordinate in $d$th dimension $x_d$ is given by $x_d=(n_c-1)+
-(\chi_d+128+1/2)/256$, where $n_c=1,2,...,N_c$ 
-is the index of the coarse grid. The mesh 
-is chosen to be coarse enough such that the density field takes negligible 
-memory. This coarse density field can be further compressed into 1-byte 
-integer format, such that a 1-byte integer show the particle number in this 
-coarse cell in range 0 to 255. In the densest cells (rarely happened) where 
-there are $\ge 255$ particles, we can just write 255, and write the actual 
-number as a 4-byte integer in another file.
+We construct a uniform mesh throughout the space and each particle belongs to its parent cell of the mesh. Instead of storing global coordinates of each particle, we store its offset relative to its parent cell which contains the particle. We divide the cell, in each dimension $d$, evenly into $2^8=256$ bins, and use a 1-byte (8 bits) integer $\chi_d \in \{-128,-127,...,127\}$ to indicate which bin it locates in this dimension. The global locations of particles are given by cell-ordered format in memory space, and a complimentary number count of particle number in this mesh (density field) will give complete information of particle distribution in the mesh. Then the global coordinate in $d$th dimension $x_d$ is given by $x_d=(n_c-1)+(\chi_d+128+1/2)/256$, where $n_c=1,2,...,N_c$ is the index of the coarse grid. The mesh is chosen to be coarse enough such that the density field takes negligible memory. This coarse density field can be further compressed into 1-byte integer format, such that a 1-byte integer show the particle number in this coarse cell in range 0 to 255. In the densest cells (rarely happened) where there are $\ge 255$ particles, we can just write 255, and write the actual number as a 4-byte integer in another file.
 
-In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle 
-positions are stored with a precision of $L/(256N_c)$. The force calculation 
-(e.g. softening length) should be configured much finer than this 
-resolution, discussed in later sections. On the other hand, particle 
-position can also be stored as 2-byte (16 bits) integers to increase the resolution. 
-In this case, each coarse cell is divided into $2^{16}=65536$ bins and the 
-position precision is $L/(65536N_c)$, precise enough compared to using
-4-byte global coordinates, see later results. We denote this case ``x2'' and 
-denote using 1-byte integers for positions ``x1''.
+In a simulation with volume $L^3$ and $N_c^3$ coarse cells, particle positions are stored with a precision of $L/(256N_c)$. The force calculation (e.g. softening length) should be configured much finer than this resolution, discussed in later sections. On the other hand, particle position can also be stored as 2-byte (16 bits) integers to increase the resolution. In this case, each coarse cell is divided into $2^{16}=65536$ bins and the position precision is $L/(65536N_c)$, precise enough compared to using4-byte global coordinates, see later results. We denote this case ``x2'' and denote using 1-byte integers for positions ``x1''.
 
 We collectively write the general position conversion formulae
 \begin{equation}\label{eq.chi}
@@ -155,64 +77,33 @@ As a $n_\chi=1$, 1D ($d=1$), 4-coarse-cell ($N_c=4$) example, if $$\chi_1=(-128,
 
 \begin{figure}
 \centering
-  \includegraphics[width=1.0\linewidth]{vdisp.pdf}
+  \includegraphics[width=0.88\linewidth]{vdisp.pdf}
  \caption{Variance of the velocity distribution given by Equation \ref{eq.vdisp}. The $x$-axis is the scale factor characterizing the cosmic evolution and the $y$-axis shows the $\sigma_v$ in unit of km/s. The 5 curves, from top to bottom, shows the $\sigma_v(a)$ with increasing smoothing scale $r$ from 0 to 20 Mpc$/h$.}
 \label{fig.vdisp}
 \end{figure}
 
 \subsection{Particle velocity storage}\label{ss.velocity}
-Similarly, actual velocity in $d$th dimension $v_d$ is decomposed into an 
-averaged velocity field on the same coarse grid $v_c$ and a residual $\Delta v$ 
-relative to this field: 
+Similarly, actual velocity in $d$th dimension $v_d$ is decomposed into an averaged velocity field on the same coarse grid $v_c$ and a residual $\Delta v$ relative to this field: 
 \begin{equation}
 	v_d=v_c+\Delta v.
 \end{equation}
-$v_c$ is always recorded and 
-kept updated, and occupies negligible memory. We then divide velocity space 
-$\Delta v$ into uneven bins, and use a $n_\nu$-byte integer to indicate
-which $\Delta v$ bin the particle is located.
+$v_c$ is always recorded and kept updated, and occupies negligible memory. We then divide velocity space $\Delta v$ into uneven bins, and use a $n_\nu$-byte integer to indicate which $\Delta v$ bin the particle is located.
 
-The reason why we use uneven bins is that, slower particles are more 
-abundant compared to faster ones, and one should better resolve slower 
-particles tracing at least linear evolution. On the other hand, there could 
-be extreme scattering particles (in case of particle-particle force), and we 
-can safely ignore or less resolve those nonphysical particles. One of the 
-solution is that, if we know the probability distribution function (PDF) 
-$f(\Delta v)$ we divide its cumulative distribution function (CDF) $F(\Delta 
-v)\in(0,1)$ into $2^{8n_\nu}$ bins to determine the boundary of $\Delta v$ 
-bins, and particles should evenly distribute in the corresponding uneven $
-\Delta v$ bins. Practically we find that either $f(v_d)$ or $f(\Delta v)$ is 
-close to Gaussian, so we can use Gaussian CDF, or any convenient analytic 
-functions which are close to Gaussian, to convert velocity between real 
-numbers and integers.
+The reason why we use uneven bins is that, slower particles are more abundant compared to faster ones, and one should better resolve slower particles tracing at least linear evolution. On the other hand, there could be extreme scattering particles (in case of particle-particle force), and we can safely ignore or less resolve those nonphysical particles. One of the solution is that, if we know the probability distribution function (PDF) $f(\Delta v)$ we divide its cumulative distribution function (CDF) $F(\Delta v)\in(0,1)$ into $2^{8n_\nu}$ bins to determine the boundary of $\Delta v$ bins, and particles should evenly distribute in the corresponding uneven $\Delta v$ bins. Practically we find that either $f(v_d)$ or $f(\Delta v)$ is close to Gaussian, so we can use Gaussian CDF, or any convenient analytic functions which are close to Gaussian, to convert velocity between real numbers and integers.
 
-The essential parameter of the velocity distribution is its variance. On 
-non-linear scale, the velocity distribution function is non-Gaussian. 
-However, to the first order approximation, we simply assume it as Gaussian 
-and characterized by the variance
+The essential parameter of the velocity distribution is its variance. On non-linear scale, the velocity distribution function is non-Gaussian. However, to the first order approximation, we simply assume it as Gaussian and characterized by the variance
 \begin{equation}\label{eq.vdisp}
 	\sigma_v(a,k) = \frac{1}{3}  (a H f D)^2 \int_0^kd^3q\frac{P_{L}(q)}{q^2},
 \end{equation}
-where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the 
-linear growth factor, $f=d \ln D/d\ln a$, and $P_L(k)$ is the linear power 
-spectrum of density contrast at redshift zero.
-$\sigma_v(a,k)$ is a function of cosmic evolution $a$ and a smoothing scale 
-$k$, or $r$ (see Figure \ref{fig.vdisp}). $\Delta v$
-is the velocity dispersion relative to the coarse grid, so we approximate 
-its variance as
+where $a(z)$ is the scale factor, $H(z)$ the Hubble parameter, $D$ is the linear growth factor, $f=d \ln D/d\ln a$, and $P_L(k)$ is the linear power spectrum of density contrast at redshift zero. $\sigma_v(a,k)$ is a function of cosmic evolution $a$ and a smoothing scale $k$, or $r$ (see Figure \ref{fig.vdisp}). $\Delta v$is the velocity dispersion relative to the coarse grid, so we approximate its variance as
 \begin{equation}\label{eq.vdelta}
 	\sigma^2_{\Delta}(a)=\sigma^2_v(a,r_c)-\sigma^2_v(a,r_p), 
 \end{equation}
-where $r_c$ is the scale of
-coarse grid, and $r_p$ is the scale of average particle separation. In each
-dimension of 3D velocity field, we use $\sigma^2_{\Delta}(a)/3$ according 
-to the equipartition therorem. On different scales, we measure the 
-statistics of $v_d$, $v_c$ and $\Delta v$ and find good agreement with the 
-above model.
+where $r_c$ is the scale of coarse grid, and $r_p$ is the scale of average particle separation. In each dimension of 3D velocity field, we use $\sigma^2_{\Delta}(a)/3$ according to the equipartition therorem. On different scales, we measure the statistics of $v_d$, $v_c$ and $\Delta v$ and find good agreement with the above model.
 
 \begin{figure}
 \centering
-  \includegraphics[width=0.99\linewidth]{fig_tile.pdf}
+  \includegraphics[width=0.90\linewidth]{fig_tile.pdf}
  \caption{Spacial decomposition in {\tt CUBE} in a 2D analogy. In this example, there are 2 images per dimension (${\tt nn}=2$), and 2 tiles per image per dimension (${\tt nnt}=2$). The orange boxes show the overlapped physical+buffer=extended tile regions, inside of which one physical regions is indicated with green.}
 \label{fig.tile}
 \end{figure}
@@ -224,12 +115,7 @@ The simulation results are very insensitive if we manually tune the variance of 
 \begin{equation}\label{eq.v}
 	v_d=v_c+\tan\left(\frac{\pi\nu_d}{2^{8n_\nu}-1}\right)\sqrt{2\sigma_\Delta^2/\pi},
 \end{equation}
-where $\lfloor\ \rfloor$ is the operator to take the nearest integer. 
-Tangent functions are convenient and compute very fast. Compared to error 
-functions used in Gaussian case, they take the same variance at $\nu_d=0$ but 
-resolve high velocities relatively better.
-Note again that proper choice of conversion formulae and $\sigma_\Delta$ 
-only optimizes the velocity space sampling, but does not affect the physics. 
+where $\lfloor\ \rfloor$ is the operator to take the nearest integer. Tangent functions are convenient and compute very fast. Compared to error functions used in Gaussian case, they take the same variance at $\nu_d=0$ but resolve high velocities relatively better. Note again that proper choice of conversion formulae and $\sigma_\Delta$ only optimizes the velocity space sampling, but does not affect the physics. 
 
 Initially, particles are generated by initial condition generator, at a higher redshift. The coarse grid density field $v_c$ is also generated at this step by averaging all particles in the coarse cell. A global $\sigma_\Delta$ is calculated by equation (\ref{eq.vdelta}), where linear approximation is hold. Then velocities are stored by equation (\ref{eq.nu}). During the simulation, $v_c$ is updated every time step, and a nonlinear $\sigma_\Delta$ is measured directly from the simulation, and can be simply used in the next time step, after scaled by the ratio of growth factors between two adjacent time steps. More details see section \ref{sss.algorithm}.
 
@@ -340,11 +226,6 @@ Figure \ref{fig.code} shows the overall structure of the code and these subrouti
 {\tt timestep} --
 We operate a Runge-Kutta 2 method for time integration. i.e., we update position ($D$=drift) and velocity ($K$=kick) every half time step. For $n$ time steps, the operation would be $(DKKD)^n$ which is 2nd order accurate. The actual simulation applies varied time steps. In each iteration of the main loop, we firstly call {\tt timestep}, where a increment of time {\tt dt} is controlled by particles' maximum velocities, accelerations, cosmic expansion and any other desired conditions.
 
-{\tt update\_xp} --
-According to {\tt dt}, subroutine {\tt update\_xp} updates the positions of particles in a ``{\it gather}'' algorithm (in contrast, {\tt CUBEP3M} uses ``scatter'' algorithm) tile by tile. For each particle, {\tt xp} and {\tt vp} are converted to $x_d$ and $v_d$ by Equations(\ref{eq.x},\ref{eq.v}). Because each tile is in the buffered state with buffer depth {\tt ncb}, we are able to collect all possible particles whose $v_d\times{\tt dt}<{\tt ncb}$ from physical+buffer region to its physical region.
-
-In order to keep particles ordered, for each tile, we first do $x_d=x_d+v_d\times{\tt dt}$ on all particles to obtain an updated density and velocity field on the tile, {\tt rho\_c\_new} and {\tt vfield\_new}. Then, this calculation in done on the same tile again\footnote{This repetition scales as $o(N)$ and is computational inexpensive.} to generate a new, local particle list {\tt xp\_new} and {\tt vp\_new} (also {\tt PID\_new} if needed) on the tile by Equations(\ref{eq.chi},\ref{eq.nu}). Here, the ordering of particles depends on {\tt rho\_c\_new}, and {\tt vfield\_new} is used as $v_c$ in Equation(\ref{eq.nu}). Then, another iteration is done on this tile to discard buffer regions of $\{{\tt rho\_c\_new},{\tt xp\_new},{\tt vfield\_new},{\tt vp\_new},{\tt PID\_new}({\rm if\ any})\}$, converting buffer state to disjoint state, and it replaces corresponding part of $\{{\tt rho\_c},{\tt xp},{\tt vfield},{\tt vp},{\tt PID}({\rm if\ any})\}$. When all tiles are iterated, the entire image is in disjoint state, and {\tt nplocal} is updated. Then all images is synchronized by {\tt sync all} and we sum up {\tt nplocal} over images to check if total number of particles {\tt npglobal} is conserved. These steps are summarized in Figure \ref{fig.update_xp}.
-
 \begin{figure}[]
 \begin{verbatim}
 
@@ -378,6 +259,15 @@ end
 \label{fig.update_xp}
 \end{figure}
 
+{\tt update\_xp} --
+According to {\tt dt}, subroutine {\tt update\_xp} updates the positions of particles in a ``{\it gather}'' algorithm (in contrast, {\tt CUBEP3M} uses ``scatter'' algorithm) tile by tile. For each particle, {\tt xp} and {\tt vp} are converted to $x_d$ and $v_d$ by Equations(\ref{eq.x},\ref{eq.v}). Because each tile is in the buffered state with buffer depth {\tt ncb}, we are able to collect all possible particles whose $v_d\times{\tt dt}<{\tt ncb}$ from physical+buffer region to its physical region.
+
+In order to keep particles ordered, for each tile, we first do $x_d=x_d+v_d\times{\tt dt}$ on all particles to obtain an updated density and velocity field on the tile, {\tt rho\_c\_new} and {\tt vfield\_new}. Then, this calculation in done on the same tile again\footnote{This repetition scales as $o(N)$ and is computational inexpensive.} to generate a new, local particle list {\tt xp\_new} and {\tt vp\_new} (also {\tt PID\_new} if needed) on the tile by Equations(\ref{eq.chi},\ref{eq.nu}). Here, the ordering of particles depends on {\tt rho\_c\_new}, and {\tt vfield\_new} is used as $v_c$ in Equation(\ref{eq.nu}). Then, another iteration is done on this tile to discard buffer regions of $\{{\tt rho\_c\_new},{\tt xp\_new},{\tt vfield\_new},{\tt vp\_new},{\tt PID\_new}({\rm if\ any})\}$, converting buffer state to disjoint state, and it replaces corresponding part of $\{{\tt rho\_c},{\tt xp},{\tt vfield},{\tt vp},{\tt PID}({\rm if\ any})\}$. When all tiles are iterated, the entire image is in disjoint state, and {\tt nplocal} is updated. Then all images is synchronized by {\tt sync all} and we sum up {\tt nplocal} over images to check if total number of particles {\tt npglobal} is conserved. These steps are summarized in Figure \ref{fig.update_xp}.
+
+{\tt update\_vp} -- 
+The particle-mesh (PM) or particle-particle particle-mesh (P$^3$M) algorithm is applied in this subroutine to update particles's velocities.
+After {\tt update\_xp}, or drift $D$, we call {\tt buffer\_density} and {\tt buffer\_xp} in order that particle positions are in buffered state, based on which, we update velocities (kick $K$) of particles in physical region of each tile. {\tt CUBE} uses a 2-level particle mesh scheme \citep{2005NewA...10..393M,2013MNRAS.436..540H}. Local fine forces have a force cutoff ${\tt nforce\_cutoff}\leq{\tt ncb}$, i.e., $F_{\rm fine}(r>{\tt ncb})=0$. So, if we apply a fine-grid particle-mesh on an extended tile with buffered-depth {\tt ncb} (see Figure \ref{fig.tile} and regard it periodic), the force on physical regions does not depend on the false periodic boundary assumption, and the resulting fine force $F_{\rm fine}$ and velocity update on physical region is correct.
+
 \begin{figure}[]
 \begin{verbatim}
 
@@ -404,9 +294,6 @@ end
 \label{fig.update_vp}
 \end{figure}
 
-{\tt update\_vp} -- 
-The particle-mesh (PM) or particle-particle particle-mesh (P$^3$M) algorithm is applied in this subroutine to update particles's velocities.
-After {\tt update\_xp}, or drift $D$, we call {\tt buffer\_density} and {\tt buffer\_xp} in order that particle positions are in buffered state, based on which, we update velocities (kick $K$) of particles in physical region of each tile. {\tt CUBE} uses a 2-level particle mesh scheme \citep{2013MNRAS.436..540H}. Local fine forces have a force cutoff ${\tt nforce\_cutoff}\leq{\tt ncb}$, i.e., $F_{\rm fine}(r>{\tt ncb})=0$. So, if we apply a fine-grid particle-mesh on an extended tile with buffered-depth {\tt ncb} (see Figure \ref{fig.tile} and regard it periodic), the force on physical regions does not depend on the false periodic boundary assumption, and the resulting fine force $F_{\rm fine}$ and velocity update on physical region is correct.
 
 
 The compensating coarse grid force $F_{\rm coarse}$ is globally computed by using a coarser (usually by factor of 4) mesh by dimensional splitting -- a distributed-memory cubic decomposed 3D coarse density field is interpolated by particles, and we Fourier transform data in consecutive three dimensions with global transposition in between (known as the pencil decomposition). After the multiplication of force kernels, the inverse transform takes place to get the cubic distributed coarse force field $F_{\rm coarse}$, upon which velocities are updated again.
@@ -480,7 +367,7 @@ Total &                      & 35.6 & 9.84 & 100\%\\
 \end{tabular}
 \end{table}
 
-\begin{figure*}[t]
+\begin{figure*}[]
 \centering
   \includegraphics[width=0.75\linewidth]{overplotparticles.pdf}
  \caption{Offset in the particle distribution induced by integer-1 based algorithm (x1v1). In S512's subregion of volume $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$, particles from {\tt CUBEP3M} (bigger grey dots in the background) and {\tt CUBE}-x1v1 (smaller red dots) are projected onto the plane of $(15.625\ {\rm Mpc}/h)^2$. The comparing rules show 1 ${\rm Mpc}/h$, fine grid and coarse grid respectively, and position resolution of x1v1 is 1/64 of a fine grid.}
@@ -488,9 +375,9 @@ Total &                      & 35.6 & 9.84 & 100\%\\
 \end{figure*}
 
 \subsubsection{Compare with traditional algorithms}
-To illustrate the improvement of memory usage, we give an example of TianNu simulation \citep{2017NatAs...1E.143Y} on the Tianhe-2 supercomputer, which used a traditional {\tt CUBEP3M} code. TianNu's particles number is limited by memory per computing node -- per computing node, an average of $576^3$ neutrino particles and $288^3$ CDM particles are used, and consumes about 40 GB of memory\footnote{Additional memory is used for OpenMP parallelization and for particle IDs to differentiate different particle spices.}, or about 186 bpp. A memory efficient case of {\tt CUBEP3M} by using large physical scales and at costs of speed, still uses about 40 bpp. 
+To illustrate the improvement of memory usage, we refer to the TianNu simulation \citep{2017NatAs...1E.143Y} on the Tianhe-2 supercomputer, which used a traditional $N$-body code {\tt CUBEP3M}. TianNu's particles number is limited by memory per computing node -- for each computing node, an average of $576^3$ neutrino particles and $288^3$ CDM particles are used, and consumes about 40 GB of memory\footnote{Additional memory is used for OpenMP parallelization and for particle IDs to differentiate different particle spices.}, or about 186 bpp. A memory efficient case of {\tt CUBEP3M} by using large physical scales and at costs of speed, still uses about 40 bpp. 
 
-By using {\tt CUBE}, with parameters $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt}=3$, ${\tt ncb}=6$, $\epsilon_{\rm image}=5\%$, $\epsilon_{\rm tile}=200\%$ and $\left\langle {\tt nplocal} \right\rangle=1536^3$, we use about 35.6 GB of memory, corresponding to 9.84 bpp. This can be done on most of the supercomputers, even modern laptops.
+If the same amount of memory is allocated to {\tt CUBE}, we can set parameters as $n_\chi=n_\nu=1$, ${\tt nc}=384$, ${\tt nnt}=3$, ${\tt ncb}=6$, $\epsilon_{\rm image}=5\%$, $\epsilon_{\rm tile}=200\%$. This gives $\left\langle {\tt nplocal} \right\rangle=1536^3$, and uses about 35.6 GB of memory, corresponding to 9.84 bpp. This can be done on most of the supercomputers, even modern laptops.
 
 Table \ref{t.memory} shows the memory consumption for this test simulation. The memory-consuming arrays are listed and classified into the three types above mentioned, and their memory usages are in unit of GB ($10^9$ bytes), byte per particle (bpp), and their percentage to the total memory usage. The parenthesized numbers show overlapped memory, which is saved by equivalencing them with the underscored numbers. There are other, unlisted variables which are memory-light, and can also be equivalenced with listed variables. For this $1536^3$ per image simulation, using ${\tt nnt}^3=27$ tiles per image optimizes the memory usage, because it well controls the balance between the second terms in Equations (\ref{eq.npmax},\ref{eq.nptile}). A great amount of temporary memory in coarse and fine mesh force calculations is equivalenced to {\tt xvp\_new}.
 
@@ -528,12 +415,22 @@ We list the names and configurations of simulations used in Table \ref{t.sim}, w
 
 \subsection{Displacement of particles}
 In S512, we zoom into a small region of $15.625^2\times 3.90625\ ({\rm Mpc}/h)^3$ and compare the particle distribution between {\tt CUBEP3M} and {\tt CUBE}-x1v1 in Figure \ref{fig.particles}. For clarity, {\tt CUBEP3M} particles are marked with bigger, grey dots, whereas smaller red dots are {\tt CUBE}-x1v1 particles over-plotted onto them. One can see the difference between them. The 1 ${\rm Mpc}/h$, fine grid and coarse grid scales are shown in the figure. The position resolution of particles in {\tt CUBE}-x1v1 is 1/256 of a coarse grid, or 1/64 of a fine grid.
+
 \begin{figure}[]
 \centering
-  \includegraphics[width=0.95\linewidth]{ddsp_pcdf_256_box80.pdf}
+  \includegraphics[width=0.99\linewidth]{ddsp_pcdf_256_box80.pdf}
  \caption{Statistics of the error in particle displacement $\Delta{\bs\Psi}$ induced by integer based algorithms in {\tt CUBE}. The PDF and CDF of $|\Delta{\bs\Psi}|$ from S256 are shown in the upper and lower axes, as functions of fine grids. Black, red, blue and green correspond to x2v2, x1v2, x2v1 and x1v1 respectively. The grey lines, marked with ``initial'', shows the distribution of actual displacement of particles in {\tt CUBEP3M}, $|{\bs\Psi}_0|$, which is orders of magnitudes larger than $|\Delta{\bs\Psi}|$. }
 \label{fig.dsp}
 \end{figure}
+
+
+\begin{figure*}
+\centering
+  \includegraphics[width=1.0\linewidth]{diff_power.pdf}
+ \caption{Fractional deviations in the power spectrum $\Delta^2(k)/\Delta^2_0(k)-1$ (upper axes) and decorrelation $\xi$ (lower axes) induced by the integer-based algorithms in {\tt CUBE}. The four panels show the results of two redshifts in S2048S and S2048L: $\{ z=1, z=0 \} \times \{ L=400{\rm Mpc}/h, L=1200{\rm Mpc}/h \}$. The four solid lines show the results from \{x2v2,x1v2,x2v1,x1v1\}, whose colors are shown in the legends in the last panel. The orange dashed lines show the scale $k=0.2\ k_{\rm Nyquist}$, and smaller scales are beyond our interest.}
+\label{fig.ccc}
+\end{figure*}
+\subsection{Power spectrum}
 
 
 To quantify the offset in the final particle distributions, we use PIDs to track the displacement ${\bs \Psi}({\bs q})\equiv{\bs x}-{\bs q}$ of every particle \citep{2017PhRvD..95d3501Y}, where ${\bs x}$ and ${\bs q}$ are Eulerian and Lagrangian coordinates of the particle. Then we calculate the absolute value of the offset vector
@@ -544,13 +441,6 @@ Here, ${\bs\Psi}_0$ stands for {\tt CUBEP3M} and subscript $_i$ can stand for x2
 
 For x2v2, almost all particles are accurate up to 1/100 of a fine grid, and the worst particle is $\sim 1/10$ of a fine grid away from its counterpart in {\tt CUBEP3M}. The difference is caused by truncation errors and is negligible in physical and cosmological applications. The accuracy of x1v2 is between x2v2 and x1v1, and x2v1 gives only minor improvement from x1v1. We also run a simulation with same number of particles but with $L=600\ {\rm Mpc}/h$ ($m_p=1.2\times 10^{12}\Msun$), and find that the accuracy of x1v2 is in turn between x2v1 and x1v1. We interpret that, in this latter case, particles have lower mass resolution, so they move slower and need higher position resolution but need lower velocity resolution, then x2v1 outperforms x1v2.
 
-\begin{figure*}
-\centering
-  \includegraphics[width=1.0\linewidth]{diff_power.pdf}
- \caption{Fractional deviations in the power spectrum $\Delta^2(k)/\Delta^2_0(k)-1$ (upper axes) and decorrelation $\xi$ (lower axes) induced by the integer-based algorithms in {\tt CUBE}. The four panels show the results of two redshifts in S2048S and S2048L: $\{ z=1, z=0 \} \times \{ L=400{\rm Mpc}/h, L=1200{\rm Mpc}/h \}$. The four solid lines show the results from \{x2v2,x1v2,x2v1,x1v1\}, whose colors are shown in the legends in the last panel. The orange dashed lines show the scale $k=0.2\ k_{\rm Nyquist}$, and smaller scales are beyond our interest.}
-\label{fig.ccc}
-\end{figure*}
-\subsection{Power spectrum}
 In S2048S and S2048L are two simulations with $2048^3$ particles on small ($L=400\ {\rm Mpc}/h$) and large ($L=1200\ {\rm Mpc}/h$) box sizes. We compare their accuracy by their power spectra and their cross correlations with {\tt CUBEP3M} at two checkpoints $z=1$ and $z=0$. The physical scale of S2048S is designed such that the particle mass resolution $m_p$ is comparable to TianNu and TianZero simulations (their parameters are also listed in Table \ref{t.sim}) to study halo properties. On the other hand, S2048L focuses on larger structures, on which scale one can study weak gravitational lensing, baryonic acoustic oscillation (BAO) \citep{2005ApJ...633..560E} and its reconstruction \citep{2007ApJ...664..675E,2017ApJ...841L..29W} etc.
 
 For each simulation the particles are firstly cloud-in-cell (CIC) interpolated onto the fine mesh grid of simulation, and from the density field $\rho$ we define the density contrast $\delta\equiv \rho/\left\langle \rho \right\rangle-1$. More generally we define the cross power spectrum $P_{\alpha\beta}(k)$ between two fields $\delta_\alpha$ and $\delta_\beta$ ($\delta_\alpha=\delta_\beta$ for auto power spectrum) in Fourier space as
