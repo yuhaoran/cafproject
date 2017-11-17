@@ -1,0 +1,3 @@
+character(*),parameter :: opath='../output/universe10/'
+integer(8),parameter :: izipx=2
+integer(8),parameter :: izipv=2

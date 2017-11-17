@@ -81,4 +81,14 @@ sync all
 if (head) print*, '  npglobal =',npglobal
 sync all
 
+#ifdef AFIELD
+
+call buffer_density
+call buffer_x
+call acceleration_field
+
+
+
+#endif
+
 endsubroutine

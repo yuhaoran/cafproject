@@ -17,10 +17,10 @@ module parameters
   ! (hereafter 'number of fine cells' = 'nf')
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
-  integer(8),parameter :: nn=4 ! number of imgages (nodes) /dim
+  integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96

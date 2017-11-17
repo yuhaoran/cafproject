@@ -1,5 +1,6 @@
 OPTIONS=
-#OPTIONS+=-DPID
+OPTIONS+=-DPID
+OPTIONS+=-DAFIELD
 #OPTIONS+=-Wall
 
 MODFILE:=$(wildcard *.f90)
@@ -32,8 +33,9 @@ initialize.o: variables.o cubefft.o pencil_fft.o redshifts.txt
 finalize.o: variables.o cubefft.o pencil_fft.o
 cafcube.o: variables.o cubefft.o pencil_fft.o
 pm.o: variables.o cubefft.o pencil_fft.o
+acceleration_field.o: variables.o cubefft.o pencil_fft.o
 
-cafcube.o: parameters.o variables.o initialize.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_density.o buffer_x.o buffer_v.o pm.o update_particle.o checkpoint.o projection.o finalize.o
+cafcube.o: parameters.o variables.o initialize.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_density.o buffer_x.o buffer_v.o pm.o update_particle.o checkpoint.o projection.o finalize.o acceleration_field.o
 
 %.o: %.f90 Makefile
 	$(FC) $(OFLAG) $(OPTIONS) $< -o $@ $(FFTFLAG)
