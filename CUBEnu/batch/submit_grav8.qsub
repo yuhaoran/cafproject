@@ -1,0 +1,22 @@
+#!/bin/bash
+# Torque submission script for Gravity
+#
+#PBS -l nodes=8:ppn=12:gpus=2,walltime=4:00:00
+#PBS -N CUBE
+#PBS -q gravity
+
+# DIRECTORY TO RUN - $PBS_O_WORKDIR is directory job was submitted from
+cd $PBS_O_WORKDIR
+
+# EXECUTION COMMAND; -np = nodes*ppn
+
+cd ../utilities/
+source module_load_intel.sh
+cafrun  -N 1 ./ic2.x > ../batch/many/log_ic2048_grav.log
+
+cd ../main/
+#cafrun  -N 1 ./cafcube.x > ../batch/many/log_cube1536
+#mpirun -np 1 ./cafcube.x > ../batch/many/log_cube1536
+
+
+cd ../batch/

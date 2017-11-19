@@ -1,0 +1,28 @@
+#!/bin/bash
+# MOAB/Torque submission script for SciNet GPC
+#
+#PBS -l nodes=64:ppn=8,walltime=1:00:00
+#PBS -N CUBE
+
+# DIRECTORY TO RUN - $PBS_O_WORKDIR is directory job was submitted from
+cd $PBS_O_WORKDIR
+
+# EXECUTION COMMAND; -np = nodes*ppn
+
+cd ../utilities/
+#export I_MPI_PROCESS_MANAGER=mpd
+
+#source module_load_intel.sh
+source module_load_intel.sh 
+
+
+#time cafrun -N 1 ../batch/many/ic_universe1.x > ../batch/many/log_ic_universe1
+
+cd ../main/
+#time cafrun -N 1 ../batch/many/cube_universe1.x > ../batch/many/log_cube_universe1
+
+cd ../utilities/
+time cafrun -N 1 ../batch/many/cicpower_universe1.x > ../batch/many/log_power_universe1
+
+
+cd ../batch/
