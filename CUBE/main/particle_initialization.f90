@@ -29,7 +29,7 @@ subroutine particle_initialization
   if (head) print*, 'number of io',num_io
 
   open(10,file=ic_name('zip0'),status='old',access='stream')
-  !read(10) x(:,:nplocal)
+  !read(10) xp(:,:nplocal)
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)
@@ -38,7 +38,7 @@ subroutine particle_initialization
   close(10)
 
   open(11,file=ic_name('zip1'),status='old',access='stream')
-  !read(11) v(:,:nplocal)
+  !read(11) vp(:,:nplocal)
   do i=1,num_io
     nplow=(i-1)*blocksize+1
     nphigh=min(i*blocksize,nplocal)

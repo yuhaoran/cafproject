@@ -1,3 +1,5 @@
+! read qspace fields and compute the divergence
+! compute the c.c. w.r.t. delta_L
 program correlation_qspace
   use pencil_fft
   use powerspectrum
@@ -30,6 +32,8 @@ program correlation_qspace
       read(10) delta_L
     close(10)
 
+
+    ! displacement
     cube3=0;cube=0
     open(10,file=output_name('dsp'),status='old',access='stream')
       read(10) cube3(1,:,:,:)
@@ -41,7 +45,18 @@ program correlation_qspace
       write(10) cube
     close(10)
     call cross_power(xi,cube,delta_L)
+    if (head) then
+      open(10,file=output_name('cicpower_dspE'),status='replace',access='stream')
+      write(10) xi
+      close(10)
+      print*,'wrote',output_name('cicpower_dspE')
+    endif
+    sync all
 
+    delta_L=cube     ! cross correlate with dsp
+
+
+    ! velocity
     cube3=0;cube=0
     open(10,file=output_name('vel'),status='old',access='stream')
       read(10) cube3(1,:,:,:)
@@ -52,7 +67,17 @@ program correlation_qspace
     open(10,file=output_name('velE'),status='replace',access='stream')
       write(10) cube
     close(10)
+    call cross_power(xi,cube,delta_L)
+    if (head) then
+      open(10,file=output_name('cicpower_velE'),status='replace',access='stream')
+      write(10) xi
+      close(10)
+      print*,'wrote',output_name('cicpower_velE')
+    endif
+    sync all
 
+
+    ! acceleration
     cube3=0;cube=0
     open(10,file=output_name('acc'),status='old',access='stream')
       read(10) cube3(1,:,:,:)
@@ -63,6 +88,15 @@ program correlation_qspace
     open(10,file=output_name('accE'),status='replace',access='stream')
       write(10) cube
     close(10)
+
+    call cross_power(xi,cube,delta_L)
+    if (head) then
+      open(10,file=output_name('cicpower_accE'),status='replace',access='stream')
+      write(10) xi
+      close(10)
+      print*,'wrote',output_name('cicpower_accE')
+    endif
+    sync all
   enddo
 
   call destroy_penfft_plan
@@ -78,7 +112,6 @@ contains
     complex cdiv(ng*nn/2+1,ng,npen)
     complex pdim, ekx(3)
 
-    print*,npen,ng,ng*nn/2+1
     r3=0
     cdiv=0
     do i_dim=1,3

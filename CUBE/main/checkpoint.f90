@@ -18,6 +18,7 @@ subroutine checkpoint
   sim%dt_f_acc=dt_fine
   sim%dt_pp_acc=dt_pp
   sim%dt_c_acc=dt_coarse
+  sim%sigma_vi=sigma_vi
 
   sim%cur_checkpoint=cur_checkpoint
   sim%cur_proj=cur_checkpoint
@@ -71,24 +72,14 @@ subroutine checkpoint
   close(14)
 #endif
 
-sync all
-print*,'  image',this_image(),'write',nplocal,'particles'
-npglobal=0
-do i=1,nn**3
-  npglobal=npglobal+nplocal[i]
-enddo
-sync all
-if (head) print*, '  npglobal =',npglobal
-sync all
-
-#ifdef AFIELD
-
-call buffer_density
-call buffer_x
-call acceleration_field
-
-
-
-#endif
+  sync all
+  print*,'  image',this_image(),'write',nplocal,'particles'
+  npglobal=0
+  do i=1,nn**3
+    npglobal=npglobal+nplocal[i]
+  enddo
+  sync all
+  if (head) print*, '  npglobal =',npglobal
+  sync all
 
 endsubroutine

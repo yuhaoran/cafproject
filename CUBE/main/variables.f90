@@ -43,9 +43,6 @@ module variables
 #ifdef PID
     integer(8) pid(np_image_max)[*], pid_new(np_tile_max)
 #endif
-#ifdef AFIELD
-    real(4) afield(3,np_image_max)
-#endif
 
   real rho_f(nfe+2,nfe,nfe)
   real crho_f(nfe+2,nfe,nfe)

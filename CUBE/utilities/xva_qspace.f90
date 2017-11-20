@@ -1,3 +1,6 @@
+! read particle-based quantities
+! get displacement, velocity and acceleration fields in Lagrangian space
+! also compute CIC density field
 program xva_qspace
   use parameters
   implicit none
@@ -15,12 +18,12 @@ program xva_qspace
   real acc(3,0:ng+1,0:ng+1,0:ng+1)
   real vfield(3,nt,nt,nt,nnt,nnt,nnt)
 
-  integer idx,idx1(3),idx2(3)
+  integer idx1(3),idx2(3)
   real dx1(3),dx2(3)
   integer(izipx) xp(3,npmax)
   integer(izipv) vp(3,npmax)
   integer(8)   pid(npmax)
-  real(4) afield(3,npmax),vreal(3),sigma_vi
+  real(4) ap(3,npmax),vreal(3),sigma_vi
 
   call geometry
 
@@ -75,9 +78,12 @@ program xva_qspace
     read(10) vfield
     close(10)
     sigma_vi=sim%sigma_vi
-    open(10,file=output_name('afield'),status='old',action='read',access='stream')
-    read(10) afield(:,:nplocal)
+    open(10,file=output_name('ap'),status='old',action='read',access='stream')
+    read(10) ap(:,:nplocal)
     close(10)
+
+    print*, output_name('vfield')
+    print*, output_name('zip1')
 
     rho0=0
     dsp=0
@@ -134,14 +140,14 @@ program xva_qspace
           vel(:,idx2(1),idx2(2),idx1(3))=vel(:,idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*vreal
           vel(:,idx2(1),idx2(2),idx2(3))=vel(:,idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*vreal
           ! acceleration field
-          acc(:,idx1(1),idx1(2),idx1(3))=acc(:,idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*afield(:,ipp)
-          acc(:,idx2(1),idx1(2),idx1(3))=acc(:,idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*afield(:,ipp)
-          acc(:,idx1(1),idx2(2),idx1(3))=acc(:,idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*afield(:,ipp)
-          acc(:,idx1(1),idx1(2),idx2(3))=acc(:,idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*afield(:,ipp)
-          acc(:,idx1(1),idx2(2),idx2(3))=acc(:,idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*afield(:,ipp)
-          acc(:,idx2(1),idx1(2),idx2(3))=acc(:,idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*afield(:,ipp)
-          acc(:,idx2(1),idx2(2),idx1(3))=acc(:,idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*afield(:,ipp)
-          acc(:,idx2(1),idx2(2),idx2(3))=acc(:,idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*afield(:,ipp)
+          acc(:,idx1(1),idx1(2),idx1(3))=acc(:,idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*ap(:,ipp)
+          acc(:,idx2(1),idx1(2),idx1(3))=acc(:,idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*ap(:,ipp)
+          acc(:,idx1(1),idx2(2),idx1(3))=acc(:,idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*ap(:,ipp)
+          acc(:,idx1(1),idx1(2),idx2(3))=acc(:,idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*ap(:,ipp)
+          acc(:,idx1(1),idx2(2),idx2(3))=acc(:,idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*ap(:,ipp)
+          acc(:,idx2(1),idx1(2),idx2(3))=acc(:,idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*ap(:,ipp)
+          acc(:,idx2(1),idx2(2),idx1(3))=acc(:,idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*ap(:,ipp)
+          acc(:,idx2(1),idx2(2),idx2(3))=acc(:,idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*ap(:,ipp)
           ! CIC number count
           rho0(idx1(1),idx1(2),idx1(3))=rho0(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)
           rho0(idx2(1),idx1(2),idx1(3))=rho0(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)
