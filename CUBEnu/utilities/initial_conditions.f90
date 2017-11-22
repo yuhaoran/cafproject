@@ -19,7 +19,7 @@ program initial_conditions
 
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
-  integer(8),parameter :: nk=1675
+  integer(8),parameter :: nk=133
   integer(8) i,j,k
   integer(4) seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
@@ -146,39 +146,57 @@ program initial_conditions
   sync all
 
   ! transferfnc --------------------------------------
-  !open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
-  open(11,file='../tf/mnu100_onu3/mnu100_onu3_transfer_out_z10.dat',form='formatted')
-  !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
+  ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
+  open(11,file='../tf/caf_z10_tk.dat',form='formatted')
+  read(11,*) !header
   read(11,*) tf
   close(11)
-  ! normalization
-  ! norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1) ! for Xin
-  norm=1
-  if (head) print*, 'Normalization factor: norm =', norm
-  !Delta^2
-  do i=2,size(tf,dim=1)
-     tf(i,:)=tf(i,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-  end do
-!  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-!  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-!  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-  !dk
-  tf(4,1)=tf(1,2)/2
-  do k=2,nk-1
-    tf(4,k)=(tf(1,k+1)-tf(1,k-1))/2
-  enddo
-  tf(4,nk)=tf(1,nk)-tf(1,nk-1)
-  v8=0
-  kmax=2*pi*sqrt(3.)*nyquest/box
-  do k=1,nk
-    if (tf(1,k)>kmax) exit
-    v8=v8+tf(7,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
-  enddo
-!  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest ;stop
-!  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
-  tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
-!  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
+
+  ! replace T_g with T_cb = f_c T_c + f_b T_b
+  tf(2,:) = (omega_bar*tf(3,:)+omega_cdm*tf(4,:))/(omega_bar+omega_cdm)
+
+  ! compute power spectrum @ z_tf
+  tf(2,:) = A_s*(tf(1,:)/k_o)**(n_s-1.)*tf(2,:)**2
+    
+  ! propagate to starting redshift
+  tf(2:,:) = tf(2:,:)*DgrowRatio(z_i,z_tf)**2
+
   sync all
+
+!!$  ! transferfnc --------------------------------------
+!!$  !open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
+!!$  open(11,file='../tf/mnu100_onu3/mnu100_onu3_transfer_out_z10.dat',form='formatted')
+!!$  !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
+!!$  read(11,*) tf
+!!$  close(11)
+!!$  ! normalization
+!!$  ! norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1) ! for Xin
+!!$  norm=1
+!!$  if (head) print*, 'Normalization factor: norm =', norm
+!!$  !Delta^2
+!!$  do i=2,size(tf,dim=1)
+!!$     tf(i,:)=tf(i,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+!!$  end do
+!!$!  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+!!$!  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+!!$!  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+!!$  !dk
+!!$  tf(4,1)=tf(1,2)/2
+!!$  do k=2,nk-1
+!!$    tf(4,k)=(tf(1,k+1)-tf(1,k-1))/2
+!!$  enddo
+!!$  tf(4,nk)=tf(1,nk)-tf(1,nk-1)
+!!$  v8=0
+!!$  kmax=2*pi*sqrt(3.)*nyquest/box
+!!$  do k=1,nk
+!!$    if (tf(1,k)>kmax) exit
+!!$    v8=v8+tf(7,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
+!!$  enddo
+!!$!  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest ;stop
+!!$!  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
+!!$  tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
+!!$!  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
+!!$  sync all
 
 
   ! noisemap -------------------------------------
@@ -750,6 +768,7 @@ program initial_conditions
     implicit none
     real, parameter :: om=omega_m
     real, parameter :: ol=omega_l
+    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/24.) !~1-3f/5
     real z1,z2
     real Dgrow
     real hsq,oma,ola,a1,a2,ga1,ga2
@@ -767,11 +786,12 @@ program initial_conditions
     ga2=2.5*oma/(oma**(4./7)-ola+(1+oma/2)*(1+ola/70))
 
     Dgrow=(a1*ga1)/(a2*ga2)
-    Dgrow=Dgrow**(1.-3.*(omega_mnu/omega_m)/5.)
+    Dgrow=Dgrow**np!(1.-3.*(omega_mnu/omega_m)/5.)
   end function DgrowRatio
 
   function vfactor(a)
     implicit none
+    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/24.) !~1-3f/5
     real :: a
     real :: H,km,lm
     real :: vfactor
@@ -779,7 +799,7 @@ program initial_conditions
     km=(1-omega_m-omega_l)/omega_m
     H=2/(3*sqrt(a**3))*sqrt(1+a*km+a**3*lm)
     vfactor=a**2*H
-    vfactor=vfactor*(1.-3.*(omega_mnu/omega_m)/5.)
+    vfactor=vfactor*np!(1.-3.*(omega_mnu/omega_m)/5.)
   endfunction vfactor
 
   function lcg(s) !// Linear congruential generator
