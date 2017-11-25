@@ -61,7 +61,7 @@ module parameters
 
   ! cosmological parameters
   real,parameter :: box=300.0*nn  ! simulation scale /dim, in unit of Mpc/h
-  real,parameter :: s8=0.0900   ! \sigma_8
+  real,parameter :: s8=0 !not used
 
   real,parameter :: z_i=49.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
@@ -70,7 +70,8 @@ module parameters
   real,parameter :: z_tf=z_i_mnu ! redshift of transfer functions
 
   ! neutrino parameters
-  real, parameter :: Tcnb = 1.945 ! temperature for active neutrinos
+  real, parameter :: Tcmb = 2.7255
+  real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
   
   integer, parameter :: Nmnu = 3 ! number of massive neutrinos
   real, dimension(Nmnu), parameter :: Mmnu = (/ 0.05,0.05,0.05  /)
@@ -82,7 +83,7 @@ module parameters
   real, parameter :: Neff = Nur*(Tur/Tcnb)**4.
 
   integer, parameter :: np_nc_mnu = ncell ! number of neutrinos per dim per coarse cell
-  integer, parameter :: izipi = 2 ! if ids are on, size to store as
+  integer, parameter :: izipi = 2 ! if neutrino ids are on, size to store as
 
   ! background parameters
   real, parameter :: h0 = 0.67
@@ -92,9 +93,10 @@ module parameters
   real, parameter :: omega_r = omega_g+omega_u ! total radiation
 
   real, parameter :: omega_cdm = 0.27 ! cdm energy
-  real, parameter :: omega_mhd = 0.05 ! mhd energy
+  real, parameter :: omega_bar = 0.05 ! baryon energy, goes into cdm
+  real, parameter :: omega_mhd = 0.0 ! mhd energy, evolved separately
   real, parameter :: omega_mnu = sum( Mmnu*(Tmnu/Tcnb)**3 )/94.1/h0**2 ! mnu energy
-  real, parameter :: omega_m = omega_cdm+omega_mhd+omega_mnu ! total matter
+  real, parameter :: omega_m = omega_cdm+omega_bar+omega_mhd+omega_mnu ! total matter
 
   real, parameter :: omega_l = 1.-omega_m-omega_r
   real, parameter :: wde = -1. ! de equation of state
@@ -102,9 +104,9 @@ module parameters
   ! initial conditions
   real,parameter :: f_nl=0
   real,parameter :: g_nl=0
-  real,parameter :: n_s=0.96
-  real,parameter :: A_s=2.142e-9
-  real,parameter :: k_o =0.05/h0
+  real,parameter :: n_s=0.9619
+  real,parameter :: A_s=2.215e-9
+  real,parameter :: k_o=0.05/h0
 
   integer(8),parameter :: istep_max=1000 ! maximum number of timesteps
   real,parameter :: ra_max=0.2

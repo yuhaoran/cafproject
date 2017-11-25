@@ -97,36 +97,28 @@ subroutine expansion(a0,dt0,da1,da2)
   real(8), parameter :: e = 2.718281828459046
   !! Expand Friedman equation to third order and integrate
   dt_x=dt0/2
-  a_x=a0
   omHsq=4.0/9.0
-  a3rlm=a_x**(-3*wde)*omega_l/omega_m
-  !a3rlm=a_x**(-3*wde - 3*w_a)*(omega_l/omega_m)*e**(3*w_a*(a_x - 1))
-  arkm=a_x*(1.0-omega_m-omega_l)/omega_m
 
-  adot=sqrt(omHsq*a_x**3*(1.0+arkm+a3rlm))
-  !    addot=a_x**2*omHsq*(1.5+2.0*arkm+3.0*a3rlm)
-  addot=a_x**2*omHsq*(1.5+2.0*arkm+1.5*(1.0-wde)*a3rlm)
-  !    addot=a_x**2*omHsq*(1.5+2.0*arkm+1.5*(1.0-wde + w_a*(a_x - 1))*a3rlm)
-  !    atdot=a_x*adot*omHsq*(3.0+6.0*arkm+15.0*a3rlm)
-  atdot=a_x*adot*omHsq*(3.0+6.0*arkm+1.5*(2.0-3.0*wde)*(1.0-wde)*a3rlm)
-  !    atdot=a_x*adot*omHsq*(3.0+6.0*arkm+1.5*(3*w_a**2*a_x**2 + 6*w_a*(1-wde-w_a)+ (2.0-3.0*(wde+w_a))*(1.0-(wde+w_a)))*a3rlm)
+  a_x=a0
+  a3rlm=a_x**(-3*wde)*omega_l/omega_m
+  arkm=a_x*(1.0-omega_m-omega_l)/omega_m
+  am1rrm=a_x**(-1.)*omega_r/omega_m
+
+  adot=sqrt(omHsq*a_x**3*(1.0+arkm+a3rlm+am1rrm))
+  addot=a_x**2*omHsq*(1.5+2.0*arkm+1.5*(1.0-wde)*a3rlm+am1rrm)
+  atdot=a_x*adot*omHsq*(3.0+6.0*arkm+1.5*(2.0-3.0*wde)*(1.0-wde)*a3rlm+am1rrm)
 
   da1=adot*dt_x+(addot*dt_x**2)/2.0+(atdot*dt_x**3)/6.0
 
   a_x=a0+da1
-  omHsq=4.0/9.0
-  !    a3rlm=a_x**3*omega_l/omega_m
-  a3rlm=a_x**(-3*wde)*omega_l/omega_m
-  !    a3rlm=a_x**(-3*wde - 3*w_a)*(omega_l/omega_m)*e**(3*w_a*(a_x - 1))
-  arkm=a_x*(1.0-omega_m-omega_l)/omega_m
 
-  adot=sqrt(omHsq*a_x**3*(1.0+arkm+a3rlm))
-  !    addot=a_x**2*omHsq*(1.5+2.0*arkm+3.0*a3rlm)
-  addot=a_x**2*omHsq*(1.5+2.0*arkm+1.5*(1.0-wde)*a3rlm)
-  !    addot=a_x**2*omHsq*(1.5+2.0*arkm+1.5*(1.0-wde + w_a*(a_x - 1))*a3rlm)
-  !    atdot=a_x*adot*omHsq*(3.0+6.0*arkm+15.0*a3rlm)
-  atdot=a_x*adot*omHsq*(3.0+6.0*arkm+1.5*(2.0-3.0*wde)*(1.0-wde)*a3rlm)
-  !    atdot=a_x*adot*omHsq*(3.0+6.0*arkm+1.5*(3*w_a**2*a_x**2 + 6*w_a*(1-wde-w_a)+ (2.0-3.0*(wde+w_a))*(1.0-(wde+w_a)))*a3rlm)
+  a3rlm=a_x**(-3*wde)*omega_l/omega_m
+  arkm=a_x*(1.0-omega_m-omega_l)/omega_m
+  am1rrm=a_x**(-1.)*omega_r/omega_m
+
+  adot=sqrt(omHsq*a_x**3*(1.0+arkm+a3rlm+am1rrm))
+  addot=a_x**2*omHsq*(1.5+2.0*arkm+1.5*(1.0-wde)*a3rlm+am1rrm)
+  atdot=a_x*adot*omHsq*(3.0+6.0*arkm+1.5*(2.0-3.0*wde)*(1.0-wde)*a3rlm+am1rrm)
 
   da2=adot*dt_x+(addot*dt_x**2)/2.0+(atdot*dt_x**3)/6.0
 
