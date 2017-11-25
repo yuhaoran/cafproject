@@ -1,5 +1,6 @@
 ! read in checkpoint and compute the gravitational potential
 ! CIC potential in Lagrangian space
+! compute its gradient w.r.t. q
 program potential
   use pencil_fft
   implicit none
@@ -22,8 +23,9 @@ program potential
   integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk
   integer(8) ileft,iright,nlen,g(3)
   real kr,kx,ky,kz,phi8,temp8[*]
-  real dsp(3,ng,ng,ng)
+  real dsp(3,ng,ng,ng),rgrad(3,ng,ng,ng)
   complex cx_temp(nyquest+1,nf,npen)
+  equivalence(dsp,rgrad)
 
   call geometry
   if (head) then
@@ -149,7 +151,7 @@ program potential
     phi(:,:,nf+1)=phi(:,:,1)[image1d(icx,icy,ipz)]
     sync all
 
-    ! write potential
+    ! write potential in Eulerian space
     if (write_potential) then
       open(11,file=output_name('phi1'),status='replace',access='stream')
       write(11) phi(1:nf,1:nf,1:nf)
@@ -157,34 +159,14 @@ program potential
     endif
     sync all
 
-    ! transform potential into Lagrangian space
-    !if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
-    !open(12,file=output_name('zip2'),status='old',action='read',access='stream')
-    !read(12) sim
-    !if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
-    !  print*, 'zip format incompatable'
-    !  close(12)
-    !  stop
-    !endif
-    !read(12) rhoc(1:nt,1:nt,1:nt,:,:,:) ! coarse grid density
-    !close(12)
-    !mass_p=sim%mass_p
-    !if (head) print*, 'mass_p =',mass_p
-    !nplocal=sim%nplocal
-    !if (head) print*, 'nplocal =',nplocal
-    !open(10,file=output_name('zip0'),status='old',action='read',access='stream')
-    !read(10) xp(:,:nplocal) ! particle Eulerian positions
-    !close(10)
-    !open(10,file=output_name('zipid'),status='old',action='read',access='stream')
-    !read(10) pid(:nplocal) ! particle Eulerian positions
-    !close(10)
-    !
+    ! read displacement field
     open(10,file=output_name('dsp'),status='old',action='read',access='stream')
     read(10) dsp(1,:,:,:)
     read(10) dsp(2,:,:,:)
     read(10) dsp(3,:,:,:)
     close(10)
 
+    ! transform potential into q-space according to displacement field
     do k=1,nf
     do j=1,nf
     do i=1,nf
@@ -209,9 +191,32 @@ program potential
     enddo
     enddo
     enddo
-
     open(10,file=output_name('phiq'),status='replace',access='stream')
       write(10) phiq
+    close(10)
+
+    ! compute phiq's gradient in q-space
+    phi=0
+    phi(1:nf,1:nf,1:nf)=phiq
+    phi(0,:,:)=phi(nf,:,:)[image1d(inx,icy,icz)]
+    phi(nf+1,:,:)=phi(1,:,:)[image1d(ipx,icy,icz)]
+    sync all
+    phi(:,0,:)=phi(:,nf,:)[image1d(icx,iny,icz)]
+    phi(:,nf+1,:)=phi(:,1,:)[image1d(icx,ipy,icz)]
+    sync all
+    phi(:,:,0)=phi(:,:,nf)[image1d(icx,icy,inz)]
+    phi(:,:,nf+1)=phi(:,:,1)[image1d(icx,icy,ipz)]
+    sync all
+
+    rgrad=0
+    rgrad(1,:,:,:)=(phi(2:nf+1,1:nf,1:nf)-phi(0:nf-1,1:nf,1:nf))/2
+    rgrad(2,:,:,:)=(phi(1:nf,2:nf+1,1:nf)-phi(1:nf,0:nf-1,1:nf))/2
+    rgrad(3,:,:,:)=(phi(1:nf,1:nf,2:nf+1)-phi(1:nf,1:nf,0:nf-1))/2
+
+    open(10,file=output_name('gradphiq'),status='replace',access='stream')
+      write(10) rgrad(1,:,:,:)
+      write(10) rgrad(2,:,:,:)
+      write(10) rgrad(3,:,:,:)
     close(10)
 
   enddo

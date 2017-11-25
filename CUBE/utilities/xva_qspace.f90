@@ -1,5 +1,6 @@
 ! read particle-based quantities
 ! get displacement, velocity and acceleration fields in Lagrangian space
+! note that the grid has moved (-0.5,-0.5,-0.5) for above fields
 ! also compute CIC density field
 program xva_qspace
   use parameters

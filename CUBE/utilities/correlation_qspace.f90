@@ -1,10 +1,13 @@
 ! read qspace fields and compute the divergence
+! compute B mode
 ! compute the c.c. w.r.t. delta_L
 program correlation_qspace
   use pencil_fft
   use powerspectrum
   implicit none
   save
+
+  logical,parameter :: correlate_phi=.false.
   integer i
   real cube3(3,ng,ng,ng),cube(ng,ng,ng),delta_L(ng,ng,ng)
   real xi(10,nbin)[*]
@@ -97,8 +100,34 @@ program correlation_qspace
       print*,'wrote',output_name('cicpower_accE')
     endif
     sync all
-  enddo
 
+    if (correlate_phi) then ! cross correlate potential with 1LPT potential
+      print*, output_dir()//'49.000phi1'//output_suffix()
+      open(10,file=output_dir()//'49.000phi1'//output_suffix(),status='old',access='stream')
+        read(10) delta_L
+      close(10)
+      print*, output_name('phiq')
+      open(10,file=output_name('phiq'),status='old',access='stream')
+        read(10) cube
+      close(10)
+      call cross_power(xi,cube,delta_L)
+      if (head) then
+        open(10,file=output_name('cicpower_phiq'),status='replace',access='stream')
+        write(10) xi
+        close(10)
+      endif
+      open(10,file=output_name('phi1'),status='old',access='stream')
+        read(10) cube
+      close(10)
+      call cross_power(xi,cube,delta_L)
+      if (head) then
+        open(10,file=output_name('cicpower_phi'),status='replace',access='stream')
+        write(10) xi
+        close(10)
+      endif
+    endif
+
+  enddo
   call destroy_penfft_plan
 
 contains

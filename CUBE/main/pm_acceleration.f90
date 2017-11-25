@@ -5,7 +5,7 @@ subroutine pm_acceleration
   use pencil_fft
   implicit none
   save
-  
+
   integer(8) nlast,nlen
   integer(4) ithread, nthread
   integer(8) idxf(3),np
@@ -188,6 +188,7 @@ subroutine pm_acceleration
       np=rhoc(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
         ip=nlast+l
+        ipp=ipp+1
         tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1
@@ -201,6 +202,8 @@ subroutine pm_acceleration
         ap(:,ipp)=ap(:,ipp)+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
         ap(:,ipp)=ap(:,ipp)+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         ap(:,ipp)=ap(:,ipp)+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+        !print*,force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+        !stop
       enddo
     enddo
     enddo

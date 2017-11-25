@@ -2,7 +2,7 @@ OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
 
-all: ic.x dsp.x cicpower.x qspace.x corr.x potential.x #convert.x
+all: ic.x dsp.x cicpower.x qspace.x corr.x potential.x Jmatrix.x detJ.x #convert.x
 	@echo "done"
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -14,9 +14,13 @@ corr.x: parameters.o pencil_fft.o powerspectrum.o correlation_qspace.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 potential.x: parameters.o pencil_fft.o potential_qspace.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+Jmatrix.x: parameters.o pencil_fft.o powerspectrum.o Jmatrix_qspace.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 convert.x: parameters.o convert_zip_to_xv.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 qspace.x: parameters.o xva_qspace.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
+detJ.x: parameters.o detJ.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 
 parameters.o: ../main/parameters.f90
@@ -35,9 +39,13 @@ correlation_qspace.o: correlation_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 potential_qspace.o: potential_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
+Jmatrix_qspace.o: Jmatrix_qspace.f90 parameters.o pencil_fft.o
+	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 cicpower.o: cicpower.f90 parameters.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 convert_zip_to_xv.o: convert_zip_to_xv.f90 parameters.o
+	$(FC) $(OFLAG) $(OPTIONS) $<
+detJ.o: detJ.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 *.o: Makefile
 

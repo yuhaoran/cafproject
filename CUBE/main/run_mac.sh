@@ -15,10 +15,13 @@ cd ../utilities/
 ./ic.x
 cd ../main/
 ./cafcube.x
-cd ../utilities/
-./dsp.x
-cd ../utilities/
-./cicpower.x
+./acc.x
 
+cd ../utilities/
+./qspace.x
+./corr.x
+./potential.x # get -grad(phi_q)
+./Jmatrix.x
+./detJ.x # get inv(J), and apply -inv(J)grad(phi_q)
 
 cd ../main/
