@@ -155,9 +155,9 @@ program initial_conditions
   norm=1
   if (head) print*, 'Normalization factor: norm =', norm
   !Delta^2
-  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3*0+n_s) * norm! / (2.0*pi**2)
+  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3*0+n_s) * norm! / (2.0*pi**2)
+  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3*0+n_s) * norm! / (2.0*pi**2)
   !dk
   tf(4,1)=tf(1,2)/2
   do k=2,nk-1
@@ -170,11 +170,18 @@ program initial_conditions
     if (tf(1,k)>kmax) exit
     v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
   enddo
+
 !  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest ;stop
   tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
 !  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
   sync all
 
+print*, Dgrow(a)
+  open(11,file='tf.bin',access='stream')
+  write(11) tf(1,:)
+  write(11) tf(2,:)/Dgrow(a)**2/Dgrow(1./6)**2
+  close(11)
+  stop
 
   ! noisemap -------------------------------------
   if (head) print*,'Generating random noise'

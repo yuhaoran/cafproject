@@ -68,6 +68,7 @@ program cicpower
     close(10)
 
     rho0=0
+    rho_grid=0
     nlast=0
     do itz=1,nnt
     do ity=1,nnt
@@ -155,7 +156,7 @@ program cicpower
     write(str_i,'(i6)') image
     write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
     !open(15,file=output_name('delta_N'),access='stream')
-    open(15,file='../output/universe5/image'//&
+    open(15,file='../output/universe1/image'//&
                   trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'delta_N'//&
                   output_suffix(),access='stream')
     read(15) rho0

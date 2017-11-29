@@ -5,6 +5,9 @@ program Jmatrix_qspace
   use powerspectrum
   implicit none
   save
+
+  real,parameter :: l_smooth=30 ! Mpc/h
+  real,parameter :: k_smooth=box/l_smooth
   integer i_redshift,i_dim
   real cube3(3,ng,ng,ng),cube(ng,ng,ng),delta_L(ng,ng,ng)
   real xi(10,nbin)[*]
@@ -71,7 +74,7 @@ contains
         dim_2=mod(dim_1,3)+1
         dim_3=mod(dim_2,3)+1
         pdim=(ekx(dim_1)-1)*(ekx(dim_2)+1)*(ekx(dim_3)+1)/4
-        cgrad(j_dim,i,j,k)=cgrad(j_dim,i,j,k)+pdim*cxyz(i,j,k)
+        cgrad(j_dim,i,j,k) = pdim*cxyz(i,j,k)*exp(-(kr/k_smooth)**2)
       enddo
     enddo
     enddo

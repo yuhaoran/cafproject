@@ -81,7 +81,8 @@ program detJmatrix
     enddo
     enddo
     enddo
-
+    
+    print*, output_name('gradphiqinvJ')
     open(10,file=output_name('gradphiqinvJ'),status='replace',access='stream')
       write(10) rgrad(1,:,:,:)
       write(10) rgrad(2,:,:,:)
