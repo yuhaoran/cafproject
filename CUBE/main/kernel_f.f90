@@ -1,4 +1,4 @@
-!#define FPPKCORR
+#define FPPKCORR
 subroutine kernel_f
   use variables
   implicit none
@@ -21,6 +21,18 @@ subroutine kernel_f
   enddo
   enddo
   close(20)
+
+#ifdef FPPKCORR
+  fk_table(1,1,1,:)=fk_table(1,1,1,:)*1.6
+  fk_table(2,1,1,:)=fk_table(2,1,1,:)*1.6
+  fk_table(1,2,1,:)=fk_table(1,2,1,:)*1.6
+  fk_table(1,1,2,:)=fk_table(1,1,2,:)*1.6
+  print*, fk_table(1,1,1,:)
+  print*, fk_table(2,1,1,:)
+  print*, fk_table(1,2,1,:)
+  print*, fk_table(1,1,2,:)
+  stop
+#endif
 
   do i_dim=1,3
     rho_f=0
