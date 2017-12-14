@@ -129,7 +129,7 @@ program displacement
     read(15) dsp0(3,1:ng,1:ng,1:ng)
     close(15)
     print*, 'max dsp-dsp0', maxval(abs(dsp-dsp0))
-    
+
   enddo
   print*,'displacement done'
 end

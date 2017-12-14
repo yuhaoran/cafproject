@@ -1,8 +1,10 @@
 #define mkdir
 #define READ_SEED
 #define WRITE_NOISE
+!#define WRITE_KSPACE
 !#define READ_NOISE
 !#define DO_2LPT
+#define READ_DELTA_L
 
 program initial_conditions
   use pencil_fft
@@ -155,9 +157,9 @@ program initial_conditions
   norm=1
   if (head) print*, 'Normalization factor: norm =', norm
   !Delta^2
-  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3*0+n_s) * norm! / (2.0*pi**2)
-  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3*0+n_s) * norm! / (2.0*pi**2)
-  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3*0+n_s) * norm! / (2.0*pi**2)
+  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
   !dk
   tf(4,1)=tf(1,2)/2
   do k=2,nk-1
@@ -176,18 +178,18 @@ program initial_conditions
 !  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
   sync all
 
-print*, Dgrow(a)
-  open(11,file='tf.bin',access='stream')
-  write(11) tf(1,:)
-  write(11) tf(2,:)/Dgrow(a)**2/Dgrow(1./6)**2
-  close(11)
-  stop
+  !print*, Dgrow(a)
+  !open(11,file='tf.bin',access='stream')
+  !write(11) tf(1,:)
+  !write(11) tf(2,:)/Dgrow(a)**2/Dgrow(1./6)**2
+  !close(11)
+  !stop
 
   ! noisemap -------------------------------------
   if (head) print*,'Generating random noise'
   call random_seed(size=seedsize)
   if (head) print*,'min seedsize =', seedsize
-  seedsize=max(seedsize,12)
+  seedsize=max(seedsize,36)
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
@@ -291,16 +293,22 @@ print*, Dgrow(a)
   call pencil_fft_backward
   !print*,'r3',r3(1,1,1)
   !print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
-
+#ifdef READ_DELTA_L
+  print*, 'Read delta_L from file'
+  print*, output_dir()//'delta_L'//output_suffix()
+  open(11,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
+  read(11) r3
+  close(11)
+  r3=r3*Dgrow(a)
+  call pencil_fft_forward
+  cx_temp=cxyz
+#else
   if (head) print*,'Write delta_L into file'
   if (head) print*,'Growth factor Dgrow(',a,') =',Dgrow(a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
-
-
-
-
+#endif
 
   ! Potential field ----------------------------------------------------
   if (head) print*, ''

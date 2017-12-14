@@ -1,6 +1,7 @@
 OPTIONS=-DFFTFINE
+#OPTIONS=-DFFTHALF
 #OPTIONS+=-Wall
-OPTIONS+=-DPID
+#OPTIONS+=-DPID
 
 all: ic.x dsp.x cicpower.x qspace.x corr.x potential.x Jmatrix.x detJ.x #convert.x
 	@echo "done"

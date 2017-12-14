@@ -2,7 +2,7 @@ module parameters
   implicit none
   save
 
-  include 'universe1.fh'
+  include 'universe3.fh'
   !! output directory for both IC and snapshots
   !character(*),parameter :: opath='../output/universe1/'
   !
@@ -31,6 +31,8 @@ module parameters
   ! ngrid /image/dim for pencil-fft
 # ifdef FFTFINE
     integer(8),parameter :: ng=nf ! fine grid fft, for IC, dsp, convert_zip_to_xv
+# elif FFTHALF
+    integer(8),parameter :: ng=nf/2
 # else
     integer(8),parameter :: ng=nc ! coarse grid fft, for N-body main code
 # endif
@@ -55,14 +57,14 @@ module parameters
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
   real,parameter :: image_buffer=1.5
-  real,parameter :: tile_buffer=1.5
+  real,parameter :: tile_buffer=2.5
 
   ! cosmological parameters
   real,parameter :: z_i=49.0   ! initial redshift
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=600.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=75.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: h0=67.74    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim

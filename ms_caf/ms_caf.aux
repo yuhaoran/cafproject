@@ -1,0 +1,95 @@
+\relax 
+\citation{1988csup.book.....H}
+\citation{1985ApJ...292..371D}
+\citation{2005MNRAS.360L..82R,2011ApJ...726....7T}
+\citation{2005ApJ...633..560E,2009ApJ...700..479T}
+\citation{2003ApJ...592..699V,2009A&A...499...31H,2009ApJ...701..945S}
+\citation{2001NewA....6...79S,2005MNRAS.364.1105S}
+\citation{2005Natur.435..629S,2012MNRAS.426.2046A}
+\citation{1995ApJS...98..355X}
+\citation{2004NewA....9..111D}
+\citation{1995ApJ...452..797C}
+\citation{2010ascl.soft11007T}
+\citation{1991ApJ...368L..23C}
+\citation{1995ApJS..100..269P}
+\citation{1988csup.book.....H}
+\citation{Frigo05thedesign}
+\citation{2005NewA...10..393M}
+\citation{2013MNRAS.436..540H}
+\citation{2017NatAs...1E.143Y,2017RAA....17...85E}
+\newlabel{FirstPage}{{}{1}{}{}{}}
+\@writefile{toc}{\contentsline {abstract}{Abstract}{1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{}}
+\newlabel{s.intro}{{1}{1}{}{}{}}
+\citation{2013MNRAS.436..540H}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Method}{2}{}}
+\newlabel{s.method}{{2}{2}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Particle position storage}{2}{}}
+\newlabel{ss.position}{{2.1}{2}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Variance of the velocity distribution given by Equation \ref  {eq.vdisp}. The $x$-axis is the scale factor characterizing the cosmic evolution and the $y$-axis shows the $\sigma _v$ in unit of km/s. The 5 curves, from top to bottom, shows the $\sigma _v(a)$ with increasing smoothing scale $r$ from 0 to 20 Mpc$/h$.}}{2}{}}
+\newlabel{fig.vdisp}{{1}{2}{}{}{}}
+\newlabel{eq.chi}{{1}{2}{}{}{}}
+\newlabel{eq.x}{{2}{2}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Particle velocity storage}{2}{}}
+\newlabel{ss.velocity}{{2.2}{2}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Spacial decomposition in {\tt  CUBE} in a 2D analogy. In this example, there are 2 images per dimension (${\tt  nn}=2$), and 2 tiles per image per dimension (${\tt  nnt}=2$). The orange boxes show the overlapped physical+buffer=extended tile regions, inside of which one physical regions is indicated with green.}}{3}{}}
+\newlabel{fig.tile}{{2}{3}{}{}{}}
+\newlabel{eq.vdisp}{{4}{3}{}{}{}}
+\newlabel{eq.vdelta}{{5}{3}{}{}{}}
+\newlabel{eq.nu}{{6}{3}{}{}{}}
+\newlabel{eq.v}{{7}{3}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Code overview}{3}{}}
+\newlabel{ss.overview}{{2.3}{3}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Spacial decomposition}{3}{}}
+\newlabel{sss.spatial_decomposition}{{2.3.1}{3}{}{}{}}
+\citation{1970A&A.....5...84Z}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Pseudocode for the initial condition generator.}}{4}{}}
+\newlabel{fig.ic}{{3}{4}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.2}Initial conditions}{4}{}}
+\newlabel{sss.ic}{{2.3.2}{4}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.3}Algorithm}{4}{}}
+\newlabel{sss.algorithm}{{2.3.3}{4}{}{}{}}
+\citation{2005NewA...10..393M,2013MNRAS.436..540H}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Overall structure of {\tt  CUBE}. Sections of the code are grouped into Fortran subroutines, which are described in paragraphs of Section \ref  {sss.algorithm}.}}{5}{}}
+\newlabel{fig.code}{{4}{5}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Pseudocode for subroutine {\tt  update\_xp}.}}{5}{}}
+\newlabel{fig.update_xp}{{5}{5}{}{}{}}
+\citation{2017NatAs...1E.143Y}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Pseudocode for subroutine {\tt  update\_vp}.}}{6}{}}
+\newlabel{fig.update_vp}{{6}{6}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Memory layout}{6}{}}
+\newlabel{ss.memory}{{2.4}{6}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.1}Arrays of particles}{6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Memory layout for a \leavevmode {\color  {blue}certain} configuration}}{6}{}}
+\newlabel{t.memory}{{1}{6}{}{}{}}
+\newlabel{eq.npmax}{{8}{6}{}{}{}}
+\newlabel{eq.nptile}{{9}{6}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.2}Coarse mesh arrays}{6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.3}Fine mesh arrays}{6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.4}Compare with traditional algorithms}{6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Offset in the particle distribution induced by integer-1 based algorithm (x1v1). In S512's subregion of volume $15.625^2\times 3.90625\ ({\rm  Mpc}/h)^3$, particles from {\tt  CUBEP3M} (bigger grey dots in the background) and {\tt  CUBE}-x1v1 (smaller red dots) are projected onto the plane of $(15.625\ {\rm  Mpc}/h)^2$. The comparing rules show 1 ${\rm  Mpc}/h$, fine grid and coarse grid respectively, and position resolution of x1v1 is 1/64 of a fine grid.}}{7}{}}
+\newlabel{fig.particles}{{7}{7}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Accuracy}{7}{}}
+\newlabel{s.results}{{3}{7}{}{}{}}
+\citation{2017NatAs...1E.143Y,2017RAA....17...85E}
+\citation{2017PhRvD..95d3501Y}
+\citation{2005ApJ...633..560E}
+\citation{2007ApJ...664..675E,2017ApJ...841L..29W}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Simulation configurations}}{8}{}}
+\newlabel{t.sim}{{2}{8}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Displacement of particles}{8}{}}
+\newlabel{eq.offset}{{10}{8}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Statistics of the error in particle displacement $\Delta {\boldsymbol  \Psi }$ induced by integer based algorithms in {\tt  CUBE}. The PDF and CDF of $|\Delta {\boldsymbol  \Psi }|$ from S256 are shown in the upper and lower axes, as functions of fine grids. Black, red, blue and green correspond to x2v2, x1v2, x2v1 and x1v1 respectively. The grey lines, marked with ``initial'', shows the distribution of actual displacement of particles in {\tt  CUBEP3M}, $|{\boldsymbol  \Psi }_0|$, which is orders of magnitudes larger than $|\Delta {\boldsymbol  \Psi }|$. }}{8}{}}
+\newlabel{fig.dsp}{{8}{8}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Power spectrum}{8}{}}
+\newlabel{eq.cps}{{11}{8}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \leavevmode {\color  {blue}Fractional deviations $\Delta ^2(k)/\Delta ^2_0(k)-1$ in the power spectra relative to nonlinear predictions $\Delta ^2_0(k)$ (upper axes), and {\tt  CUBE}'s decorrelations $\xi (k)$ relative to {\tt  CUBEP3M} (lower axes) induced by the integer-based algorithms. The four panels show the results of two redshifts in S2048S and S2048L: $\{ z=1, z=0 \} \times \{ L=400{\rm  Mpc}/h, L=1200{\rm  Mpc}/h \}$. The four solid lines show the results from \{x2v2,x1v2,x2v1,x1v1\}. In lower panels, the dashed grey curves show the decorrelations given by the PM algorithm. The orange dashed lines show the scale $k=0.2\ k_{\rm  Nyquist}$.}}}{9}{}}
+\newlabel{fig.ccc}{{9}{9}{}{}{}}
+\citation{2011JCAP...07..034B}
+\citation{2017PhRvD..95d3501Y,2017ApJ...841L..29W,2017MNRAS.469.1968P}
+\bibdata{ms_cafNotes,haoran_ref}
+\bibstyle{hapj}
+\newlabel{eq.ccc}{{12}{10}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion and conclusion}{10}{}}
+\newlabel{s.discussion}{{4}{10}{}{}{}}
+\newlabel{LastPage}{{}{10}{}{}{}}

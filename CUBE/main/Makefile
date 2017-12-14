@@ -1,11 +1,11 @@
 OPTIONS=
-OPTIONS+=-DPID
+#OPTIONS+=-DPID
 #OPTIONS+=-Wall
 
 MODFILE:=$(wildcard *.f90)
 OBJFILE:=$(addprefix ,$(notdir $(MODFILE:.f90=.o)))
 
-all: cafcube.x acc.x
+all: cafcube.x # acc.x
 
 
 #cafcube.x: $(OBJFILE)
