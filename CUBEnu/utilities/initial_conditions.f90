@@ -19,7 +19,7 @@ program initial_conditions
 
   real,parameter :: a=1/(1+z_i)
   real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
-  integer(8),parameter :: nk=133
+  integer(8),parameter :: nk=132 ! ???
   integer(8) i,j,k
   integer(4) seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
@@ -28,7 +28,7 @@ program initial_conditions
 
   integer(8) nplocal[*],npglobal,ip,l
   ! power spectrum arrays
-  real, dimension(13,nk) :: tf    !CAMB
+  real, dimension(14,nk) :: tf    !CAMB ! ???
   real, dimension(2,nc) :: pkm,pkn
 
   integer(4),allocatable :: iseed(:)
@@ -157,7 +157,7 @@ program initial_conditions
 
   ! compute power spectrum @ z_tf
   tf(2,:) = A_s*(tf(1,:)/k_o)**(n_s-1.)*tf(2,:)**2
-    
+
   ! propagate to starting redshift
   tf(2:,:) = tf(2:,:)*DgrowRatio(z_i,z_tf)**2
 
@@ -198,12 +198,16 @@ program initial_conditions
 !!$!  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
 !!$  sync all
 
+!print*, tf(1,:)
+!print*, ''
+!print*, tf(2,:)
+!stop
 
   ! noisemap -------------------------------------
   if (head) print*,'Generating random noise'
   call random_seed(size=seedsize)
   if (head) print*,'min seedsize =', seedsize
-  seedsize=max(seedsize,12)
+  seedsize=max(seedsize,36)
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
@@ -772,7 +776,7 @@ program initial_conditions
     real z1,z2
     real Dgrow
     real hsq,oma,ola,a1,a2,ga1,ga2
-    
+
     a1=1./(1.+z1)
     hsq=om/a1**3+(1-om-ol)/a1**2+ol
     oma=om/(a1**3*hsq)

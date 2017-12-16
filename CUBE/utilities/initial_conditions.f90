@@ -4,7 +4,7 @@
 !#define WRITE_KSPACE
 !#define READ_NOISE
 !#define DO_2LPT
-#define READ_DELTA_L
+!#define READ_DELTA_L
 
 program initial_conditions
   use pencil_fft
@@ -184,6 +184,11 @@ program initial_conditions
   !write(11) tf(2,:)/Dgrow(a)**2/Dgrow(1./6)**2
   !close(11)
   !stop
+
+!print*, tf(1,:)
+!print*, ''
+!print*, tf(2,:)
+!stop
 
   ! noisemap -------------------------------------
   if (head) print*,'Generating random noise'

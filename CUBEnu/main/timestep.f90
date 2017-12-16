@@ -93,7 +93,7 @@ subroutine expansion(a0,dt0,da1,da2)
   implicit none
   save
   real(4) :: a0,dt0,dt_x,da1,da2
-  real(8) :: a_x,adot,addot,atdot,arkm,a3rlm,omHsq
+  real(8) :: a_x,adot,addot,atdot,arkm,am1rrm,a3rlm,omHsq
   real(8), parameter :: e = 2.718281828459046
   !! Expand Friedman equation to third order and integrate
   dt_x=dt0/2

@@ -2,13 +2,13 @@ module parameters
   implicit none
   save
 
-  include 'universe1.fh'
-  !! output directory for both IC and snapshots
-  !character(*),parameter :: opath='../output/universe1/'
-  !
-  !! simulation parameters
-  !integer(8),parameter :: izipx=2
-  !integer(8),parameter :: izipv=2
+  ! output directory for both IC and snapshots
+  character(*),parameter :: opath='../output/universe1/'
+
+  ! simulation parameters
+  integer(8),parameter :: izipx=2 ! size to store xp as
+  integer(8),parameter :: izipv=2 ! size to store vp as
+  integer(8), parameter :: izipi = 2 ! if neutrino ids are on, size to store as
 
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
   integer(8),parameter :: ishift=-(int(2,8)**(izipx*8-1))
@@ -53,14 +53,14 @@ module parameters
   integer(8),parameter :: np_nc=ncell ! number of particles / coarse cell / dim
 
   real,parameter :: rsoft=0.1 ! PP softening length
-  logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles
+  logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles, body-centered cubic
   real,parameter :: image_buffer=2.0
   real,parameter :: tile_buffer=3.0
 
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=300.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=100.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
   real,parameter :: z_i=49.0   ! initial redshift
@@ -72,7 +72,7 @@ module parameters
   ! neutrino parameters
   real, parameter :: Tcmb = 2.7255
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
-  
+
   integer, parameter :: Nmnu = 3 ! number of massive neutrinos
   real, dimension(Nmnu), parameter :: Mmnu = (/ 0.05,0.05,0.05  /)
   real, dimension(Nmnu), parameter :: Tmnu = (/ Tcnb,Tcnb,Tcnb /)
@@ -83,12 +83,11 @@ module parameters
   real, parameter :: Neff = Nur*(Tur/Tcnb)**4.
 
   integer, parameter :: np_nc_mnu = ncell ! number of neutrinos per dim per coarse cell
-  integer, parameter :: izipi = 2 ! if neutrino ids are on, size to store as
 
   ! background parameters
   real, parameter :: h0 = 0.67
-  
-  real, parameter :: omega_g = 2.471*10**(-5.)/h0**2. ! photon energy 
+
+  real, parameter :: omega_g = 2.471*10**(-5.)/h0**2. ! photon energy
   real, parameter :: omega_u = Nur*(7.*pi**4/180.)*Tur*(Tur/Tcnb)**3./94.1/h0**2 ! ur energy
   real, parameter :: omega_r = omega_g+omega_u ! total radiation
 
@@ -125,7 +124,6 @@ module parameters
   real z_checkpoint(nmax_redshift)[*]
   logical checkpoint_step[*], final_step[*]
 
-  ! 128 byte (equivalent 32 4-byte variables) header in zip2
   type sim_header
     integer(8) nplocal
     integer(8) izipx,izipv

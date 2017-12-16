@@ -44,7 +44,7 @@ program cicpower
   sync all
 
   call create_penfft_plan
-  
+
   do cur_checkpoint= 1,n_checkpoint
     if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
     open(12,file=output_name('zip2'),status='old',action='read',access='stream')
@@ -68,6 +68,7 @@ program cicpower
     close(10)
 
     rho0=0
+    rho_grid=0
     nlast=0
     do itz=1,nnt
     do ity=1,nnt
@@ -120,7 +121,7 @@ program cicpower
     rho1=rho_grid(1:ng,1:ng,1:ng)
     !print*, 'check: min,max,sum of rho_grid = '
     !print*, minval(rho1),maxval(rho1),sum(rho1*1d0)
-    
+
     rho8=sum(rho1*1d0)
     sync all
 
@@ -150,12 +151,12 @@ program cicpower
     sync all
 
 
-    
+
     ! cross correlate correct density field
     write(str_i,'(i6)') image
     write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
     !open(15,file=output_name('delta_N'),access='stream')
-    open(15,file='../output/universe5/image'//&
+    open(15,file='../output/universe1/image'//&
                   trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'delta_N'//&
                   output_suffix(),access='stream')
     read(15) rho0

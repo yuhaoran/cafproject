@@ -24,7 +24,7 @@ subroutine checkpoint
   sim%cur_halo=cur_checkpoint
 
   sim%mass_p=mass_p
-  sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
+  sim%vsim2phys=(1.5/a)*box*h0*100.*sqrt(omega_m)/nf_global
 
   num_io=(nplocal-1)/blocksize+1
 

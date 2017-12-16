@@ -2,12 +2,12 @@ OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
 
-all: ic.x ic_mnu.x dsp.x cicpower.x qspace.x corr.x #convert.x
+all: ic.x ic_mnu.x cicpower.x #dsp.x qspace.x corr.x #convert.x
 	@echo "done"
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 ic_mnu.x: parameters.o initial_conditions_mnu.o
-	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ 
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o pencil_fft.o powerspectrum.o cicpower.o
