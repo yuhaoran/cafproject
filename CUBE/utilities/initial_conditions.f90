@@ -420,13 +420,6 @@ program initial_conditions
   !print*, 'phi',image
   !print*, r3(1:4,1,1)
 
-!!!! DEBUG ! read same phi
-!phi=0
-!open(11,file=ic_name('phi1'),access='stream')
-!read(11) phi(1:nf,1:nf,1:nf)
-!close(11)
-!!!! ENDDEBUG
-
   !call pencil_fft_forward
 
 #ifdef DO_2LPT
