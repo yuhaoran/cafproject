@@ -159,7 +159,7 @@ program initial_conditions
   tf(2,:) = A_s*(tf(1,:)/k_o)**(n_s-1.)*tf(2,:)**2
 
   ! propagate to starting redshift
-  tf(2:,:) = tf(2:,:)*DgrowRatio(z_i,z_tf)**2
+  tf(2,:) = tf(2,:)*DgrowRatio(z_i,z_tf)**2
 
   sync all
 
@@ -772,7 +772,7 @@ program initial_conditions
     implicit none
     real, parameter :: om=omega_m
     real, parameter :: ol=omega_l
-    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/24.) !~1-3f/5
+    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/25.) !~1-3f/5
     real z1,z2
     real Dgrow
     real hsq,oma,ola,a1,a2,ga1,ga2
@@ -795,7 +795,7 @@ program initial_conditions
 
   function vfactor(a)
     implicit none
-    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/24.) !~1-3f/5
+    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/25.) !~1-3f/5
     real :: a
     real :: H,km,lm
     real :: vfactor
