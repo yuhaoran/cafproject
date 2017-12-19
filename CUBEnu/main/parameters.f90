@@ -65,24 +65,24 @@ module parameters
 
   real,parameter :: z_i=49.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
-  real,parameter :: z_i_mnu=10.0 ! initial redshift for neutrinos
-  real,parameter :: a_i_mnu=1./(1.+z_i_mnu) ! initial scale factor for neutrinos
-  real,parameter :: z_tf=z_i_mnu ! redshift of transfer functions
+  real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
+  real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
+  real,parameter :: z_tf=z_i_nu ! redshift of transfer functions
 
   ! neutrino parameters
   real, parameter :: Tcmb = 2.7255
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
 
-  integer, parameter :: Nmnu = 3 ! number of massive neutrinos
-  real, dimension(Nmnu), parameter :: Mmnu = (/ 0.05,0.05,0.05  /)
-  real, dimension(Nmnu), parameter :: Tmnu = (/ Tcnb,Tcnb,Tcnb /)
-  real, parameter :: Meff = sum( Mmnu*(Tmnu/Tcnb)**3. )
+  integer, parameter :: Nnu = 3 ! number of massive neutrinos
+  real, dimension(Nnu), parameter :: Mnu = (/ 0.05,0.05,0.05  /)
+  real, dimension(Nnu), parameter :: Tnu = (/ Tcnb,Tcnb,Tcnb /)
+  real, parameter :: Meff = sum( Mnu*(Tnu/Tcnb)**3. )
 
   integer, parameter :: Nur = 0 ! number of massless neutrinos
   real, parameter :: Tur = Tcnb ! temperature of massless neutrinos
   real, parameter :: Neff = Nur*(Tur/Tcnb)**4.
 
-  integer, parameter :: np_nc_mnu = ncell ! number of neutrinos per dim per coarse cell
+  integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
   ! background parameters
   real, parameter :: h0 = 0.67
@@ -94,8 +94,8 @@ module parameters
   real, parameter :: omega_cdm = 0.27 ! cdm energy
   real, parameter :: omega_bar = 0.05 ! baryon energy, goes into cdm
   real, parameter :: omega_mhd = 0.0 ! mhd energy, evolved separately
-  real, parameter :: omega_mnu = sum( Mmnu*(Tmnu/Tcnb)**3 )/94.1/h0**2 ! mnu energy
-  real, parameter :: omega_m = omega_cdm+omega_bar+omega_mhd+omega_mnu ! total matter
+  real, parameter :: omega_nu = sum( Mnu*(Tnu/Tcnb)**3 )/94.1/h0**2 ! nu energy
+  real, parameter :: omega_m = omega_cdm+omega_bar+omega_mhd+omega_nu ! total matter
 
   real, parameter :: omega_l = 1.-omega_m-omega_r
   real, parameter :: wde = -1. ! de equation of state
@@ -239,7 +239,7 @@ module parameters
       character(20) :: str_z,str_i
       write(str_i,'(i6)') image
       write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
-      output_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))
+      output_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'
     endfunction
 
     function output_suffix()
@@ -261,6 +261,6 @@ module parameters
       character(20) :: str_z,str_i
       write(str_i,'(i6)') image
       write(str_z,'(f7.3)') z_i
-      ic_name=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//zipname//output_suffix()
+      ic_name=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
     endfunction
 endmodule

@@ -1,8 +1,5 @@
-#define mkdir
 #define READ_SEED
-#define WRITE_NOISE
 !#define READ_NOISE
-!#define DO_2LPT
 
 program initial_conditions
   use pencil_fft
@@ -39,13 +36,8 @@ program initial_conditions
   real kr,kx,ky,kz
   !real xi(10,nbin)
 
-  complex cx_temp(nyquest+1,nf,npen)
+  complex delta_k(nyquest+1,nf,npen)
   real phi(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
-#ifdef DO_2LPT
-    real phi1(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
-    real,dimension(nf,nf,nf) :: phixx,phiyy,phizz,phixy,phiyz,phizx
-#endif
-
 
   ! zip arrays
   integer(8),parameter :: npt=nt*np_nc ! np / tile / dim !64
@@ -89,9 +81,7 @@ program initial_conditions
   endif
   sync all
 
-#ifdef mkdir
-    call system('mkdir -p '//opath//'image'//image2str(image))
-#endif
+  call system('mkdir -p '//opath//'image'//image2str(image))
 
   sim%nplocal=1 ! will be overwritten
   sim%a=1./(1+z_i)
@@ -164,8 +154,8 @@ program initial_conditions
   sync all
 
 !!$  ! transferfnc --------------------------------------
-!!$  !open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
-!!$  open(11,file='../tf/mnu100_onu3/mnu100_onu3_transfer_out_z10.dat',form='formatted')
+!!$  !open(11,file='../tf/ith2_nu0p05_z5_tk.dat',form='formatted')
+!!$  open(11,file='../tf/nu100_onu3/nu100_onu3_transfer_out_z10.dat',form='formatted')
 !!$  !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
 !!$  read(11,*) tf
 !!$  close(11)
@@ -236,25 +226,23 @@ program initial_conditions
     ! execute the following line if you want to save seeds
     !call system('cp ../output/universe1/image*/seed* ../configs/')
 #endif
+
   call random_number(r3)
   deallocate(iseed)
   deallocate(rseed_all)
   sync all
-#ifdef READ_NOISE
-      !!!!! test only for serial job
-      open(11,file=output_dir()//'noise'//output_suffix(),access='stream')
-      read(11) r3
-      close(11)
-      print*, 'READ IN NOISE MAP:', r3(1,1,1), r3(ng,ng,ng)
-      !!!!! test only
-#endif
 
-#ifdef WRITE_NOISE
-  open(11,file=output_dir()//'noise'//output_suffix(),status='replace',access='stream')
-  write(11) r3
-  close(11)
-  print*, 'noise',int(image,1),r3(1:2,1,1)
-#endif
+# ifdef READ_NOISE
+    open(11,file=output_dir()//'noise'//output_suffix(),access='stream')
+    read(11) r3
+    close(11)
+    print*, 'READ IN NOISE MAP:', r3(1,1,1), r3(ng,ng,ng)
+# else
+    open(11,file=output_dir()//'noise'//output_suffix(),status='replace',access='stream')
+    write(11) r3
+    close(11)
+    print*, 'noise',int(image,1),r3(1:2,1,1)
+# endif
   sync all
 
   ! Box-Muller transform ----------------------------------------------
@@ -270,11 +258,6 @@ program initial_conditions
   enddo
   enddo
   sync all
-
-  !call cross_power(xi,r3,r3)
-  !open(11,file='initpower.dat',access='stream')
-  !write(11) xi
-  !close(11)
 
   ! delta_field ----------------------------------------------------
   if (head) print*, ''
@@ -300,12 +283,8 @@ program initial_conditions
   enddo
   enddo
   if (head) cxyz(1,1,1)=0 ! DC frequency
-
-  ! print*,icx,icy,icz,ig,jg,kg; stop ! check last frequency
   sync all
-  !print*,'cxyz',cxyz(ng*nn/2+1,ng,npen)
-
-  cx_temp=cxyz ! backup delta_L
+  delta_k=cxyz ! backup k-space delta_L
 
   if (head) print*,'Start btran'
   call pencil_fft_backward
@@ -317,10 +296,6 @@ program initial_conditions
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
-
-
-
-
 
   ! Potential field ----------------------------------------------------
   if (head) print*, ''
@@ -349,19 +324,14 @@ program initial_conditions
   if (correct_kernel) then
     if (head) print*, 'correct kernel'
     call pencil_fft_backward
-
     temp8=0
     if (image==1) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
-    !if (image==1) print*, r3(9,1,1),r3(1,9,1),r3(1,1,9)
     sync all
     if (icx==nn .and. icy==1 .and. icz==1) temp8=temp8+r3(nf-7,1,1)
-    !if (icx==nn .and. icy==1 .and. icz==1) print*, r3(nf-7,1,1)
     sync all
     if (icx==1 .and. icy==nn .and. icz==1) temp8=temp8+r3(1,nf-7,1)
-    !if (icx==1 .and. icy==nn .and. icz==1) print*, r3(1,nf-7,1)
     sync all
     if (icx==1 .and. icy==1 .and. icz==nn) temp8=temp8+r3(1,1,nf-7)
-    !if (icx==1 .and. icy==1 .and. icz==nn) print*, r3(1,1,nf-7)
     sync all
     phi8=0
     do i=1,nn**3
@@ -371,7 +341,6 @@ program initial_conditions
     phi8=phi8/6
     if (head) print*,'phi8 =',phi8
     sync all
-    ! Construct Ewald potential kernel in real space
     if (head) print*, 'Construct Ewald potential kernel in real space'
     do k=1,nf
     do j=1,nf
@@ -394,16 +363,12 @@ program initial_conditions
     enddo
     enddo
     sync all
-    !print*,'ewarld kernel',image,sum(r3*1d0)
-
     call pencil_fft_forward
-
   endif
-  ! Complex multiply delta_L with potential kernel
-  cxyz=real(cxyz)*cx_temp
-  cx_temp=cxyz  ! backup phi(k)
 
-  !!!!!! output phi in real space
+  ! Complex multiply delta_L with potential kernel
+  cxyz=real(cxyz)*delta_k
+  delta_k=cxyz  ! backup phi(k)
   call pencil_fft_backward
 
 
@@ -424,21 +389,6 @@ program initial_conditions
   write(11) r3
   close(11)
 
-  !print*, 'phi',image
-  !print*, r3(1:4,1,1)
-
-!!!! DEBUG ! read same phi
-!phi=0
-!open(11,file=ic_name('phi1'),access='stream')
-!read(11) phi(1:nf,1:nf,1:nf)
-!close(11)
-!!!! ENDDEBUG
-
-  !call pencil_fft_forward
-
-#ifdef DO_2LPT
-    call correct_2lpt
-#endif
   sync all
 
   ! buffer phi ---------------------------------------------------
@@ -489,7 +439,6 @@ program initial_conditions
   read(24) svr
   close(43)
 
-  !svz(:,2)=svz(:,2)/sim%vsim2phys/sqrt(3.)
   sigma_vf=interp_sigmav(a,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
   sigma_vc=interp_sigmav(a,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
   sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
@@ -512,14 +461,14 @@ program initial_conditions
   ! create particles (no communication) ----------------------------
   if (head) print*,''
   if (head) print*, 'Create particles'
-  open(10,file=ic_name('zip0'),status='replace',access='stream')
-  open(11,file=ic_name('zip1'),status='replace',access='stream')
-  open(12,file=ic_name('zip2'),status='replace',access='stream')
+  open(10,file=ic_name('xp'),status='replace',access='stream')
+  open(11,file=ic_name('vp'),status='replace',access='stream')
+  open(12,file=ic_name('np'),status='replace',access='stream')
 #ifdef PID
-  open(14,file=ic_name('zipid'),status='replace',access='stream')
+  open(14,file=ic_name('id'),status='replace',access='stream')
   if (head) print*, '  also create PID'
 #endif
-  open(15,file=ic_name('vfield'),status='replace',access='stream') !!!
+  open(15,file=ic_name('vc'),status='replace',access='stream') !!!
   write(12) sim ! occupying 128 bytes
 
   vfield=0
@@ -664,12 +613,7 @@ program initial_conditions
   sim%mass_p=real(nf_global**3,kind=8)/npglobal
   call print_header(sim)
   sync all
-
   if (head) print*, 'initial condition done'
-
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   contains
 
@@ -772,7 +716,7 @@ program initial_conditions
     implicit none
     real, parameter :: om=omega_m
     real, parameter :: ol=omega_l
-    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/25.) !~1-3f/5
+    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_nu/omega_m/25.) !~1-3f/5
     real z1,z2
     real Dgrow
     real hsq,oma,ola,a1,a2,ga1,ga2
@@ -790,12 +734,12 @@ program initial_conditions
     ga2=2.5*oma/(oma**(4./7)-ola+(1+oma/2)*(1+ola/70))
 
     Dgrow=(a1*ga1)/(a2*ga2)
-    Dgrow=Dgrow**np!(1.-3.*(omega_mnu/omega_m)/5.)
+    Dgrow=Dgrow**np!(1.-3.*(omega_nu/omega_m)/5.)
   end function DgrowRatio
 
   function vfactor(a)
     implicit none
-    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_mnu/omega_m/25.) !~1-3f/5
+    real, parameter :: np = -(1./4.)+(5./4.)*sqrt(1-24.*omega_nu/omega_m/25.) !~1-3f/5
     real :: a
     real :: H,km,lm
     real :: vfactor
@@ -803,7 +747,7 @@ program initial_conditions
     km=(1-omega_m-omega_l)/omega_m
     H=2/(3*sqrt(a**3))*sqrt(1+a*km+a**3*lm)
     vfactor=a**2*H
-    vfactor=vfactor*np!(1.-3.*(omega_mnu/omega_m)/5.)
+    vfactor=vfactor*np!(1.-3.*(omega_nu/omega_m)/5.)
   endfunction vfactor
 
   function lcg(s) !// Linear congruential generator
@@ -818,209 +762,4 @@ program initial_conditions
     s = mod(s * 279470273_int64, 4294967291_int64)
     lcg = int(mod(s, int(huge(0), int64)), kind(0))
   endfunction
-
-#ifdef DO_2LPT
-  subroutine correct_2lpt
-    ! phi_xx
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      cxyz((i+1)/2,j,k)=(-kx**2)/(4*pi)*cx_temp((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    call pencil_fft_backward
-    phixx=r3
-
-    ! phi_yy
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      cxyz((i+1)/2,j,k)=(-ky**2)/(4*pi)*cx_temp((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    call pencil_fft_backward
-    phiyy=r3
-
-    ! phi_zz
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      cxyz((i+1)/2,j,k)=(-kz**2)/(4*pi)*cx_temp((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    call pencil_fft_backward
-    phizz=r3
-
-    ! phi_xy
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      cxyz((i+1)/2,j,k)=(-kx*ky)/(4*pi)*cx_temp((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    call pencil_fft_backward
-    phixy=r3
-
-    ! phi_yz
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      cxyz((i+1)/2,j,k)=(-ky*kz)/(4*pi)*cx_temp((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    call pencil_fft_backward
-    phiyz=r3
-
-    ! phi_zx
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      cxyz((i+1)/2,j,k)=(-kz*kx)/(4*pi)*cx_temp((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    call pencil_fft_backward
-    phizx=r3
-
-    ! phi2_source in real space
-    r3=phixx*phiyy+phiyy*phizz+phizz*phixx-phixy**2-phiyz**2-phizx**2
-
-    !! diff in real space
-    !phixx=phi(0:nf-1,1:nf,1:nf)-2*phi(1:nf,1:nf,1:nf)+phi(2:nf+1,1:nf,1:nf)
-    !phiyy=phi(1:nf,0:nf-1,1:nf)-2*phi(1:nf,1:nf,1:nf)+phi(1:nf,2:nf+1,1:nf)
-    !phizz=phi(1:nf,1:nf,0:nf-1)-2*phi(1:nf,1:nf,1:nf)+phi(1:nf,1:nf,2:nf+1)
-
-    !r3=phixx*phiyy+phiyy*phizz+phizz*phixx
-
-    !phixy=(phi(2:nf+1,2:nf+1,1:nf)-phi(0:nf-1,2:nf+1,1:nf)+phi(0:nf-1,0:nf-1,1:nf)-phi(2:nf+1,0:nf-1,1:nf))/4
-    !phiyz=(phi(1:nf,2:nf+1,2:nf+1)-phi(1:nf,0:nf-1,2:nf+1)+phi(1:nf,0:nf-1,0:nf-1)-phi(1:nf,2:nf+1,0:nf-1))/4
-    !phizx=(phi(2:nf+1,1:nf,2:nf+1)-phi(0:nf-1,1:nf,2:nf+1)+phi(0:nf-1,1:nf,0:nf-1)-phi(2:nf+1,1:nf,0:nf-1))/4
-
-    !r3=r3-phixy**2-phiyz**2-phizx**2 ! source term of phi2
-
-    open(11,file='phi2_source.dat',status='replace',access='stream')
-    write(11) r3
-    close(11)
-
-    sync all
-
-    call pencil_fft_forward
-
-    ! solve phi2
-    do k=1,npen
-    do j=1,nf
-    do i=1,nf*nn+1,2
-      ! global grid in Fourier space for i,j,k
-      kg=(nn*(icz-1)+icy-1)*npen+k
-      jg=(icx-1)*nf+j
-      ig=i
-      kz=mod(kg+nf/2-1,nf)-nf/2
-      ky=mod(jg+nf/2-1,nf)-nf/2
-      kx=(ig-1)/2
-      kz=2*sin(pi*kz/nf) ! ?
-      ky=2*sin(pi*ky/nf) ! ?
-      kx=2*sin(pi*kx/nf) ! ?
-      kr=kx**2+ky**2+kz**2
-      kr=max(kr,1.0/nf**2)
-      cxyz((i+1)/2,j,k)=(-4*pi/kr)*cxyz((i+1)/2,j,k)
-    enddo
-    enddo
-    enddo
-    if (head) cxyz(1,1,1)=0 ! DC frequency
-
-    call pencil_fft_backward
-
-    open(11,file='phi2.dat',status='replace',access='stream')
-    write(11) r3
-    close(11)
-
-    phixx=phi(1:nf,1:nf,1:nf) ! backup phi1
-    phiyy=r3 ! backup phi2
-
-    ! phi for delta_x
-    print*,'Dgrow(a)', Dgrow(a)
-    print*, a, Dgrow(a)
-    print*, 'a=1',Dgrow(1.)
-
-    phi(1:nf,1:nf,1:nf)=phixx-Dgrow(a)*phiyy ! corrected phi for positions
-
-    open(11,file='phi12.dat',status='replace',access='stream')
-    write(11) phi(1:nf,1:nf,1:nf)
-    close(11)
-
-    phi1(1:nf,1:nf,1:nf)=phixx
-    phi1(:0,:,:)=phi1(nf-nfb:nf,:,:)[image1d(inx,icy,icz)]
-    phi1(nf+1:,:,:)=phi1(1:nfb+1,:,:)[image1d(ipx,icy,icz)]
-    phi1(:,:0,:)=phi1(:,nf-nfb:nf,:)[image1d(icx,iny,icz)]
-    phi1(:,nf+1:,:)=phi1(:,1:nfb+1,:)[image1d(icx,ipy,icz)]
-    phi1(:,:,:0)=phi1(:,:,nf-nfb:nf)[image1d(icx,icy,inz)]
-    phi1(:,:,nf+1:)=phi1(:,:,1:nfb+1)[image1d(icx,icy,ipz)]
-  endsubroutine
-#endif
-
 end
