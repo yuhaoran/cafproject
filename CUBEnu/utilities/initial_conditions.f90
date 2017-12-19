@@ -4,8 +4,6 @@
 !#define READ_NOISE
 !#define DO_2LPT
 
-#define READ_DELTA_L
-
 program initial_conditions
   use pencil_fft
   !use powerspectrum
@@ -151,7 +149,7 @@ program initial_conditions
   ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
   open(11,file='../tf/caf_z10_tk.dat',form='formatted')
   read(11,*) !header
-  !read(11,*) tf  !! this is currently not used.
+  read(11,*) tf
   close(11)
 
   ! replace T_g with T_cb = f_c T_c + f_b T_b
@@ -314,22 +312,12 @@ program initial_conditions
   !print*,'r3',r3(1,1,1)
   !print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
-#ifdef READ_DELTA_L
-  print*, 'Read delta_L from file'
-  print*, output_dir()//'delta_L'//output_suffix()
-  open(11,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
-  read(11) r3
-  close(11)
-  r3=r3*Dgrow(a) ! multiply growth factor
-  call pencil_fft_forward
-  cx_temp=cxyz ! backup delta_L(k)
-#else
   if (head) print*,'Write delta_L into file'
+  if (head) print*,'Growth factor Dgrow(',a,') =',Dgrow(a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(a)
   close(11)
-#endif
-  if (head) print*,'Growth factor Dgrow(',a,') =',Dgrow(a)
+
 
 
 
@@ -438,6 +426,13 @@ program initial_conditions
 
   !print*, 'phi',image
   !print*, r3(1:4,1,1)
+
+!!!! DEBUG ! read same phi
+!phi=0
+!open(11,file=ic_name('phi1'),access='stream')
+!read(11) phi(1:nf,1:nf,1:nf)
+!close(11)
+!!!! ENDDEBUG
 
   !call pencil_fft_forward
 
