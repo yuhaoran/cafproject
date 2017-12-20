@@ -125,12 +125,12 @@ module parameters
   logical checkpoint_step[*], final_step[*]
 
   type sim_header
-    integer(8) nplocal
+    integer(8) nplocal,nplocal_nu
     integer(8) izipx,izipv
     integer(8) image
     integer(8) nn,nnt,nt,ncell,ncb
     integer(8) istep
-    integer(8) cur_checkpoint,cur_proj,cur_halo !26*4
+    integer(8) cur_checkpoint,cur_proj,cur_halo
 
     real a, t, tau
     real dt_f_acc, dt_pp_acc, dt_c_acc
@@ -144,7 +144,8 @@ module parameters
     real vsim2phys
     real sigma_vres
     real sigma_vi
-    real z_i ! 42*4 bytes
+    real sigma_vi_nu
+    real z_i,z_i_nu
   endtype
 
   type(sim_header) sim
@@ -155,6 +156,7 @@ module parameters
       if (this_image()==1) then
       print*,'-------------------------------- CUBE info --------------------------------'
       print*,'| nplocal      =',s%nplocal
+      print*,'| nplocal_nu   =',s%nplocal_nu
       print*,'| a,t,tau      =',s%a,s%t,s%tau
       print*,'| istep        =',s%istep
       print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
@@ -177,7 +179,9 @@ module parameters
       print*,'| vsim2phys    =',s%vsim2phys, '(km/s)/(1.0)'
       print*,'| sigma_vres   =',s%sigma_vres,'(km/s)'
       print*,'| sigma_vi     =',s%sigma_vi,'(simulation unit)'
+      print*,'| sigma_vi_nu  =',s%sigma_vi_nu,'(simulation unit)'
       print*,'| z_i          =',s%z_i
+      print*,'| z_i_nu       =',s%z_i_nu
       print*,'------------------------------------------------------------------------------'
       endif
       sync all

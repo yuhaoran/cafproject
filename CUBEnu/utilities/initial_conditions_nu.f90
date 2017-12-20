@@ -10,7 +10,7 @@ program initial_conditions_nu
   real, parameter :: vp2s = 1.0/(300.*sqrt(omega_m)*box/a_i_nu/2./nc)
   real, parameter :: fdf = 25.8341 !kT/m for T=1K, m=1eV
   real, parameter :: fd = vp2s*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
-  real, parameter :: sigma_v = 3.59714*fd !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5
+  real, parameter :: sigma_vi_nu = 3.59714*fd !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5
 
   !Seed
   integer(4) seedsize
@@ -18,13 +18,13 @@ program initial_conditions_nu
   real, allocatable :: rseed_all(:,:)
 
   !Useful variables and small arrays
-  integer :: i,j,k,p,n,pii,pjj,pkk,b,b1,b2
+  integer :: i,j,k,ip,n,pii,pjj,pkk,b,b1,b2
 
   !Particle information
   integer, parameter :: npt = np_nc_nu*nc
   integer(izipx), dimension(3,npt**3) ::  xp
   integer(izipv), dimension(3,npt**3) :: vp
-  integer(izipi), dimension(npt**3) :: ip
+  integer(izipi), dimension(npt**3) :: pid
   real, dimension(3) :: xq,vq,rng
 
   integer(4), dimension(nt,nt,nt) :: rhoc
@@ -35,15 +35,22 @@ program initial_conditions_nu
   if (head) then
      write(*,*) ''
      write(*,*) 'Homogeneous Initial Conditions for Massive Neutrinos'
+     print*, 'on',nn**3,' images'
+     print*, 'Resolution', ng*nn
+     print*, 'Number of particles per side', np_nc_nu*nc*nn
+     print*, 'Box size', box
+     print*, 'output: ', opath
      write(*,*) ''
      write(*,*) 'vp2s/(km/s)=',vp2s
      write(*,*) 'fd/(km/s)=',fd/vp2s
   end if
+  sync all
+  call system('mkdir -p '//opath//'image'//image2str(image))
 
   !Read seed
   if (head) write(*,*) 'Reading seeds'
   call random_seed(size=seedsize)
-  seedsize=max(seedsize,12)
+  seedsize=max(seedsize,36)
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
   open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
@@ -63,7 +70,7 @@ program initial_conditions_nu
   if (head) then
      write(*,*) 'Writing CDF to file'
      write(*,*) 'FD factor used: ',fd
-     open(11,file='./cdf.txt')
+     open(11,file=opath//'cdf.txt')
      do i=1,ncdf
         write(11,*) cdf(1,i)/fd,cdf(2,i)
      end do
@@ -72,82 +79,83 @@ program initial_conditions_nu
 
   !Create particles
   if (head) write(*,*) 'Computing particle positions and velocities'
-  open(unit=10,file=ic_name('xp_nu'),status='replace',access='stream')
-  open(unit=11,file=ic_name('vp_nu'),status='replace',access='stream')
-  open(unit=12,file=ic_name('np_nu'),status='replace',access='stream')
-  open(unit=13,file=ic_name('vc_nu'),status='replace',access='stream')
-  open(unit=14,file=ic_name('id_nu'),status='replace',access='stream')
+  open(unit=11,file=ic_name('xp_nu'),status='replace',access='stream')
+  open(unit=12,file=ic_name('vp_nu'),status='replace',access='stream')
+  open(unit=13,file=ic_name('np_nu'),status='replace',access='stream')
+  open(unit=14,file=ic_name('vc_nu'),status='replace',access='stream')
+  open(unit=15,file=ic_name('id_nu'),status='replace',access='stream')
   vfield=0
   rhoc=np_nc_nu**3
   do k=1,nnt
-     do j=1,nnt
-        do i=1,nnt
+  do j=1,nnt
+  do i=1,nnt
+    !Compute Lagrangian positions and Thermal velocities
+    do pkk=1,npt
+    do pjj=1,npt
+    do pii=1,npt
+      ip=pii+npt*(pjj-1)+npt**2*(pkk-1)
+      !Positions stored in xq
+      xq=(/pii,pjj,pkk/)-0.5
+      xp(:,ip)=floor( xq/x_resolution,kind=izipx )
+      !Random velocities
+      call random_number(rng)
+      !Bisection interpolate CDF
+      !Type out fns here to save time in case compiler does not inline
+      b1=1
+      b2=ncdf
+      do while(b2-b1>1)
+        b=(b1+b2)/2
+        if ( rng(1)>cdf(2,b) ) then
+          b1=b
+        else
+          b2=b
+        endif
+      enddo
+      n=merge(b1,b2,b1<b2)
+      rng(1)=(cdf(1,n)*(cdf(2,n+1)-rng(1))+cdf(1,n+1)*(rng(1)-cdf(2,n)))/(cdf(2,n+1)-cdf(2,n))
 
-           !Compute Lagrangian positions and Thermal velocities
-           do pkk=1,npt
-              do pjj=1,npt
-                 do pii=1,npt
+      !!Store fraction of max velocity
+      !!Fermi-Dirac CDF Approximated by Gaussian
+      pid(ip)=nint(approxCDF(rng(1))*int(2,8)**(8*izipi)-int(2,8)**(8*izipi-1),kind=izipi)
 
-                    p=pii+npt*(pjj-1)+npt**2*(pkk-1)
+      !!Amplitude and Angle
+      rng(1)=rng(1)!*fd !!Holds velocity amplitude
+      rng(2)=2.*rng(2)-1. !cosTheta in (-1,1)
+      rng(3)=rng(3)*2.*pi !Phi in 0 to 2*pi
+      !!Direction
+      vq(1)=rng(1)*sqrt(1.-rng(2)**2.)*cos(rng(3))
+      vq(2)=rng(1)*sqrt(1.-rng(2)**2.)*sin(rng(3))
+      vq(3)=rng(1)*rng(2)
 
-                    !Positions stored in xq
-                    xq=(/pii,pjj,pkk/)-0.5
-                    xp(:,p)=floor( xq/x_resolution,kind=izipx )
-
-                    !Random velocities
-                    call random_number(rng)
-
-                    !Bisection interpolate CDF
-                    !Type out fns here to save time in case compiler does not inline
-                    b1=1
-                    b2=ncdf
-                    do while(b2-b1>1)
-                      b=(b1+b2)/2
-                      if ( rng(1).gt.cdf(2,b) ) then
-                         b1=b
-                      else
-                         b2=b
-                      end if
-                    end do
-                    n=merge(b1,b2,b1<b2)
-                    rng(1)=(cdf(1,n)*(cdf(2,n+1)-rng(1))+cdf(1,n+1)*(rng(1)-cdf(2,n)))/(cdf(2,n+1)-cdf(2,n))
-
-                    !!Store fraction of max velocity
-                    !!Fermi-Dirac CDF Approximated by Gaussian
-                    ip(p)=nint(approxCDF(rng(1))*int(2,8)**(8*izipi)-int(2,8)**(8*izipi-1),kind=izipi)
-
-                    !!Amplitude and Angle
-                    rng(1)=rng(1)!*fd !!Holds velocity amplitude
-                    rng(2)=2.*rng(2)-1. !cosTheta in (-1,1)
-                    rng(3)=rng(3)*2.*pi !Phi in 0 to 2*pi
-                    !!Direction
-                    vq(1)=rng(1)*sqrt(1.-rng(2)**2.)*cos(rng(3))
-                    vq(2)=rng(1)*sqrt(1.-rng(2)**2.)*sin(rng(3))
-                    vq(3)=rng(1)*rng(2)
-
-                    vp(:,p)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_v*vrel_boost)*vq)/pi,kind=izipv)
-
-                 end do
-              end do
-           end do
-
-           write(10) xp
-           write(11) vp
-           write(12) rhoc
-           write(13) ip
-           write(14) vfield
-
-        end do
-     end do
-  end do
-
+      vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv)
+    enddo
+    enddo
+    enddo
+    write(11) xp
+    write(12) vp
+    write(13) rhoc
+    write(14) vfield
+    write(15) pid
+  enddo
+  enddo
+  enddo
   close(10)
   close(11)
   close(12)
-  close(13)
   close(14)
+  close(15)
 
+  open(unit=10,file=ic_name('info'),access='stream')
+  read(10) sim
+  sim%nplocal_nu=(np_nc_nu*nc)**3
+  sim%sigma_vi_nu=sigma_vi_nu
+  rewind(10)
+  write(10) sim
+  close(10)
+
+  call print_header(sim)
   if (head) write(*,*) 'Finished neutrino ic'
+
 
 contains
 
@@ -157,7 +165,7 @@ contains
     real :: c
     real, parameter :: s=3.5
     c=1.-exp(-(v/s)**2.)
-  end function approxCDF
+  end
 
   function invertCDF(c) result(v)
     implicit none
@@ -165,7 +173,7 @@ contains
     real :: v
     real, parameter :: s=3.5
     v=s*sqrt(log(1./(1.-c)))
-  end function invertCDF
+  end
 
   subroutine compute_cdf
     implicit none
@@ -180,20 +188,18 @@ contains
 
     cdf0 = 0.
     do i=2,ncdf
-
        !Limits of integration
        l=maxu*(1.0*i-1.)/ncdf
        u=maxu*(1.0*i)/ncdf
        cdf0(1,i)=u
-
        !Integral
        do j=1,ni
           x(j)=l+(j-1)*(u-l)/(ni-1)
           y(j)=f0(x(j))
-       end do
+       enddo
        cdf0(2,i)=cdf0(2,i-1)+integrate(x,y)
 
-    end do
+    enddo
 
     write(*,*) 'cdf: u->inf = ',cdf0(2,ncdf),cdfinf
     cdf0(2,:) = cdf0(2,:)/cdf0(2,ncdf)
@@ -209,19 +215,16 @@ contains
        do i=1,ncdf
           j=nearest_loc(cdf(1,i),cdfn(1,:))
           cdf(2,i) = cdf(2,i)+fnu*interp(cdf(1,i),cdfn(1,j),cdfn(1,j+1),cdfn(2,j),cdfn(2,j+1))
-       end do
-    end do
-
-    return
-
-  end subroutine compute_cdf
+       enddo
+    enddo
+  endsubroutine compute_cdf
 
   function f0(u) result(f)
     implicit none
     real, intent(in) :: u
     real :: f
     f= u**2./(exp(u)+1.)
-  end function f0
+  end
 
   function integrate(x,y) result(s)
     implicit none
@@ -231,8 +234,8 @@ contains
     s=0
     do i=2,size(x)
        s=s+0.5*(x(i)-x(i-1))*(y(i)+y(i-1))
-    end do
-  end function integrate
+    enddo
+  end
 
   function nearest_loc(u,c) result(nl)
     implicit none
@@ -247,16 +250,16 @@ contains
           b1=b
        else
           b2=b
-       end if
-    end do
+       endif
+    enddo
     nl=merge(b1,b2,b1<b2)
-  end function nearest_loc
+  end
 
   function interp(x,x1,x2,y1,y2) result(y)
     implicit none
     real, intent(in) :: x,x1,x2,y1,y2
     real :: y
     y = (y1*(x2-x)+y2*(x-x1))/(x2-x1)
-  end function interp
+  end
 
-end program initial_conditions_nu
+end

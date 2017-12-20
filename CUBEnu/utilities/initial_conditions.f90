@@ -83,7 +83,8 @@ program initial_conditions
 
   call system('mkdir -p '//opath//'image'//image2str(image))
 
-  sim%nplocal=1 ! will be overwritten
+  sim%nplocal=0
+  sim%nplocal_nu=0
   sim%a=1./(1+z_i)
   sim%t=0
   sim%tau=0
@@ -116,6 +117,7 @@ program initial_conditions
   sim%s8=s8
   sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
   sim%z_i=z_i
+  sim%z_i_nu=z_i_nu
   sync all
 
   ! initialize variables ------------------------------
@@ -461,15 +463,15 @@ program initial_conditions
   ! create particles (no communication) ----------------------------
   if (head) print*,''
   if (head) print*, 'Create particles'
-  open(10,file=ic_name('xp'),status='replace',access='stream')
-  open(11,file=ic_name('vp'),status='replace',access='stream')
-  open(12,file=ic_name('np'),status='replace',access='stream')
+  open(11,file=ic_name('xp'),status='replace',access='stream')
+  open(12,file=ic_name('vp'),status='replace',access='stream')
+  open(13,file=ic_name('np'),status='replace',access='stream')
+  open(14,file=ic_name('vc'),status='replace',access='stream')
 #ifdef PID
-  open(14,file=ic_name('id'),status='replace',access='stream')
   if (head) print*, '  also create PID'
+  open(15,file=ic_name('id'),status='replace',access='stream')
 #endif
-  open(15,file=ic_name('vc'),status='replace',access='stream') !!!
-  write(12) sim ! occupying 128 bytes
+
 
   vfield=0
   nplocal=0
@@ -563,31 +565,28 @@ program initial_conditions
     enddo
     enddo
 
-    write(10) xp(:,1:iright)
-    write(11) vp(:,1:iright)
+    write(11) xp(:,1:iright)
+    write(12) vp(:,1:iright)
+    write(13) rhoce(1:nt,1:nt,1:nt)
+    write(14) vfield(:,1:nt,1:nt,1:nt)
 #   ifdef PID
-      write(14) pid(1:iright)
+      write(15) pid(1:iright)
 #   endif
-    write(12) rhoce(1:nt,1:nt,1:nt)
-    write(15) vfield(:,1:nt,1:nt,1:nt)
-
     nplocal=nplocal+iright
 
   enddo
   enddo
   enddo ! end of tile loop
 
-  close(10)
   close(11)
+  close(12)
+  close(13)
+  close(14)
 # ifdef PID
-    close(14)
+    close(15)
 # endif
-  close(15)
 
   sim%nplocal=nplocal
-  rewind(12)
-  write(12) sim
-  close(12)
 
   if (head) then
     print*,''
@@ -612,6 +611,11 @@ program initial_conditions
   if (head) print*, 'npglobal =',npglobal
   sim%mass_p=real(nf_global**3,kind=8)/npglobal
   call print_header(sim)
+
+  sync all
+  open(10,file=ic_name('info'),status='replace',access='stream')
+  write(10) sim
+  close(10)
   sync all
   if (head) print*, 'initial condition done'
 
