@@ -18,7 +18,7 @@ program cafcube
   call buffer_density
   call buffer_x
   call buffer_v
-
+stop
   if (head) open(77,file=output_dir()//'vinfo'//output_suffix(),access='stream',status='replace')
 
   if (head) print*, '---------- starting main loop ----------'

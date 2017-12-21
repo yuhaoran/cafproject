@@ -51,6 +51,7 @@ module parameters
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
   integer(8),parameter :: np_nc=ncell ! number of particles / coarse cell / dim
+  integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
   real,parameter :: rsoft=0.1 ! PP softening length
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles, body-centered cubic
@@ -81,8 +82,6 @@ module parameters
   integer, parameter :: Nur = 0 ! number of massless neutrinos
   real, parameter :: Tur = Tcnb ! temperature of massless neutrinos
   real, parameter :: Neff = Nur*(Tur/Tcnb)**4.
-
-  integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
   ! background parameters
   real, parameter :: h0 = 0.67

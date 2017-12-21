@@ -92,7 +92,7 @@ subroutine buffer_density
     stop
   endif
 
-  
+
 
   nshift=np_image_max-nplocal
 

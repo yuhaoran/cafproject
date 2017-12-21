@@ -23,7 +23,7 @@ checkpoint.o: variables.o
 cubefft.o: variables.o
 kernel_f.o: variables.o
 kernel_c.o: variables.o
-particle_initialization.o: variables.o
+particle_initialization.o: variables.o neutrinos.o
 timestep.o: variables.o
 update_particle.o: variables.o
 projection.o: variables.o
