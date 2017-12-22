@@ -57,6 +57,7 @@ module parameters
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles, body-centered cubic
   real,parameter :: image_buffer=2.0
   real,parameter :: tile_buffer=3.0
+  real,parameter :: vbuf=0.9
 
   real,parameter :: pi=4*atan(1.)
 
@@ -132,7 +133,7 @@ module parameters
     integer(8) cur_checkpoint,cur_proj,cur_halo
 
     real a, t, tau
-    real dt_f_acc, dt_pp_acc, dt_c_acc
+    real dt_f_acc, dt_pp_acc, dt_c_acc, dt_vmax, dt_vmax_nu
     real mass_p
     real box
 
@@ -159,6 +160,7 @@ module parameters
       print*,'| a,t,tau      =',s%a,s%t,s%tau
       print*,'| istep        =',s%istep
       print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
+      print*,'| dt v,v_nu    =',s%dt_vmax,s%dt_vmax_nu
       print*,'| cur_steps    =',int(s%cur_checkpoint,2),int(s%cur_proj,2),int(s%cur_halo,2)
       print*,'| mass_p       =',s%mass_p
       print*,'| '

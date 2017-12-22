@@ -14,6 +14,8 @@ subroutine particle_initialization
   nplocal_nu=sim%nplocal_nu
   sigma_vi=sim%sigma_vi
   sigma_vi_nu=sim%sigma_vi_nu
+  dt_vmax=sim%dt_vmax
+  dt_vmax_nu=sim%dt_vmax_nu
 
   if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
     print*, '  zip format incompatable'
@@ -59,7 +61,7 @@ subroutine particle_initialization
   read(11) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:)
   close(11)
 
-#ifdef PID
+#ifdef EID
       open(11,file=ic_name('id_nu'),status='old',access='stream')
       read(11) pid_nu(:nplocal_nu)
       close(11)

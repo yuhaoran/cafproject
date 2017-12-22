@@ -94,6 +94,8 @@ program initial_conditions
   sim%dt_f_acc=1000
   sim%dt_pp_acc=1000
   sim%dt_c_acc=1000
+  sim%dt_vmax=1000
+  sim%dt_vmax_nu=1000
 
   sim%cur_checkpoint=0
   sim%cur_proj=0
@@ -422,6 +424,7 @@ program initial_conditions
   enddo
   !print*, grad_max
   vmax=grad_max/2/(4*pi)*vf
+  sim%dt_vmax=vbuf*20./maxval(abs(vmax))
   if (head) then
     print*, 'grad_max',grad_max
     print*, 'max dsp',grad_max/2/(4*pi)

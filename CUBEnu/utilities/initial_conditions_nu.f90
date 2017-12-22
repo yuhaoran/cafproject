@@ -25,7 +25,7 @@ program initial_conditions_nu
   integer(izipx), dimension(3,npt**3) ::  xp
   integer(izipv), dimension(3,npt**3) :: vp
   integer(izipi), dimension(npt**3) :: pid
-  real, dimension(3) :: xq,vq,rng
+  real, dimension(3) :: xq,vq,rng,vmax
 
   integer(4), dimension(nt,nt,nt) :: rhoc
   real(4), dimension(3,nt,nt,nt) :: vfield
@@ -86,6 +86,7 @@ program initial_conditions_nu
   open(unit=15,file=ic_name('id_nu'),status='replace',access='stream')
   vfield=0
   rhoc=np_nc_nu**3
+  vmax=0
   do k=1,nnt
   do j=1,nnt
   do i=1,nnt
@@ -126,6 +127,8 @@ program initial_conditions_nu
       vq(1)=rng(1)*sqrt(1.-rng(2)**2.)*cos(rng(3))
       vq(2)=rng(1)*sqrt(1.-rng(2)**2.)*sin(rng(3))
       vq(3)=rng(1)*rng(2)
+      
+      vmax=max(vmax,abs(vq))
 
       vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv)
     enddo
@@ -149,6 +152,7 @@ program initial_conditions_nu
   read(10) sim
   sim%nplocal_nu=(np_nc_nu*nc)**3
   sim%sigma_vi_nu=sigma_vi_nu
+  sim%dt_vmax_nu=vbuf*20./maxval(abs(vmax))
   rewind(10)
   write(10) sim
   close(10)

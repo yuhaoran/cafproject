@@ -28,7 +28,7 @@ subroutine timestep
       if (ntemp>10) exit
     enddo
 
-    dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax)
+    dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax,dt_vmax_nu)
 
     call expansion(a,dt,da_1,da_2)
 
@@ -69,6 +69,7 @@ subroutine timestep
     print*, 'dt_pp       :',dt_pp
     print*, 'dt_coarse   :',dt_coarse
     print*, 'dt_vmax     :',dt_vmax
+    print*, 'dt_vmax_nu  :',dt_vmax_nu
     print*, ''
     tau=tau+dt
     t=t+dt

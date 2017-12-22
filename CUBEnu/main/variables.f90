@@ -9,7 +9,6 @@ module variables
   integer(8),parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
   integer(8),parameter ::  nseedmax=200
   integer(8),parameter :: unit8=1
-  real,parameter :: vbuf=0.9
   real,parameter :: dt_max=1
   real,parameter :: dt_scale=1
   real,parameter :: GG=1.0/6.0/pi
@@ -20,7 +19,7 @@ module variables
   ! variables
   integer(8) istep
   real dt[*],dt_old[*],dt_mid[*]
-  real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*]
+  real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*],dt_vmax_nu[*]
   real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
   real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
 
