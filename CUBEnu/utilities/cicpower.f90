@@ -146,18 +146,16 @@ program cicpower
     if (head) print*,'Write rho_grid into file'
     open(15,file=output_name('delta_N'),status='replace',access='stream')
     write(15) rho1
-!print*, rho1(1,1,1)
+    print*, rho1(1,1,1)
     close(15)
     sync all
-
-
 
     ! cross correlate correct density field
     write(str_i,'(i6)') image
     write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
     !open(15,file=output_name('delta_N'),access='stream')
     open(15,file='../output/universe1/image'//&
-                  trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'delta_N'//&
+                  trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_delta_N'//&
                   output_suffix(),access='stream')
     read(15) rho0
     close(15)
