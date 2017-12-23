@@ -30,8 +30,10 @@ program cafcube
 
   if (head) print*, '---------- starting main loop ----------'
   DO istep=1,istep_max
-    call timestep ! to include nu
-    call update_particle ! to include nu
+    call timestep
+    call update_vp()
+    call update_vp_nu()
+    !stop
     !call buffer_density
     ! the following to be collected
     call buffer_np(rhoc)
@@ -50,7 +52,8 @@ program cafcube
     call buffer_vp_nu
     if (checkpoint_step) then
       dt_old=0
-      call update_particle
+      call update_vp()
+      call update_vp_nu()
       call checkpoint ! to include nu
       call projection
       call print_header(sim)
@@ -68,7 +71,7 @@ program cafcube
       call buffer_xp_nu
       call buffer_vp
       call buffer_vp_nu
-      
+
       cur_checkpoint=cur_checkpoint+1
       checkpoint_step=.false.
       dt=0
