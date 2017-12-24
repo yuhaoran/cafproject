@@ -13,7 +13,7 @@ subroutine particle_mesh
   !logical,parameter :: pp_force=.false.
   !logical,parameter :: ext_pp_force=.false.
 
-  integer(8) nlast,nlen, nlast_nu,nlen_nu
+  integer(8) nlast
   integer(4) ithread, nthread
   integer(8) idxf(3),np
   integer(8) idx1(3), idx2(3)
@@ -68,10 +68,10 @@ subroutine particle_mesh
         rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*mass_p_cdm
         rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*mass_p_cdm
       enddo
-      nlast_nu=cum_nu(i-1,j,k,itx,ity,itz)
+      nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np ! loop over neutrino particles
-        ip=nlast_nu+l
+        ip=nlast+l
         tempx=4.*((/i,j,k/)-1)+4*(int(xp_nu(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
         idx2 = idx1 + 1
@@ -111,7 +111,7 @@ subroutine particle_mesh
     do i=1,nt ! loop over coarse cell
       nlast=cum(i-1,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
-      do l=1,np ! loop over particle
+      do l=1,np ! loop over cdm particles
         ip=nlast+l
         tempx=4.*((/i,j,k/)-1)+4*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
@@ -134,6 +134,30 @@ subroutine particle_mesh
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 
+      nlast=cum_nu(i-1,j,k,itx,ity,itz)
+      np=rhoc_nu(i,j,k,itx,ity,itz)
+      do l=1,np ! loop over neutrino particles
+        ip=nlast+l
+        tempx=4.*((/i,j,k/)-1)+4*(int(xp_nu(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
+        idx1 = floor(tempx) + 1
+        idx2 = idx1 + 1
+        dx1 = idx1 - tempx
+        dx2 = 1 - dx1
+        idx1=idx1+nfb
+        idx2=idx2+nfb
+        vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+
+        vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_f(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_f(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
+        vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+
+        vp_nu(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new_nu*vrel_boost)*vreal)/pi,kind=izipv)
+      enddo
     enddo
     enddo
     enddo
@@ -141,6 +165,7 @@ subroutine particle_mesh
   enddo
   enddo
   sigma_vi=sigma_vi_new
+  sigma_vi_nu=sigma_vi_new_nu
   sync all
   !-----------------------------------------------------------------------------
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -174,10 +199,10 @@ subroutine particle_mesh
         r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*mass_p_cdm
         r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*mass_p_cdm
       enddo
-      nlast_nu=cum_nu(i-1,j,k,itx,ity,itz)
+      nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
-        ip=nlast_nu+l
+        ip=nlast+l
         tempx=((/i,j,k/)-1)+(int(xp_nu(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1
@@ -240,7 +265,7 @@ subroutine particle_mesh
     do i=1,nt
       nlast=cum(i-1,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
-      do l=1,np ! loop over particle
+      do l=1,np ! loop over cdm particles
         ip=nlast+l
         tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
@@ -259,6 +284,28 @@ subroutine particle_mesh
         vmax=max(vmax,maxval(vreal+vfield(:,i,j,k,itx,ity,itz)))
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
+
+      nlast=cum_nu(i-1,j,k,itx,ity,itz)
+      np=rhoc_nu(i,j,k,itx,ity,itz)
+      do l=1,np ! loop over neutrino particles
+        ip=nlast+l
+        tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp_nu(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
+        idx1(:)=floor(tempx(:))+1
+        idx2(:)=idx1(:)+1
+        dx1(:)=idx1(:)-tempx(:)
+        dx2(:)=1-dx1(:)
+        vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+        vreal=vreal+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
+        vreal=vreal+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_c(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_c(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
+        vreal=vreal+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
+        vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
+        vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+        vmax_nu=max(vmax_nu,maxval(vreal+vfield(:,i,j,k,itx,ity,itz)))
+        vp_nu(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv)
+      enddo
     enddo
     enddo
     enddo
@@ -273,6 +320,7 @@ subroutine particle_mesh
   dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   dt_pp=1000
   dt_vmax=vbuf*20/vmax
+  dt_vmax_nu=vbuf*20/vmax_nu
   sync all
 
   do i=1,nn**3
@@ -280,6 +328,7 @@ subroutine particle_mesh
     dt_coarse=min(dt_coarse,dt_coarse[i])
     dt_pp=min(dt_pp,dt_pp[i])
     dt_vmax=min(dt_vmax,dt_vmax[i])
+    dt_vmax_nu=min(dt_vmax_nu,dt_vmax_nu[i])
   enddo
   sync all
 

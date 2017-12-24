@@ -18,5 +18,6 @@ module neutrinos
   integer(8) pid_nu(np_image_max_nu)[*], pid_new_nu(np_tile_max_nu)
 
   integer(8) npglobal_nu, npcheck_nu
+  real vmax_nu
 
 endmodule
