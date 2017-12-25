@@ -31,6 +31,7 @@ subroutine particle_mesh
   !print*,'ithread'
 
   vmax=0
+  vmax_nu=0
   f2_max_fine(1:nnt,1:nnt,1:nnt)=0
   f2_max_pp=0
   f2_max_coarse=0
@@ -281,7 +282,7 @@ subroutine particle_mesh
         vreal=vreal+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        vmax=max(vmax,maxval(vreal+vfield(:,i,j,k,itx,ity,itz)))
+        vmax=max(vmax,maxval(abs(vreal+vfield(:,i,j,k,itx,ity,itz))))
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 
@@ -303,7 +304,7 @@ subroutine particle_mesh
         vreal=vreal+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        vmax_nu=max(vmax_nu,maxval(vreal+vfield(:,i,j,k,itx,ity,itz)))
+        vmax_nu=max(vmax_nu,maxval(abs(vreal+vfield_nu(:,i,j,k,itx,ity,itz))))
         vp_nu(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
     enddo

@@ -87,11 +87,11 @@ program initial_conditions_nu
 
   !Create particles
   if (head) write(*,*) 'Computing particle positions and velocities'
-  open(unit=11,file=ic_name('xp_nu'),status='replace',access='stream')
-  open(unit=12,file=ic_name('vp_nu'),status='replace',access='stream')
-  open(unit=13,file=ic_name('np_nu'),status='replace',access='stream')
-  open(unit=14,file=ic_name('vc_nu'),status='replace',access='stream')
-  open(unit=15,file=ic_name('id_nu'),status='replace',access='stream')
+  open(unit=11,file=ic_name_nu('xp_nu'),status='replace',access='stream')
+  open(unit=12,file=ic_name_nu('vp_nu'),status='replace',access='stream')
+  open(unit=13,file=ic_name_nu('np_nu'),status='replace',access='stream')
+  open(unit=14,file=ic_name_nu('vc_nu'),status='replace',access='stream')
+  open(unit=15,file=ic_name_nu('id_nu'),status='replace',access='stream')
   vfield=0
   rhoc=np_nc_nu**3
   vmax=0

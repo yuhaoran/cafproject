@@ -65,7 +65,7 @@ module parameters
   real,parameter :: box=100.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
-  real,parameter :: z_i=49.0   ! initial redshift
+  real,parameter :: z_i=10.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
   real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
@@ -260,12 +260,20 @@ module parameters
       output_name=output_prefix()//zipname//output_suffix()
     endfunction
 
-    function ic_name(zipname)
+    function ic_name(zipname)  result(filename)
       character(*) ::  zipname
-      character(:),allocatable :: ic_name
+      character(:),allocatable :: filename
       character(20) :: str_z,str_i
       write(str_i,'(i6)') image
       write(str_z,'(f7.3)') z_i
-      ic_name=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
+      filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
+    endfunction
+    function ic_name_nu(zipname) result(filename)
+      character(*) ::  zipname
+      character(:),allocatable :: filename
+      character(20) :: str_z,str_i
+      write(str_i,'(i6)') image
+      write(str_z,'(f7.3)') z_i_nu
+      filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
     endfunction
 endmodule

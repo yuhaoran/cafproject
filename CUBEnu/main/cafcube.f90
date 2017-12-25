@@ -33,7 +33,6 @@ program cafcube
     call timestep
     call update_vp()
     call update_vp_nu()
-    !stop
     !call buffer_density
     ! the following to be collected
     call buffer_np(rhoc)

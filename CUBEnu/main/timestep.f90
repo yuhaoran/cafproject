@@ -64,12 +64,12 @@ subroutine timestep
     print*, 'scale factor:',a,a_mid,a+da
     print*, 'expansion   :',ra
     print*, 'dt          :',dt
-    print*, 'dt_e        :',dt_e
-    print*, 'dt_fine     :',dt_fine
-    print*, 'dt_pp       :',dt_pp
-    print*, 'dt_coarse   :',dt_coarse
-    print*, 'dt_vmax     :',dt_vmax
-    print*, 'dt_vmax_nu  :',dt_vmax_nu
+    print*, 'dt_e        :',dt_e,merge('<',' ',dt==dt_e)
+    print*, 'dt_fine     :',dt_fine,merge('<',' ',dt==dt_fine)
+    print*, 'dt_pp       :',dt_pp,merge('<',' ',dt==dt_pp)
+    print*, 'dt_coarse   :',dt_coarse,merge('<',' ',dt==dt_coarse)
+    print*, 'dt_vmax     :',dt_vmax,merge('<',' ',dt==dt_vmax)
+    print*, 'dt_vmax_nu  :',dt_vmax_nu,merge('<',' ',dt==dt_vmax_nu)
     print*, ''
     tau=tau+dt
     t=t+dt
