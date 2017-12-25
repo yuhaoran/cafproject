@@ -117,7 +117,7 @@ program initial_conditions
   sim%omega_m=omega_m
   sim%omega_l=omega_l
   sim%s8=s8
-  sim%vsim2phys=(1.5/a)*box*h0*sqrt(omega_m)/nf_global
+  sim%vsim2phys=(150./a)*box*h0*sqrt(omega_m)/nf_global
   sim%z_i=z_i
   sim%z_i_nu=z_i_nu
   sync all
@@ -437,12 +437,12 @@ program initial_conditions
   endif
   sync all
 
-  open(23,file='../velocity_conversion/sigmav_z.bin',access='stream')
-  read(23) svz
-  close(23)
-  open(24,file='../velocity_conversion/sigmav_r.bin',access='stream')
-  read(24) svr
-  close(43)
+  open(11,file='../velocity_conversion/sigmav_z.bin',access='stream')
+  read(11) svz
+  close(11)
+  open(11,file='../velocity_conversion/sigmav_r.bin',access='stream')
+  read(11) svr
+  close(11)
 
   sigma_vf=interp_sigmav(a,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
   sigma_vc=interp_sigmav(a,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
@@ -454,10 +454,11 @@ program initial_conditions
   sync all
   if (head) then
     print*, ''
-    print*,'sigma_vf(a=',a,', r=',box/nf_global,'Mpc/h)=',sigma_vf,'km/s'
-    print*,'sigma_vc(a=',a,', r=',box/nc_global,'Mpc/h)=',sigma_vc,'km/s'
-    print*,'sigma_vres=',sigma_vres,'km/s'
-    print*,'sigma_vi =',sigma_vi,'(simulation unit)'
+    print*, 'Read velocity dispersion prediction'
+    print*,'sigma_vf(a=',a,', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
+    print*,'sigma_vc(a=',a,', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
+    print*,'sigma_vres=',real(sigma_vres,4),'km/s'
+    print*,'sigma_vi =',real(sigma_vi,4),'(simulation unit)'
   endif
 
 
@@ -478,6 +479,7 @@ program initial_conditions
 
   vfield=0
   nplocal=0
+  std_vsim_c=0; std_vsim_res=0; std_vsim=0;
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -597,10 +599,10 @@ program initial_conditions
     std_vsim_res=sqrt(std_vsim_res/nplocal)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
     std_vsim=sqrt(std_vsim/nplocal)
-    print*,'  std_vsim',std_vsim*sim%vsim2phys,'km/s'
-    print*,'  std_vsim_c',std_vsim_c*sim%vsim2phys,'km/s'
-    print*,'  std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
-    print*,'  std_vi (sim unit)',std_vsim_res/sqrt(3.),'(simulation unit)'
+    print*,'  std_vsim         ',real(std_vsim*sim%vsim2phys,4),'km/s'
+    print*,'  std_vsim_c       ',real(std_vsim_c*sim%vsim2phys,4),'km/s'
+    print*,'  std_vsim_res     ',real(std_vsim_res*sim%vsim2phys,4),'km/s'
+    print*,'  std_vi (sim unit)',real(std_vsim_res/sqrt(3.),4),'(simulation unit)'
     print*,''
   endif
   sync all

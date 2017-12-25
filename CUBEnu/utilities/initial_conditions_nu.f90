@@ -8,6 +8,9 @@ program initial_conditions_nu
 
   !Units
   real, parameter :: vp2s = 1.0/(300.*sqrt(omega_m)*box/a_i_nu/2./nc)
+
+  ! real, parameter :: vp2s = 1.0/(150.*h0*sqrt(omega_m)*box/a_i_nu/nf_global)
+  ! because: sim%vsim2phys=(150./a)*box*h0*sqrt(omega_m)/nf_global in initial_conditions.f90
   real, parameter :: fdf = 25.8341 !kT/m for T=1K, m=1eV
   real, parameter :: fd = vp2s*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
   real, parameter :: sigma_vi_nu = 3.59714*fd !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5
@@ -18,7 +21,7 @@ program initial_conditions_nu
   real, allocatable :: rseed_all(:,:)
 
   !Useful variables and small arrays
-  integer :: i,j,k,ip,n,pii,pjj,pkk,b,b1,b2
+  integer :: itx,ity,itz,i,j,k,l,ip,n,pii,pjj,pkk,b,b1,b2
 
   !Particle information
   integer, parameter :: npt = np_nc_nu*nc
@@ -29,6 +32,11 @@ program initial_conditions_nu
 
   integer(4), dimension(nt,nt,nt) :: rhoc
   real(4), dimension(3,nt,nt,nt) :: vfield
+
+  real(8) vreal(3)
+  real(8) sigma_vc,sigma_vf,sigma_vres,sigma_vi
+  real(8) std_vsim_c,std_vsim_res,std_vsim
+  integer(8) nplocal_nu
 
   !Setup
   call geometry
@@ -87,9 +95,10 @@ program initial_conditions_nu
   vfield=0
   rhoc=np_nc_nu**3
   vmax=0
-  do k=1,nnt
-  do j=1,nnt
-  do i=1,nnt
+  std_vsim_c=0; std_vsim_res=0; std_vsim=0;
+  do itz=1,nnt
+  do ity=1,nnt
+  do itx=1,nnt
     !Compute Lagrangian positions and Thermal velocities
     do pkk=1,npt
     do pjj=1,npt
@@ -127,7 +136,7 @@ program initial_conditions_nu
       vq(1)=rng(1)*sqrt(1.-rng(2)**2.)*cos(rng(3))
       vq(2)=rng(1)*sqrt(1.-rng(2)**2.)*sin(rng(3))
       vq(3)=rng(1)*rng(2)
-      
+
       vmax=max(vmax,abs(vq))
 
       vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv)
@@ -139,23 +148,58 @@ program initial_conditions_nu
     write(13) rhoc
     write(14) vfield
     write(15) pid
+
+    ! velocity analysis
+    ip=0
+    do k=1,nt
+    do j=1,nt
+    do i=1,nt
+      std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
+      do l=1,np_nc_nu**3
+        ip=ip+1
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+        std_vsim_res=std_vsim_res+sum(vreal**2)
+        vreal=vreal+vfield(:,i,j,k)
+        std_vsim=std_vsim+sum(vreal**2)
+      enddo
+    enddo
+    enddo
+    enddo
+
   enddo
   enddo
-  enddo
+  enddo ! end of tile loop
+
   close(10)
   close(11)
   close(12)
   close(14)
   close(15)
 
+
+  nplocal_nu=(np_nc_nu*nc)**3
   open(unit=10,file=ic_name('info'),access='stream')
   read(10) sim
-  sim%nplocal_nu=(np_nc_nu*nc)**3
+  sim%nplocal_nu=nplocal_nu
   sim%sigma_vi_nu=sigma_vi_nu
   sim%dt_vmax_nu=vbuf*20./maxval(abs(vmax))
   rewind(10)
   write(10) sim
   close(10)
+
+  if (head) then
+    print*,''
+    print*,'Velocity analysis on head node'
+    std_vsim_res=sqrt(std_vsim_res/nplocal_nu)
+    std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
+    std_vsim=sqrt(std_vsim/nplocal_nu)
+    print*,'  std_vsim         ',real(std_vsim*sim%vsim2phys,4),'km/s'
+    print*,'  std_vsim_c       ',real(std_vsim_c*sim%vsim2phys,4),'km/s'
+    print*,'  std_vsim_res     ',real(std_vsim_res*sim%vsim2phys,4),'km/s'
+    print*,'  std_vi (sim unit)',real(std_vsim_res/sqrt(3.),4),'(simulation unit)'
+    print*,''
+  endif
+  sync all
 
   call print_header(sim)
   if (head) write(*,*) 'Finished neutrino ic'
