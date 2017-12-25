@@ -43,17 +43,14 @@ program cafcube
     call redistribute_nu()
     call buffer_xp
     call buffer_xp_nu
-
-    !call buffer_x
-    call particle_mesh ! to include nu
-    !call buffer_v
+    call particle_mesh
     call buffer_vp
     call buffer_vp_nu
     if (checkpoint_step) then
       dt_old=0
       call update_vp()
       call update_vp_nu()
-      call checkpoint ! to include nu
+      call checkpoint
       call projection
       call print_header(sim)
       if (final_step) exit
