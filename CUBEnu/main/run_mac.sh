@@ -13,10 +13,9 @@ make
 
 cd ../utilities/
 ./ic.x
+./ic_nu.x
 cd ../main/
 ./cafcube.x
-cd ../utilities/
-./dsp.x
 cd ../utilities/
 ./cicpower.x
 
