@@ -8,11 +8,16 @@ module parameters
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
   integer(8),parameter :: izipv=2 ! size to store vp as
+  integer(8),parameter :: izipx_nu=2 ! size to store xp_nu as
+  integer(8),parameter :: izipv_nu=2 ! size to store vp_nu as
   integer(8), parameter :: izipi = 2 ! if neutrino ids are on, size to store as
 
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
+  integer(8),parameter :: nvbin_nu=int(2,8)**(8*izipv_nu)
   integer(8),parameter :: ishift=-(int(2,8)**(izipx*8-1))
+  integer(8),parameter :: ishift_nu=-(int(2,8)**(izipx_nu*8-1))
   real(8),parameter :: rshift=0.5-ishift
+  real(8),parameter :: rshift_nu=0.5-ishift_nu
 
   ! (hereafter 'number of fine cells' = 'nf')
   ! (hereafter 'number of coarse cells' = 'nc')
@@ -20,7 +25,7 @@ module parameters
   integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -111,6 +116,8 @@ module parameters
   real,parameter :: ra_max=0.2
   real(8),parameter :: v_resolution=2.1/(int(2,8)**(izipv*8))
   real(8),parameter :: x_resolution=1.0/(int(2,8)**(izipx*8))
+  real(8),parameter :: v_resolution_nu=2.1/(int(2,8)**(izipv_nu*8))
+  real(8),parameter :: x_resolution_nu=1.0/(int(2,8)**(izipx_nu*8))
   !real(8),parameter :: vdisp_boost=1.0
   real(8),parameter :: vrel_boost=2.5
 
@@ -126,11 +133,11 @@ module parameters
 
   type sim_header
     integer(8) nplocal,nplocal_nu
-    integer(8) izipx,izipv
+    integer(8) izipx,izipv,izipx_nu,izipv_nu
     integer(8) image
     integer(8) nn,nnt,nt,ncell,ncb
     integer(8) istep
-    integer(8) cur_checkpoint,cur_proj,cur_halo
+    integer(8) cur_checkpoint
 
     real a, t, tau
     real dt_f_acc, dt_pp_acc, dt_c_acc, dt_vmax, dt_vmax_nu
@@ -161,7 +168,7 @@ module parameters
       print*,'| istep        =',s%istep
       print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
       print*,'| dt v,v_nu    =',s%dt_vmax,s%dt_vmax_nu
-      print*,'| cur_steps    =',int(s%cur_checkpoint,2),int(s%cur_proj,2),int(s%cur_halo,2)
+      print*,'| cur_steps    =',int(s%cur_checkpoint,2)
       print*,'| mass_p       =',s%mass_p
       print*,'| '
       print*,'| box          =',s%box, 'Mpc/h'
@@ -171,7 +178,8 @@ module parameters
       print*,'| nt           =',s%nt, ' ( nf_tile=',int(ncell*(nt+2*ncb),2),')'
       print*,'| ncell        =',s%ncell
       print*,'| ncb          =',s%ncb
-      print*,'| izip x,v     =',s%izipx,s%izipv
+      print*,'| izip x,v     =',int(s%izipx,1),int(s%izipv,1)
+      print*,'| izip x,v(nu) =',int(s%izipx_nu,1),int(s%izipv_nu,1)
       print*,'| '
       print*,'| H0           =',s%h0,'km/s/Mpc'
       print*,'| omega_m      =',s%omega_m

@@ -25,8 +25,8 @@ program initial_conditions_nu
 
   !Particle information
   integer, parameter :: npt = np_nc_nu*nc
-  integer(izipx), dimension(3,npt**3) ::  xp
-  integer(izipv), dimension(3,npt**3) :: vp
+  integer(izipx_nu), dimension(3,npt**3) ::  xp
+  integer(izipv_nu), dimension(3,npt**3) :: vp
   integer(izipi), dimension(npt**3) :: pid
   real, dimension(3) :: xq,vq,rng,vmax
 
@@ -106,7 +106,7 @@ program initial_conditions_nu
       ip=pii+npt*(pjj-1)+npt**2*(pkk-1)
       !Positions stored in xq
       xq=(/pii,pjj,pkk/)-0.5
-      xp(:,ip)=floor( xq/x_resolution,kind=izipx )
+      xp(:,ip)=floor( xq/x_resolution_nu,kind=izipx_nu )
       !Random velocities
       call random_number(rng)
       !Bisection interpolate CDF
@@ -139,7 +139,7 @@ program initial_conditions_nu
 
       vmax=max(vmax,abs(vq))
 
-      vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv)
+      vp(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv_nu)
     enddo
     enddo
     enddo
@@ -157,7 +157,7 @@ program initial_conditions_nu
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
       do l=1,np_nc_nu**3
         ip=ip+1
-        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k)
         std_vsim=std_vsim+sum(vreal**2)

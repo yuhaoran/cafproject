@@ -98,8 +98,6 @@ program initial_conditions
   sim%dt_vmax_nu=1000
 
   sim%cur_checkpoint=0
-  sim%cur_proj=0
-  sim%cur_halo=0
 
   sim%mass_p=real(nf**3)/sim%nplocal ! will be overwritten
 
@@ -112,6 +110,8 @@ program initial_conditions
   sim%ncb=ncb
   sim%izipx=izipx
   sim%izipv=izipv
+  sim%izipx_nu=izipx_nu
+  sim%izipv_nu=izipv_nu
 
   sim%h0=h0
   sim%omega_m=omega_m

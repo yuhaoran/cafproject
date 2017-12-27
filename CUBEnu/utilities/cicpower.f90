@@ -18,6 +18,7 @@ program cicpower
   real(8) rho8[*]
 
   integer(izipx),allocatable :: xp(:,:)
+  integer(izipx_nu),allocatable :: xp_nu(:,:)
   integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt)
 
   real xi(10,nbin)[*]
@@ -149,9 +150,9 @@ program cicpower
     close(11); sync all
 
     ! neutrinos
-    allocate(xp(3,nplocal_nu))
+    allocate(xp_nu(3,nplocal_nu))
     open(11,file=output_name('xp_nu'),status='old',action='read',access='stream')
-    read(11) xp
+    read(11) xp_nu
     close(11)
     open(11,file=output_name('np_nu'),status='old',action='read',access='stream')
     read(11) rhoc
@@ -167,7 +168,7 @@ program cicpower
         np=rhoc(i,j,k,itx,ity,itz)
         do l=1,np
           ip=nlast+l
-          pos1=nt*((/itx,ity,itz/)-1)+ ((/i,j,k/)-1) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
+          pos1=nt*((/itx,ity,itz/)-1)+ ((/i,j,k/)-1) + (int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu
           pos1=pos1*real(ng)/real(nc) - 0.5
 
           idx1=floor(pos1)+1
@@ -192,7 +193,7 @@ program cicpower
     enddo
     enddo
     sync all
-    deallocate(xp)
+    deallocate(xp_nu)
 
     if (head) print*, 'Start sync from buffer regions'
     sync all

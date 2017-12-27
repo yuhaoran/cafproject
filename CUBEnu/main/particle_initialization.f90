@@ -17,7 +17,7 @@ subroutine particle_initialization
   dt_vmax=sim%dt_vmax
   dt_vmax_nu=sim%dt_vmax_nu
 
-  if (sim%izipx/=izipx .or. sim%izipv/=izipv) then
+  if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izipx_nu/=izipx_nu .or. sim%izipv_nu/=izipv_nu) then
     print*, '  zip format incompatable'
     close(12)
     stop

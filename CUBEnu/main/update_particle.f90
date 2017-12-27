@@ -253,8 +253,8 @@ subroutine update_vp_nu()
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np
         ip=nlast-np+l
-        xq=((/i,j,k/)-1d0) + (int(xp_nu(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan((pi*real(vp_nu(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+        xq=((/i,j,k/)-1d0) + (int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu
+        vreal=tan((pi*real(vp_nu(:,ip)))/real(nvbin_nu-1)) / (sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
         vreal=vreal+vfield_nu(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
@@ -289,16 +289,16 @@ subroutine update_vp_nu()
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np
         ip=nlast-np+l
-        xq=((/i,j,k/)-1d0) + (int(xp_nu(:,ip)+ishift,izipx)+rshift)*x_resolution
-        vreal=tan((pi*real(vp_nu(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+        xq=((/i,j,k/)-1d0) + (int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu
+        vreal=tan((pi*real(vp_nu(:,ip)))/real(nvbin_nu-1)) / (sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
         vreal=vreal+vfield_nu(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
         g=ceiling(xq+deltax)
         rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
         idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-        xp_new_nu(:,idx)=xp_nu(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell))
+        xp_new_nu(:,idx)=xp_nu(:,ip)+nint(dt_mid*vreal/(x_resolution_nu*ncell))
         vreal=vreal-vfield_new(:,g(1),g(2),g(3))
-        vp_new_nu(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv)
+        vp_new_nu(:,idx)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
 #       ifdef EID
           pid_new_nu(idx)=pid_nu(ip)
 #       endif
@@ -352,7 +352,7 @@ subroutine update_vp_nu()
       std_vsim_c_nu=std_vsim_c_nu+sum(vfield_nu(:,i,j,k,itx,ity,itz)**2)
       do l=1,rhoc_nu(i,j,k,itx,ity,itz)
         ip=ip+1
-        vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+        vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
         std_vsim_res_nu=std_vsim_res_nu+sum(vreal**2)
         vreal=vreal+vfield_nu(:,i,j,k,itx,ity,itz)
         std_vsim_nu=std_vsim_nu+sum(vreal**2)
@@ -387,7 +387,6 @@ subroutine update_vp_nu()
   std_vsim_res_nu=sqrt(std_vsim_res_nu/npglobal_nu)
 
   ! set sigma_vi_new according to particle statistics
-  sigma_vi_new=std_vsim_res_nu/sqrt(3.)
   sigma_vi_new_nu=std_vsim_res_nu/sqrt(3.)
   if (head) then
     print*,'  std_vsim_nu    ',std_vsim_nu*sim%vsim2phys,'km/s'

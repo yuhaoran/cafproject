@@ -21,8 +21,6 @@ subroutine checkpoint
   sim%dt_vmax_nu=dt_vmax_nu
 
   sim%cur_checkpoint=cur_checkpoint
-  sim%cur_proj=cur_checkpoint
-  sim%cur_halo=cur_checkpoint
 
   sim%mass_p=mass_p
   sim%vsim2phys=(1.5/a)*box*h0*100.*sqrt(omega_m)/nf_global
