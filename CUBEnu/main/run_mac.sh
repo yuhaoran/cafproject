@@ -15,7 +15,7 @@ cd ../utilities/
 ./ic.x
 ./ic_nu.x
 cd ../main/
-./cafcube.x
+./cube.x
 cd ../utilities/
 ./cicpower.x
 

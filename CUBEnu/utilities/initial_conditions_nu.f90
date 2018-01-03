@@ -7,12 +7,14 @@ program initial_conditions_nu
   real, dimension(2,ncdf) :: cdf
 
   !Units
-  real, parameter :: vp2s = 1.0/(300.*sqrt(omega_m)*box/a_i_nu/2./nc)
+  !real, parameter :: vp2s = 1.0/(300.*sqrt(omega_m)*box/a_i_nu/2./nc)
 
-  ! real, parameter :: vp2s = 1.0/(150.*h0*sqrt(omega_m)*box/a_i_nu/nf_global)
+  !real, parameter :: vp2s = 1.0/(150.*h0*sqrt(omega_m)*box/a_i_nu/nf_global)
+  real, parameter :: vsim2phys=150.*sqrt(omega_m)*box/a_i_nu/2./nc ! previous version. missed h0 and nf_global
+  !real, parameter :: vsim2phys=(150./a_i_nu)*box*h0*sqrt(omega_m)/nf_global
   ! because: sim%vsim2phys=(150./a)*box*h0*sqrt(omega_m)/nf_global in initial_conditions.f90
   real, parameter :: fdf = 25.8341 !kT/m for T=1K, m=1eV
-  real, parameter :: fd = vp2s*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
+  real, parameter :: fd = (1./vsim2phys)*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
   real, parameter :: sigma_vi_nu = 3.59714*fd !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5
 
   !Seed
@@ -49,8 +51,8 @@ program initial_conditions_nu
      print*, 'Box size', box
      print*, 'output: ', opath
      write(*,*) ''
-     write(*,*) 'vp2s/(km/s)=',vp2s
-     write(*,*) 'fd/(km/s)=',fd/vp2s
+     write(*,*) 'vp2s/(km/s)=',(1./vsim2phys)
+     write(*,*) 'fd/(km/s)=',fd*vsim2phys
   end if
   sync all
   call system('mkdir -p '//opath//'image'//image2str(image))
@@ -258,7 +260,7 @@ contains
     cdfn(2,:)=cdf0(2,:)
     do n=1,Nnu
        fnu=Mnu(n)*(Tnu(n)/Tcnb)**3/Meff ! fraction of energy in this neutrino
-       fdnu=vp2s*fdf*Tnu(n)/Mnu(n)/a_i_nu
+       fdnu=(1./vsim2phys)*fdf*Tnu(n)/Mnu(n)/a_i_nu
        cdfn(1,:)=cdf0(1,:)*fdnu
        do i=1,ncdf
           j=nearest_loc(cdf(1,i),cdfn(1,:))

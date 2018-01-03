@@ -1,3 +1,22 @@
+module buffer_grid_subroutines
+
+contains
+
+subroutine buffer_grid
+  use variables
+  use neutrinos
+  implicit none
+  save
+
+  call buffer_np(rhoc)
+  call buffer_np(rhoc_nu)
+  call buffer_vc(vfield)
+  call buffer_vc(vfield_nu)
+  call redistribute_cdm()
+  call redistribute_nu()
+
+endsubroutine
+
 subroutine buffer_np(rhoc)
   use parameters
   implicit none
@@ -241,3 +260,5 @@ subroutine redistribute_nu
   sync all
 
 endsubroutine
+
+endmodule

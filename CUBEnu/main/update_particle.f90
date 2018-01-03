@@ -1,4 +1,18 @@
-subroutine update_vp()
+module update_particle
+
+contains
+
+subroutine update_x
+  use variables
+  use neutrinos
+  implicit none
+  save
+
+  call update_xp
+  call update_xp_nu
+endsubroutine
+
+subroutine update_xp()
   use variables
   implicit none
   save
@@ -210,9 +224,32 @@ subroutine update_vp()
     print*, '  npcheck,npglobal=', npcheck,npglobal
   endif
   sync all
-endsubroutine update_vp
+endsubroutine update_xp
 
-subroutine update_vp_nu()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+subroutine update_xp_nu()
   use variables
   use neutrinos
   implicit none
@@ -425,4 +462,6 @@ subroutine update_vp_nu()
     print*, '  npcheck,npglobal=', npcheck,npglobal_nu
   endif
   sync all
-endsubroutine update_vp_nu
+endsubroutine update_xp_nu
+
+endmodule

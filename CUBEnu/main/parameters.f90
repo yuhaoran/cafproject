@@ -10,7 +10,7 @@ module parameters
   integer(8),parameter :: izipv=2 ! size to store vp as
   integer(8),parameter :: izipx_nu=2 ! size to store xp_nu as
   integer(8),parameter :: izipv_nu=2 ! size to store vp_nu as
-  integer(8), parameter :: izipi = 2 ! if neutrino ids are on, size to store as
+  integer(8), parameter :: izipi = 1 ! if neutrino ids are on, size to store as
 
   integer(8),parameter :: nvbin=int(2,8)**(8*izipv)
   integer(8),parameter :: nvbin_nu=int(2,8)**(8*izipv_nu)
