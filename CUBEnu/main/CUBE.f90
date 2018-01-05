@@ -9,13 +9,9 @@ program CUBE
   use buffer_grid_subroutines
   use buffer_particle_subroutines
   use update_particle
+  use extended_pp_force
   implicit none
   save
-
-  if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'  images'
-  sync all
-  call system('hostname')
-  sync all
 
   call initialize
   call particle_initialization
@@ -30,6 +26,7 @@ program CUBE
     call update_x
     call buffer_grid
     call buffer_x
+    call ext_pp_force
     call particle_mesh
     call buffer_v
     if (checkpoint_step) then

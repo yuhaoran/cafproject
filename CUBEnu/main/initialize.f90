@@ -6,6 +6,11 @@ subroutine initialize
   save
   include 'fftw3.f'
 
+  if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'  images'
+  sync all
+  call system('hostname')
+  sync all
+
   if (this_image()==1) print*, 'initialize'
   if (this_image()==1) print*, 'call geometry'
   call geometry

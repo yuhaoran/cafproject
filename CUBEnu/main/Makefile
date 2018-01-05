@@ -23,6 +23,7 @@ buffer_particle.o: variables.o neutrinos.o
 update_particle.o: variables.o neutrinos.o
 checkpoint.o: variables.o neutrinos.o
 cubefft.o: variables.o
+ext_pp_force.o: variables.o neutrinos.o
 kernel_f.o: variables.o
 kernel_c.o: variables.o
 particle_initialization.o: variables.o neutrinos.o
@@ -35,7 +36,7 @@ finalize.o: variables.o cubefft.o pencil_fft.o
 CUBE.o: variables.o cubefft.o pencil_fft.o
 pm.o: variables.o neutrinos.o cubefft.o pencil_fft.o
 
-CUBE.o: parameters.o variables.o initialize.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_grid.o buffer_particle.o pm.o update_particle.o checkpoint.o projection.o finalize.o
+CUBE.o: parameters.o variables.o initialize.o ext_pp_force.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_grid.o buffer_particle.o pm.o update_particle.o checkpoint.o projection.o finalize.o
 
 %.o: %.f90 Makefile
 	$(FC) $(OFLAG) $(OPTIONS) $< -o $@ $(FFTFLAG)
