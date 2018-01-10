@@ -31,17 +31,19 @@ subroutine buffer_np(rhoc)
   rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
   rhoc(nt+1:,:,:,nnt,:,:)=rhoc(1:ncb,:,:,1,:,:)[image1d(ipx,icy,icz)]
   rhoc(nt+1:,:,:,:nnt-1,:,:)=rhoc(1:ncb,:,:,2:,:,:)
+  sync all
   !y
   rhoc(:,:0,:,:,1,:)=rhoc(:,nt-ncb+1:nt,:,:,nnt,:)[image1d(icx,iny,icz)]
   rhoc(:,:0,:,:,2:,:)=rhoc(:,nt-ncb+1:nt,:,:,1:nnt-1,:)
   rhoc(:,nt+1:,:,:,nnt,:)=rhoc(:,1:ncb,:,:,1,:)[image1d(icx,ipy,icz)]
   rhoc(:,nt+1:,:,:,:nnt-1,:)=rhoc(:,1:ncb,:,1:,2:,:)
+  sync all
   !z
   rhoc(:,:,:0,:,:,1)=rhoc(:,:,nt-ncb+1:nt,:,:,nnt)[image1d(icx,icy,inz)]
   rhoc(:,:,:0,:,:,2:)=rhoc(:,:,nt-ncb+1:nt,:,:,:nnt-1)
   rhoc(:,:,nt+1:,:,:,nnt)=rhoc(:,:,1:ncb,:,:,1)[image1d(icx,icy,ipz)]
   rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
-
+  sync all
 endsubroutine
 
 subroutine buffer_vc(vfield)
@@ -138,6 +140,7 @@ subroutine redistribute_cdm()
     pid(1:nshift)=0
 # endif
   checkxp1=sum(xp*int(1,kind=8))
+  print*, '  ',np_image_max,nplocal,nshift
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
@@ -219,6 +222,7 @@ subroutine redistribute_nu
     pid_nu(1:nshift)=0
 # endif
   checkxp1=sum(xp*int(1,kind=8))
+  print*, '  ',np_image_max_nu,nplocal_nu,nshift
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop

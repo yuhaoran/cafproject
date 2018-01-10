@@ -25,7 +25,6 @@ subroutine particle_mesh
     print*, 'particle mesh'
   endif
 
-  cum=cumsum6(rhoc)
   !nthread=1
   !ithread=omp_get_thread_num()+1
   !print*,'ithread'
@@ -33,7 +32,6 @@ subroutine particle_mesh
   vmax=0
   vmax_nu=0
   f2_max_fine(1:nnt,1:nnt,1:nnt)=0
-  f2_max_pp=0
   f2_max_coarse=0
 
   if (head) print*, '  pm fine over',nnt**3,'tiles'
@@ -51,6 +49,7 @@ subroutine particle_mesh
     do i=2-ncb,nt+ncb-1
       nlast=cum(i-1,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
+      !print*,'c',nlast,np
       do l=1,np ! loop over cdm particles
         ip=nlast+l
         tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
@@ -71,6 +70,7 @@ subroutine particle_mesh
       enddo
       nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
+      !print*,'n',nlast,np
       do l=1,np ! loop over neutrino particles
         ip=nlast+l
         tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu !-0.5
@@ -319,7 +319,6 @@ subroutine particle_mesh
   if (head) print*, '  constrain dt'
   dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
-  dt_pp=1000
   dt_vmax=vbuf*20/vmax
   dt_vmax_nu=vbuf*20/vmax_nu
   sync all

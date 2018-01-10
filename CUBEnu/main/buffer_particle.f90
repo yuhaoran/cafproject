@@ -46,6 +46,7 @@ subroutine buffer_xp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x- buffer
   do itz=1,nnt
@@ -79,6 +80,7 @@ subroutine buffer_xp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x+ buffer
   do itz=1,nnt
@@ -111,6 +113,7 @@ subroutine buffer_xp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y-
   do itz=1,nnt
@@ -140,6 +143,7 @@ subroutine buffer_xp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y+
   do itz=1,nnt
@@ -168,6 +172,7 @@ subroutine buffer_xp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z-
   do itz=2,nnt ! skip itz=1
@@ -193,6 +198,7 @@ subroutine buffer_xp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z+
   do itz=1,nnt-1 ! skip itz=nnt
@@ -233,6 +239,7 @@ subroutine buffer_xp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x- buffer
   do itz=1,nnt
@@ -266,6 +273,7 @@ subroutine buffer_xp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x+ buffer
   do itz=1,nnt
@@ -298,6 +306,7 @@ subroutine buffer_xp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y-
   do itz=1,nnt
@@ -327,6 +336,7 @@ subroutine buffer_xp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y+
   do itz=1,nnt
@@ -355,6 +365,7 @@ subroutine buffer_xp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z-
   do itz=2,nnt ! skip itz=1
@@ -380,6 +391,7 @@ subroutine buffer_xp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z+
   do itz=1,nnt-1 ! skip itz=nnt
@@ -426,6 +438,7 @@ subroutine buffer_vp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x- buffer
   do itz=1,nnt
@@ -465,6 +478,7 @@ subroutine buffer_vp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x+ buffer
   do itz=1,nnt
@@ -503,6 +517,7 @@ subroutine buffer_vp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y-
   do itz=1,nnt
@@ -538,6 +553,7 @@ subroutine buffer_vp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y+
   do itz=1,nnt
@@ -572,6 +588,7 @@ subroutine buffer_vp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z-
   do itz=2,nnt ! skip itz=1
@@ -603,6 +620,7 @@ subroutine buffer_vp
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z+
   do itz=1,nnt-1 ! skip itz=nnt
@@ -652,6 +670,7 @@ subroutine buffer_vp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x- buffer
   do itz=1,nnt
@@ -691,6 +710,7 @@ subroutine buffer_vp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute local x+ buffer
   do itz=1,nnt
@@ -729,6 +749,7 @@ subroutine buffer_vp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y-
   do itz=1,nnt
@@ -764,6 +785,7 @@ subroutine buffer_vp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute y+
   do itz=1,nnt
@@ -798,6 +820,7 @@ subroutine buffer_vp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z-
   do itz=2,nnt ! skip itz=1
@@ -829,6 +852,7 @@ subroutine buffer_vp_nu
   enddo
   enddo
   enddo
+  sync all
 
   ! redistribute z+
   do itz=1,nnt-1 ! skip itz=nnt

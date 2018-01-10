@@ -366,14 +366,14 @@ subroutine update_xp_nu()
   enddo
   enddo
   enddo ! end looping over tiles
-  nplocal=iright
-  xp_nu(:,nplocal+1:)=0
-  vp_nu(:,nplocal+1:)=0
+  nplocal_nu=iright
+  xp_nu(:,nplocal_nu+1:)=0
+  vp_nu(:,nplocal_nu+1:)=0
 # ifdef PID
-    pid_nu(nplocal+1:)=0
+    pid_nu(nplocal_nu+1:)=0
 # endif
-  !nplocal=sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
-  !print*, iright,sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
+  !nplocal_nu=sum(rhoc_nu(1:nt,1:nt,1:nt,:,:,:))
+  !print*, iright,nplocal_nu
   !stop
   sync all
 
@@ -457,7 +457,7 @@ subroutine update_xp_nu()
   if (head) then
     npcheck=0
     do i=1,nn**3
-      npcheck=npcheck+nplocal[i]
+      npcheck=npcheck+nplocal_nu[i]
     enddo
     print*, '  npcheck,npglobal=', npcheck,npglobal_nu
   endif

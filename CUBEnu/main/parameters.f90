@@ -25,13 +25,13 @@ module parameters
   integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
   integer(8),parameter :: nf_global=nf*nn
   integer(8),parameter :: nc_global=nc*nn
-  integer(8),parameter :: nft=nt*ncell ! >=48
+  integer(8),parameter :: nft=nt*ncell ! >=48 ! nf/tile/dim
 
   ! ngrid /image/dim for pencil-fft
 # ifdef FFTFINE
@@ -59,8 +59,9 @@ module parameters
   integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
   real,parameter :: rsoft=0.1 ! PP softening length
+  integer,parameter :: pp_range=2 ! set <=4
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles, body-centered cubic
-  real,parameter :: image_buffer=2.0
+  real,parameter :: image_buffer=1.2
   real,parameter :: tile_buffer=3.0
   real,parameter :: vbuf=0.9
 
