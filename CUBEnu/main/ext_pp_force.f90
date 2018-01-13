@@ -1,16 +1,10 @@
-module extended_pp_force
+module pp_force
   use variables
   !use neutrinos
   implicit none
   save
 
-  integer(8),parameter :: np_pp_max=np_image/nnt**3*(1+2./nt)**3*tile_buffer
-  integer hoc(1-ncell:nft+ncell,1-ncell:nft+ncell,1-ncell:nft+ncell)
-  integer ll(np_pp_max)
-  integer(8) npairs,itest1
-  real(8) xvec1(3),xvec2(3),xvec21(3),rmag,force_pp(3),rcut,pcut,f_tot(3)
-  integer(4) ivec1(3),nlast,nlast1,nlast2,np,ii,jj,kk,np1,np2,l1,l2
-  integer igx,igy,igz,lp,ip1,ip2
+
 contains
 
 subroutine ext_pp_force
@@ -23,16 +17,18 @@ subroutine ext_pp_force
   if (head) then
     print*, ''
     print*, 'ext_pp_force'
-    print*, '  ext_pp_force over',nnt**3,'tiles'
+    print*, '  pp_range=',int(pp_range,1)
+    print*, '  ext_pp_force over',int(nnt**3,2),'tiles'
     print*, '  np_pp_max=',np_pp_max
   endif
   itest1=0
+  npairs=0
   f2_max_pp(1:nnt,1:nnt,1:nnt)=0
   print*, '  nplocal =',sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    !print*, '  cum_nu',itx,ity,itz,cum_nu(-5,-5,-5,1,1,1)
+    if (head) print*, '  tile:',int(itx,1),int(ity,1),int(itz,1)
     ! [1] make linked list
     if (np_pp_max<sum(rhoc(0:nt+1,0:nt+1,0:nt+1,itx,ity,itz))) then
       print*, 'np_pp_max too small'
@@ -40,7 +36,7 @@ subroutine ext_pp_force
       stop
     endif
 
-    hoc(:,:,:)=0
+    hoc=0
     ll=0
     do igz=0,nt+1
     do igy=0,nt+1
@@ -57,29 +53,28 @@ subroutine ext_pp_force
     enddo
     enddo
     enddo
-
+    ! [2] pair particles
     do igz=1,nft
     do igy=1,nft
     do igx=1,nft
       ip1=hoc(igx,igy,igz)
       do while (ip1/=0)
         itest1=itest1+1
-#ifdef NODEBUG
-        xvec1=ncell*(((/i,j,k/)-1)/4)+ncell*(int(xp(:,ip1)+ishift,izipx)+rshift)*x_resolution
+!#ifdef SKIP_PP_PAIR
+        xvec1=ncell*floor(((/igx,igy,igz/)-1)/4.)+ncell*(int(xp(:,ip1)+ishift,izipx)+rshift)*x_resolution
         vreal=tan(pi*real(vp(:,ip1))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         !ivec1=floor(xvec1)+1
         !ivec1=(/i,j,k/)
         ! loop over nearby cells and particles
-        npairs=0
         f_tot=0
         !print*, i,j,k
         !print*, xp(:,ip1)
         !print*, xvec1
 
         ! CHOICE 1 (use linked list)
-        do kk=k-pp_range,k+pp_range
-        do jj=j-pp_range,j+pp_range
-        do ii=i-pp_range,i+pp_range
+        do kk=igz-pp_range,igz+pp_range
+        do jj=igy-pp_range,igy+pp_range
+        do ii=igx-pp_range,igx+pp_range
           ip2=hoc(ii,jj,kk)
           do while (ip2/=0) ! loop over particle 2
 
@@ -92,7 +87,7 @@ subroutine ext_pp_force
         !  do l2=1,np2
         !    ip2=nlast2+l2
 
-            !npairs=npairs+1
+            npairs=npairs+1
             xvec2=ncell*floor(((/ii,jj,kk/)-1)/4.)+ncell*(int(xp(:,ip2)+ishift,izipx)+rshift)*x_resolution
             xvec21=xvec2-xvec1
             rmag=sqrt(sum(xvec21**2))
@@ -115,9 +110,8 @@ subroutine ext_pp_force
         vreal=vreal+f_tot*a_mid*dt/6/pi
         vp(:,ip1)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
         f2_max_pp(itx,ity,itz)=max(f2_max_pp(itx,ity,itz),sum(f_tot**2))
-#endif
+!#endif
         ip1=ll(ip1)
-        !print*,npairs
       enddo !! do while (ip1/=0)
     enddo !! i
     enddo !! j
@@ -125,21 +119,30 @@ subroutine ext_pp_force
   enddo
   enddo
   enddo !! itz
-  !print*, '  cum_nu',cum_nu(-5,-5,-5,1,1,1)
+  ! for reference, in pm.f90
+  !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
+  !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
+  !dt_pp=sqrt(0.1*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
+  dt_pp=sqrt(1.0) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
+  sync all
+  do i=1,nn**3
+    dt_pp=min(dt_pp,dt_pp[i])
+  enddo
+  sync all
 
+  if (head) then
+    print*,'  max of f_pp', sqrt(maxval(f2_max_pp))
+    print*,'  dt_pp',dt_pp
+    print*,'  updated',itest1,'particles'
+    print*,'  average pairs',npairs/real(itest1)
+  endif
+  sync all
 
-  print*,'  updated',itest1,'particles'
   if (itest1/=nplocal) then
     print*, 'itest1/=nplocal'
     print*, itest1,nplocal
     stop
   endif
-
-  print*, '  max of f_pp', sqrt(maxval(f2_max_pp))
-  dt_pp=sqrt(0.05*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
-  ! for reference:
-  !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
-  !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   sync all
 
 endsubroutine

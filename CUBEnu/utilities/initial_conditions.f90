@@ -66,6 +66,7 @@ program initial_conditions
   !equivalence(phizz,phizx)
 
   call geometry
+  call system('mkdir -p '//opath//'image'//image2str(image))
 
   if (head) then
     print*, ''
@@ -78,10 +79,12 @@ program initial_conditions
     print*, 'output: ', opath
     print*, 'head image number',icx,icy,icz
     print*, '-----------------------------------------'
+    call system('mkdir -p '//opath//'code')
+    call system('cp initial_conditions*.f90 '//opath//'code')
+    call system('cp ../main/*.f90 '//opath//'code')
+    call system('cp ../main/redshift.txt '//opath//'code')
   endif
   sync all
-
-  call system('mkdir -p '//opath//'image'//image2str(image))
 
   sim%nplocal=0
   sim%nplocal_nu=0

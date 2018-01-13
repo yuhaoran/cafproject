@@ -27,7 +27,7 @@ subroutine buffer_xp
   use variables
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom,mlast
+  integer(8) nshift,nlen,ifrom,mlast
 
   if (head) print*, 'buffer_xp'
   ! buffer x direction
@@ -220,7 +220,7 @@ subroutine buffer_xp_nu
   use neutrinos
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom,mlast
+  integer(8) nshift,nlen,ifrom,mlast
 
   if (head) print*, 'buffer_xp_nu'
   ! buffer x direction
@@ -412,7 +412,7 @@ subroutine buffer_vp
   use variables
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom,mlast
+  integer(8) nshift,nlen,ifrom,mlast
 
 # ifdef PID
     if (head) print*, 'buffer_vp (vp & pid)'
@@ -644,7 +644,7 @@ subroutine buffer_vp_nu
   use neutrinos
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom,mlast
+  integer(8) nshift,nlen,ifrom,mlast
 
 # ifdef EID
     if (head) print*, 'buffer_vp_nu (vp_nu & pid_nu)'

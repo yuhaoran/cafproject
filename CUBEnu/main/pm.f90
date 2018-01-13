@@ -13,9 +13,8 @@ subroutine particle_mesh
   !logical,parameter :: pp_force=.false.
   !logical,parameter :: ext_pp_force=.false.
 
-  integer(8) nlast
   integer(4) ithread, nthread
-  integer(8) idxf(3),np
+  integer(8) idxf(3)
   integer(8) idx1(3), idx2(3)
   real tempx(3), dx1(3), dx2(3)
   real r3t(-1:nt+2,-1:nt+2,-1:nt+2) ! coarse density on tile, with buffer=2
@@ -326,7 +325,6 @@ subroutine particle_mesh
   do i=1,nn**3
     dt_fine=min(dt_fine,dt_fine[i])
     dt_coarse=min(dt_coarse,dt_coarse[i])
-    dt_pp=min(dt_pp,dt_pp[i])
     dt_vmax=min(dt_vmax,dt_vmax[i])
     dt_vmax_nu=min(dt_vmax_nu,dt_vmax_nu[i])
   enddo

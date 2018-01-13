@@ -25,7 +25,9 @@ subroutine buffer_np(rhoc)
   integer(4) rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
   integer(8),parameter :: unit8=1
   integer(8) itest
-  if (head) print*, 'buffer_np'
+  if (head) then
+    print*, 'buffer_np'
+  endif
   !x
   rhoc(:0,:,:,1,:,:)=rhoc(nt-ncb+1:nt,:,:,nnt,:,:)[image1d(inx,icy,icz)]
   rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
@@ -105,9 +107,12 @@ subroutine redistribute_cdm()
   use variables
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom,checkxp0,checkxp1
+  integer(8) nshift,nlen,ifrom,checkxp0,checkxp1
 
-  if (head) print*, 'redistribute_cdm'
+  if (head) then
+    print*,''
+    print*, 'redistribute_cdm'
+  endif
   ! check
   overhead_image=sum(rhoc*unit8)/real(np_image_max,8)
   sync all
@@ -187,9 +192,12 @@ subroutine redistribute_nu
   use neutrinos
   implicit none
   save
-  integer(8) nshift,nlen,nlast,ifrom,checkxp0,checkxp1
+  integer(8) nshift,nlen,ifrom,checkxp0,checkxp1
 
-  if (head) print*, 'redistribute_nu'
+  if (head) then
+    print*,''
+    print*, 'redistribute_nu'
+  endif
   ! check
   overhead_image=sum(rhoc_nu*unit8)/real(np_image_max_nu,8)
   sync all

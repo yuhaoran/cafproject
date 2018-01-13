@@ -1,8 +1,7 @@
 module parameters
   implicit none
   save
-
-  ! output directory for both IC and snapshots
+  ! output directory
   character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
@@ -58,7 +57,8 @@ module parameters
   integer(8),parameter :: np_nc=ncell ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
-  real,parameter :: rsoft=0.1 ! PP softening length
+  logical,parameter :: Extended_pp_force=.true.
+  real,parameter :: rsoft=0.3 ! PP softening length
   integer,parameter :: pp_range=2 ! set <=4
   logical,parameter :: np_2n3=.false. ! if there are 2*N**3 particles, body-centered cubic
   real,parameter :: image_buffer=1.2
@@ -68,7 +68,7 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=300.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
   real,parameter :: z_i=10.0   ! initial redshift
@@ -182,7 +182,7 @@ module parameters
       print*,'| izip x,v     =',int(s%izipx,1),int(s%izipv,1)
       print*,'| izip x,v(nu) =',int(s%izipx_nu,1),int(s%izipv_nu,1)
       print*,'| '
-      print*,'| H0           =',s%h0,'km/s/Mpc'
+      print*,'| h_0          =',s%h0,'km/s/Mpc'
       print*,'| omega_m      =',s%omega_m
       print*,'| omega_l      =',s%omega_l
       print*,'| sigma_8      =',s%s8

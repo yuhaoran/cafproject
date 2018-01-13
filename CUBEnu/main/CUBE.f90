@@ -9,7 +9,7 @@ program CUBE
   use buffer_grid_subroutines
   use buffer_particle_subroutines
   use update_particle
-  use extended_pp_force
+  use pp_force
   implicit none
   save
 
@@ -26,7 +26,9 @@ program CUBE
     call update_x
     call buffer_grid
     call buffer_x
-    call ext_pp_force
+    if (Extended_pp_force) then
+      call ext_pp_force
+    endif
     call particle_mesh
     call buffer_v
     if (checkpoint_step) then

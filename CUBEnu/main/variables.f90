@@ -59,7 +59,6 @@ module variables
   integer(4) rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
   real(4) vfield(3,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt) ! cannot have >7 dims
   integer(8) cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
-  integer(8) cum_nu(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
 
   ! the following variables are introduced because
@@ -77,6 +76,13 @@ module variables
   character (10) :: img_s, z_s
 
   !equivalence(rhoce,rhoce1d)
+  integer(8),parameter :: np_pp_max=np_image/nnt**3*(1+2./nt)**3*tile_buffer
+  integer hoc(1-ncell:nft+ncell,1-ncell:nft+ncell,1-ncell:nft+ncell)
+  integer ll(np_pp_max)
+  integer(8) npairs,itest1
+  real(8) xvec1(3),xvec2(3),xvec21(3),rmag,force_pp(3),rcut,pcut,f_tot(3)
+  integer(4) ivec1(3),nlast,nlast1,nlast2,np,ii,jj,kk,np1,np2,l1,l2
+  integer igx,igy,igz,lp,ip1,ip2
 
 contains
 

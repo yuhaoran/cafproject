@@ -17,8 +17,8 @@ subroutine update_xp()
   implicit none
   save
 
-  integer(8) ileft,iright,nlast,nlen,idx
-  integer(8) g(3),np ! index of grid
+  integer(8) ileft,iright,nlen,idx
+  integer(8) g(3) ! index of grid
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
   real(4) vfield_new(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(8),parameter :: weight_v=0.1 ! how previous-step vfield is mostly weighted
@@ -222,6 +222,7 @@ subroutine update_xp()
       npcheck=npcheck+nplocal[i]
     enddo
     print*, '  npcheck,npglobal=', npcheck,npglobal
+    print*, ''
   endif
   sync all
 endsubroutine update_xp
@@ -255,8 +256,8 @@ subroutine update_xp_nu()
   implicit none
   save
 
-  integer(8) ileft,iright,nlast,nlen,idx
-  integer(8) g(3),np ! index of grid
+  integer(8) ileft,iright,nlen,idx
+  integer(8) g(3) ! index of grid
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
   real(4) vfield_new(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(8),parameter :: weight_v=0.1 ! how previous-step vfield is mostly weighted
@@ -460,6 +461,7 @@ subroutine update_xp_nu()
       npcheck=npcheck+nplocal_nu[i]
     enddo
     print*, '  npcheck,npglobal=', npcheck,npglobal_nu
+    print*, ''
   endif
   sync all
 endsubroutine update_xp_nu
