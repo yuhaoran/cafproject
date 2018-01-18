@@ -80,9 +80,9 @@ program initial_conditions
     print*, 'head image number',icx,icy,icz
     print*, '-----------------------------------------'
     call system('mkdir -p '//opath//'code')
-    call system('cp initial_conditions*.f90 '//opath//'code')
-    call system('cp ../main/*.f90 '//opath//'code')
-    call system('cp ../main/redshift.txt '//opath//'code')
+    call system('cp initial_conditions*.f90 '//opath//'code/')
+    call system('cp ../main/*.f90 '//opath//'code/')
+    call system('cp ../main/redshifts.txt '//opath//'code/')
   endif
   sync all
 

@@ -24,7 +24,7 @@ module parameters
   integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=24 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -68,7 +68,7 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=300.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
   real,parameter :: z_i=10.0   ! initial redshift
