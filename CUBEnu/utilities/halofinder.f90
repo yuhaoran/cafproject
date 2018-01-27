@@ -1,16 +1,30 @@
-program halofinder
-  use parameters
+module halo_output
   implicit none
 
+  type halo_type
+    real hpos(3)
+    real mass_vir,mass_odc,radius_vir,radius_odc,v_disp
+    real x_mean(3),v_mean(3),ang_mom(3),var_x(3)
+  endtype
+endmodule
+
+program halofinder
+  use parameters
+  use halo_output
+  !use buffer_particle_subroutines, only :: buffer_vp
+  implicit none
+
+  type(halo_type) halo_info
   integer,parameter :: nc_halo_max=128
   integer,parameter :: ngrid_max=300
   integer,parameter :: nlist=5*(nc_halo_max+1)**3
   integer,parameter :: max_maxima=5*nc_halo_max**3
-  integer,parameter :: max_halo_np=5*(nc_halo_max+1)**3
+  integer,parameter :: max_halo_np=5*(nc_halo_max+1)**3/3
   integer, parameter :: search_ratio = 4
   integer, parameter :: refine_ratio = 5
   real finegrid(ngrid_max,ngrid_max,ngrid_max)
-  real xhalo(max_halo_np, 4),vhalo(max_halo_np,3)
+  real xv_vir(6,max_halo_np),xv_odc(6,max_halo_np),r_vir(max_halo_np),r_odc(max_halo_np)
+  logical(1) select_vir(max_halo_np),select_odc(max_halo_np)
   integer(8) ilist_odc(max_halo_np),ilist_vir(max_halo_np)
 
   integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
@@ -25,19 +39,20 @@ program halofinder
 
   real rhof(1-nfb:nft+nfb,1-nfb:nft+nfb,1-nfb:nft+nfb)
 
-  integer idist(3,nlist),isortdist(nlist),idist_tmp(3,nlist),isortpeak(max_maxima),isortpos(max_halo_np)
+  integer idist(3,nlist),isortdist(nlist),idist_tmp(3,nlist),isortpeak(max_maxima)
+  integer isortpos_vir(max_halo_np),isortpos_odc(max_halo_np)
   real ipeak(3,max_maxima),den_peak(max_maxima),halo_mesh_mass(max_maxima)
-  real rr,rdist(nlist),mass_p,pos1(3),dx1(3),dx2(3),amtot,denmax,scale_factor,xflat,halo_vir,r_vir,r_odc
+  real rr,rdist(nlist),mass_p,pos1(3),dx1(3),dx2(3),amtot,denmax,scale_factor,xflat,halo_vir,radius_vir,radius_odc
   real hpos(3),mass_proxy,mass_odc,mass_vir,rrefine,rsearch,dgrid,dr(3)
   real :: odci, odcj, r1, r2, d1, d2, w1, w2, I_ij(6), E0, E_tmp
-  integer i0,j0,k0,l0,ii,irtot,itx,ity,itz,idx1(3),idx2(3),ix,iy,iz,nhalo[*],nhalo_tot,iloc,itile(3)
-  integer crbox(3,2),csbox(3,2),frbox(3,2),ngrid(3),np_search,imass_vir,imass_odc
+  integer i0,j0,k0,l0,ii,irtot,itx,ity,itz,idx1(3),idx2(3),ix,iy,iz,nhalo[*],nhalo_tot[*],iloc,itile(3)
+  integer crbox(3,2),csbox(3,2),frbox(3,2),ngrid(3),np_search,imass_vir,imass_odc,np_vir,np_odc
   integer n_candidate[*],n_candidate_real[*],n_candidate_global,n_candidate_global_real
   integer(8) nlast,ip,np,nplocal,nplocal_nu,n_search_fail[*],i_vir,i_odc
   character(20) str_z,str_i
 
-  real(4) :: v_disp
-  real(4), dimension(3) :: x_mean, x2_mean, var_x, v_mean, v2_mean, offset, dx, l_CM, ang_mom
+  real(4) :: v_disp,sigma_vi
+  real(4), dimension(3) :: x_mean, x2_mean, var_x, v_mean, v2_mean, offset, dx,dv, l_CM, ang_mom
   real(4), dimension(3) :: r_wrt_halo, v_wrt_halo, v2_wrt_halo
 
   logical,parameter :: NGP = .true. ! NGP mass assignment by default
@@ -78,14 +93,15 @@ program halofinder
   do i0=-nc_halo_max,nc_halo_max
   do j0=-nc_halo_max,nc_halo_max
   do k0=-nc_halo_max,nc_halo_max
-    rr=sqrt(real(i0)**2+real(j0)**2+real(k0)**2)
+    !rr=norm2((/real(i0),real(j0),real(k0)/))
+    rr=norm2([real :: i0,j0,k0])
     if (rr>nc_halo_max) cycle
     ii=ii+1
     if (ii>nlist) then
       print*, 'ii exceeded ',nlist
       stop
     endif
-    idist(:,ii)=(/i0,j0,k0/)
+    idist(:,ii)=[i0,j0,k0]
     rdist(ii)=rr
   enddo
   enddo
@@ -124,7 +140,8 @@ program halofinder
     nplocal=sim%nplocal
     nplocal_nu=sim%nplocal_nu
     mass_p=sim%mass_p
-    mass_p=1.
+    !mass_p=1.
+    sigma_vi=sim%sigma_vi
     if (head) then
       print*, '  mass_p       =',mass_p
       print*, '  nplocal      =',nplocal
@@ -133,6 +150,7 @@ program halofinder
     endif
 
     ! read zip checkpoints
+    xp=0;vp=0;rhoc=0;vfield=0;
     open(11,file=output_name('xp'),status='old',action='read',access='stream')
     read(11) xp(:,:nplocal)
     close(11)
@@ -152,7 +170,7 @@ program halofinder
     call buffer_vc(vfield)
     call redistribute_cdm
     call buffer_xp
-    !call buffer_vp
+    call buffer_vp
     sync all
     print*, '  sum rhoc =', sum(rhoc)
     print*, ''
@@ -164,7 +182,7 @@ program halofinder
     n_search_fail=0 ! Ticker recording how many particle searches end up empty handed
     hpart_odc=0 ! Initialize so that no particles are yet part of a halo
     hpart_vir=0
-    write(11) nhalo,halo_vir,halo_odc
+    write(11) nhalo_tot,nhalo,halo_vir,halo_odc
 
     do itz=1,nnt
     do ity=1,nnt
@@ -183,11 +201,11 @@ program halofinder
         do l0=1,np
           ip=nlast+l0
           if (NGP) then
-            pos1=ncell*((/i0,j0,k0/)-1) + ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
+            pos1=ncell*([i0,j0,k0]-1) + ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
             idx1=floor(pos1)+1
             rhof(idx1(1),idx1(2),idx1(3))=rhof(idx1(1),idx1(2),idx1(3))+mass_p
           else
-            pos1=ncell*((/i0,j0,k0/)-1) + ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution - 0.5
+            pos1=ncell*([i0,j0,k0]-1) + ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution - 0.5
             idx1=floor(pos1)+1
             idx2=idx1+1
             dx1=idx1-pos1
@@ -227,8 +245,8 @@ program halofinder
           ! Consider this a halo candidate if the fine mesh mass is large enough
           if (amtot>mass_p*min_halo_particles/2.) then
             n_candidate=n_candidate+1
-            n_candidate_real=n_candidate_real+merge(1,0,minval((/i0,j0,k0/))>=1 .and. maxval((/i0,j0,k0/))<=nft)
-            ipeak(:,n_candidate)=(/i0,j0,k0/)-0.5
+            n_candidate_real=n_candidate_real+merge(1,0,minval([i0,j0,k0])>=1 .and. maxval([i0,j0,k0])<=nft)
+            ipeak(:,n_candidate)=[i0,j0,k0]-0.5
             den_peak(n_candidate)=denmax
             halo_mesh_mass(n_candidate)=amtot
           endif
@@ -239,7 +257,7 @@ program halofinder
       print*, '  real/total candidates =',n_candidate_real,n_candidate
 
       ! sort density maxima
-      isortpeak(:n_candidate) = (/(i0,i0=1,n_candidate)/)
+      isortpeak(:n_candidate) = [(i0,i0=1,n_candidate)]
       call indexedsort(n_candidate,den_peak(:),isortpeak(:))
       ipeak(:,:n_candidate)=ipeak(:,isortpeak(:n_candidate))
       halo_mesh_mass(:n_candidate)=halo_mesh_mass(isortpeak(:n_candidate))
@@ -248,11 +266,8 @@ program halofinder
         ! determine searching regions
         mass_proxy=halo_mesh_mass(iloc)
         hpos=ipeak(:,iloc)
-        if (minval(hpos)>0 .and. maxval(hpos)<nft) then
-          physical_halo=.true.
-        else
-          physical_halo=.false.
-        endif
+        !physical_halo=(minval(hpos)>0 .and. maxval(hpos)<nft)
+
         ! find_halo_particles
         ! Search for particles by looking at local particle distribution
         !call find_halo_particles(halo_vir, mass_proxy, hpos(:), r_vir, i_vir, 1)
@@ -265,7 +280,7 @@ program halofinder
         rsearch = search_ratio * rrefine
         !print*,rrefine,rsearch
         !print*, nft
-        itile=(/itx,ity,itz/)
+        itile=[itx,ity,itz]
         crbox(:,1)=floor((hpos-rrefine)/ncell)+1
         crbox(:,2)=floor((hpos+rrefine)/ncell)+1
         csbox(:,1)=floor((hpos-rsearch)/ncell)+1
@@ -275,14 +290,14 @@ program halofinder
         ngrid=refine_ratio*(frbox(:,2)-frbox(:,1)) ! Number of extra refined cells in this region
         dgrid    = 1./refine_ratio ! and their spacing
         if (maxval(ngrid)>ngrid_max) stop 'ngrid>ngrid_max'
-        !print*, crbox(:,1)
-        !print*, crbox(:,2)
-        !print*, rhoc(8,19,32,itile(1),itile(2),itile(3))
 
         ! find halo particles
         np_search=0
+        np_vir=0; np_odc=0
         finegrid=0
+        xv_vir=0; xv_odc=0
         !open(13,file='ilist_vir.dat')
+        !print*,'search particle'
         do k0=csbox(3,1),csbox(3,2)
         do j0=csbox(2,1),csbox(2,2)
         do i0=csbox(1,1),csbox(1,2)
@@ -290,189 +305,136 @@ program halofinder
           np=rhoc(i0,j0,k0,itile(1),itile(2),itile(3))
           do l0=1,np
             ip=nlast+l0
-            if (hpart_vir(ip)==0) then ! particle is not yet part of a halo
-              pos1=ncell*((/i0,j0,k0/)-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
-              dr=pos1-hpos
-              rr=sqrt(sum(dr**2))
-              !write(13,*) pos1
-              if (rr < rsearch) then
-                np_search = np_search + 1
-                xhalo(np_search, 1:3) = pos1
-                !vhalo(np_search,:)=
-                ilist_vir(np_search) = ip
+            pos1=ncell*([i0,j0,k0]-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
+            dr=pos1-hpos
+            rr=norm2(dr)
+            if (rr<rsearch) then
+              if (hpart_vir(ip)==0) then
+                np_vir=np_vir+1
+                xv_vir(1:3,np_vir)=pos1
+                xv_vir(4:6,np_vir)=tan((pi*real(vp(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost)) &
+                                   +vfield(:,i0,j0,k0,itx,ity,itz)
+                ilist_vir(np_vir)=ip
                 if (rr < rrefine) then
                   idx1=int((pos1-frbox(:,1))/dgrid)+1
-                  !print*, idx1;stop
                   finegrid(idx1(1),idx1(2),idx1(3))=finegrid(idx1(1),idx1(2),idx1(3))+1
                 endif
+              endif
+              if (hpart_odc(ip)==0) then
+                np_odc=np_odc+1
+                xv_odc(1:3,np_odc)=pos1
+                xv_odc(4:6,np_odc)=tan((pi*real(vp(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost)) &
+                                  +vfield(:,i0,j0,k0,itx,ity,itz)
+                ilist_odc(np_odc)=ip
               endif
             endif
           enddo
         enddo
         enddo
         enddo
+
+        if(np_odc>max_halo_np) stop 'np_search>max_halo_np'
         hpos=frbox(:,1)+dgrid*(maxloc(finegrid)-0.5) ! Find refined mesh density maximum, wrt tile
-        !print*,'  np_search =',np_search
-        if(np_search>max_halo_np) stop 'np_search>max_halo_np'
-        do ii=1,np_search
-          dr=xhalo(ii,1:3)-hpos
-          rr=sqrt(sum(dr**2))
-          xhalo(ii,4)=rr
-        enddo
-        isortpos(:np_search)=(/(i0,i0=1,np_search)/)
-        call indexedsort(np_search,xhalo(:,4),isortpos(:))
-        xhalo(:,1:3)=xhalo(isortpos(:np_search),1:3)
-        !vhalo=vhalo(isortpos(:np_search),:)
-
-        ilist_vir(:np_search) = ilist_vir(isortpos(:np_search))
-
-        ! calculate radius
-        r_vir=0; i_vir=0
-        do ii=2,np_search
-          odcj=0.75/pi*ii*mass_p/xhalo(ii,4)**3
-          !print*, odcj
-          !stop
+        physical_halo=(minval(hpos)>0 .and. maxval(hpos)<nft)
+        ! sort by radius -------------------------------------------------------
+        r_vir(1:np_vir)=norm2(xv_vir(1:3,1:np_vir)-spread(hpos,2,np_vir),1)
+        isortpos_vir(:np_vir)=[(i0,i0=1,np_vir)]
+        call indexedsort(np_vir,r_vir,isortpos_vir)
+        r_odc(1:np_odc)=norm2(xv_odc(1:3,1:np_odc)-spread(hpos,2,np_odc),1)
+        isortpos_odc(:np_odc)=[(i0,i0=1,np_odc)]
+        call indexedsort(np_odc,r_odc,isortpos_odc)
+        ! calculate halo radius ------------------------------------------------
+        i_vir=0; i_odc=0
+        do ii=2,np_vir
+          odcj=0.75/pi*ii*mass_p/r_vir(ii)**3
           if (odcj<halo_vir) then
-            odci=0.75/pi*(ii-1)*mass_p/xhalo(ii-1,4)**3
-            !print*, ii,odcj,odci
-            r2 = log10(xhalo(ii, 4))
-            r1 = log10(xhalo(ii-1, 4))
+            odci=0.75/pi*(ii-1)*mass_p/r_vir(ii-1)**3
+            r2 = log10(r_vir(ii))
+            r1 = log10(r_vir(ii-1))
             d2 = log10(odcj)
             d1 = log10(odci)
             w1 = log10(halo_vir) - d2
             w2 = d1 - log10(halo_vir)
-
-            r_vir = 10**((w1 * r1 + w2 * r2) / (d1 - d2))
-            !print*, xhalo(ii-1, 4),xhalo(ii, 4),r_vir
-            if (xhalo(ii, 4)<=r_vir) then
-              i_vir=ii
-            else
-              i_vir=ii-1
-            endif
+            halo_info%radius_vir = 10**((w1 * r1 + w2 * r2) / (d1 - d2))
+            i_vir=ii-1
             exit
           endif
         enddo
-        if (i_vir==0) then
+        do ii=2,np_odc
+          odcj=0.75/pi*ii*mass_p/r_odc(ii)**3
+          if (odcj<halo_odc) then
+            odci=0.75/pi*(ii-1)*mass_p/r_odc(ii-1)**3
+            r2 = log10(r_odc(ii))
+            r1 = log10(r_odc(ii-1))
+            d2 = log10(odcj)
+            d1 = log10(odci)
+            w1 = log10(halo_odc) - d2
+            w2 = d1 - log10(halo_odc)
+            halo_info%radius_odc = 10**((w1 * r1 + w2 * r2) / (d1 - d2))
+            i_odc=ii-1
+            exit
+          endif
+        enddo
+        if (i_vir==0 .or. i_odc==0) then ! check number of particles
           n_search_fail=n_search_fail+1
           print*,'  search fail'
-          print*, ii,iloc,hpos
+          print*, ii,i_vir,i_odc
           stop
         endif
-        !print*,'  new hpos =',hpos
+        !print*,'  new hpos =',halo_info%hpos
         !open(12,file='finegrid.dat',access='stream')
         !write(12) finegrid
         !close(12)
         !close(13)
-
+        !print*,'stat'
         if (i_vir >= min_halo_particles) then
-          if (physical_halo) nhalo=nhalo+1 ! if the maximum is in physical regions
-          imass_vir = 0
-          imass_odc = 0
-          x_mean = 0.
-          x2_mean = 0.
-          v_mean = 0.
-          v2_mean = 0.
-          v_wrt_halo = 0.
-          v2_wrt_halo = 0.
-          ang_mom = 0.
-          l_CM = 0.
-
-          do ii=1,i_vir
-            ip=ilist_vir(ii)
-            imass_vir=imass_vir+1
-            x_mean=x_mean+xhalo(ii,1:3)
-            x2_mean=x2_mean+xhalo(ii,1:3)**2
-            ! v_mean, v2_mean
-            dx=xhalo(ii,1:3)-hpos
-            ! ang_mom(1:3)
-            !hpart_vir(ip)=1
-          enddo
-
-          do ii=1,i_odc
-            ip=ilist_odc(ii)
-            imass_odc=imass_odc+1
-            !hpart_odc(ip)=1
-          enddo
-          mass_odc=mass_p*imass_odc
-          mass_vir=mass_p*imass_vir
-          ! hpos + offset?
-          x_mean = x_mean/imass_vir !+ offset ?
-          x2_mean = x2_mean/imass_vir
-          v_mean = v_mean/imass_vir
-          v2_mean = v2_mean/imass_vir
-          ang_mom = ang_mom/imass_vir
-          l_CM(1) = ang_mom(1) - (x_mean(3)*v_mean(2) - x_mean(2)*v_mean(3))
-          l_CM(2) = ang_mom(2) - (x_mean(1)*v_mean(3) - x_mean(3)*v_mean(1))
-          l_CM(3) = ang_mom(3) - (x_mean(2)*v_mean(1) - x_mean(1)*v_mean(2))
-          v_disp = sqrt(v2_mean(1) + v2_mean(2) + v2_mean(3))
-          !var_x = real(imass_vir)/(real(imass_vir-1)) * (x2_mean - (x_mean-offset)**2) ?
-
-          E0=0
-          E_tmp=0
-          I_ij=0
-          do ii=1,i_vir
-            ip=ilist_vir(ii)
-            ! r_wrt_halo
-            ! v_wrt_halo
-            ! v2v2_wrt_halo
-            ! dist
-            ! I_ij = ...
-          enddo
-          ! v2_wrt_halo(:) = v2_wrt_halo(:)/imass_vir
-          ! write(11) halo_info ! if the maximum is in physical regions
+          hpart_vir(ilist_vir(1:i_vir))=1
+          hpart_odc(ilist_odc(1:i_odc))=1
+          if (physical_halo) then  ! if the maximum is in physical regions
+            nhalo=nhalo+1
+            halo_info%hpos=hpos+(itile-1)*nft
+            halo_info%mass_vir=mass_p*i_vir
+            halo_info%mass_odc=mass_p*i_odc
+            halo_info%x_mean=sum(xv_vir(1:3,isortpos_vir(1:i_vir)),2)/i_vir
+            halo_info%var_x=sum((xv_vir(1:3,isortpos_vir(1:i_vir))-spread(halo_info%x_mean,2,i_vir))**2,2)/(i_vir-1)
+            halo_info%v_mean=sum(xv_vir(4:6,isortpos_vir(1:i_vir)),2)/i_vir
+            halo_info%v_disp=sqrt(sum((xv_vir(4:6,isortpos_vir(1:i_vir))-spread(halo_info%v_mean,2,i_vir))**2)/(i_vir-1))
+            halo_info%ang_mom=0
+            do ii=1,i_vir
+              dx=xv_vir(1:3,ii)-halo_info%hpos
+              dv=xv_vir(4:6,ii)-halo_info%v_mean
+              halo_info%ang_mom(1)=halo_info%ang_mom(1)+dx(2)*dv(3)-dx(3)*dv(2)
+              halo_info%ang_mom(2)=halo_info%ang_mom(2)+dx(3)*dv(1)-dx(1)*dv(3)
+              halo_info%ang_mom(3)=halo_info%ang_mom(3)+dx(1)*dv(2)-dx(2)*dv(1)
+            enddo
+            write(11) halo_info ! if the maximum is in physical regions
+          endif ! physical_halo
         endif
       enddo ! do iloc=n_candidate,1,-1
       print*, '  found nhalo =',nhalo
-      !stop
     enddo
     enddo
     enddo !! itz
-
+    sync all
+    if (head) then
+      nhalo_tot=0
+      do ii=1,nn**3
+        nhalo_tot=nhalo_tot+nhalo[ii]
+      enddo
+    endif
+    sync all
+    nhalo_tot=nhalo_tot[1]
+    sync all
 
     if (head) then
-      print*, '  found',nhalo,'halos'
-      print*, '  n_search_fail =',n_search_fail
+      print*, '  found',nhalo_tot,'halos'
     endif
     rewind(11)
-    write(11) nhalo
+    write(11) nhalo_tot,nhalo
     close(11)
   enddo ! do cur_checkpoint= 1,n_checkpoint
   sync all
   if (head) print*, 'halofinder done'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 contains
@@ -837,6 +799,238 @@ contains
     sync all
 
   endsubroutine buffer_xp
+
+  subroutine buffer_vp
+    !use variables
+    implicit none
+    save
+    integer(8) nshift,nlen,ifrom,mlast
+
+# ifdef PID
+      if (head) print*, 'buffer_vp (vp & pid)'
+# else
+      if (head) print*, 'buffer_vp'
+# endif
+    ! buffer x direction
+    ! sync x- buffer with node on the left
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=1,1 ! do only tile_x=1
+      do iz=1,nt
+      do iy=1,nt
+        nlast=cum(0,iy,iz,itx,ity,itz)
+        nlen=nlast-cum(1-ncb,iy,iz,itx,ity,itz)+rhoc(1-ncb,iy,iz,itx,ity,itz)
+        mlast=cum(nt,iy,iz,nnt,ity,itz)[image1d(inx,icy,icz)]
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)[image1d(inx,icy,icz)]
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)[image1d(inx,icy,icz)]
+      enddo
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! redistribute local x- buffer
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=2,nnt ! skip tile_x=1
+      do iz=1,nt
+      do iy=1,nt
+        nlast=cum(0,iy,iz,itx,ity,itz)
+        nlen=nlast-cum(1-ncb,iy,iz,itx,ity,itz)+rhoc(1-ncb,iy,iz,itx,ity,itz)
+        mlast=cum(nt,iy,iz,itx-1,ity,itz)
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)
+      enddo
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! sync x+ buffer with node on the right
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=nnt,nnt ! do only tile_x=nnt
+      do iz=1,nt
+      do iy=1,nt
+        nlast=cum(nt+ncb,iy,iz,itx,ity,itz)
+        nlen=nlast-cum(nt,iy,iz,itx,ity,itz)
+        mlast=cum(ncb,iy,iz,1,ity,itz)[image1d(ipx,icy,icz)]
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)[image1d(ipx,icy,icz)]
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)[image1d(ipx,icy,icz)]
+      enddo
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! redistribute local x+ buffer
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=1,nnt-1 ! skip tile_x=nnt
+      do iz=1,nt
+      do iy=1,nt
+        nlast=cum(nt+ncb,iy,iz,itx,ity,itz)
+        nlen=nlast-cum(nt,iy,iz,itx,ity,itz)
+        mlast=cum(ncb,iy,iz,itx+1,ity,itz)
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)
+      enddo
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! buffer y direction
+    ! sync y-
+    do itz=1,nnt
+    do ity=1,1 ! do only ity=1
+    do itx=1,nnt
+      do iz=1,nt
+        nlast=cum(nt+ncb,0,iz,itx,ity,itz)
+        nlen=nlast-cum(1-ncb,1-ncb,iz,itx,ity,itz)+rhoc(1-ncb,1-ncb,iz,itx,ity,itz)
+        mlast=cum(nt+ncb,nt,iz,itx,nnt,itz)[image1d(icx,iny,icz)]
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)[image1d(icx,iny,icz)]
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)[image1d(icx,iny,icz)]
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! redistribute y-
+    do itz=1,nnt
+    do ity=2,nnt ! skip ity=1
+    do itx=1,nnt
+      do iz=1,nt
+        nlast=cum(nt+ncb,0,iz,itx,ity,itz)
+        nlen=nlast-cum(1-ncb,1-ncb,iz,itx,ity,itz)+rhoc(1-ncb,1-ncb,iz,itx,ity,itz)
+        mlast=cum(nt+ncb,nt,iz,itx,ity-1,itz)
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! sync y+
+    do itz=1,nnt
+    do ity=nnt,nnt ! do only ity=nnt
+    do itx=1,nnt
+      do iz=1,nt
+        nlast=cum(nt+ncb,nt+ncb,iz,itx,ity,itz)
+        nlen=nlast-cum(nt+ncb,nt,iz,itx,ity,itz)
+        mlast=cum(nt+ncb,ncb,iz,itx,1,itz)[image1d(icx,ipy,icz)]
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)[image1d(icx,ipy,icz)]
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)[image1d(icx,ipy,icz)]
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! redistribute y+
+    do itz=1,nnt
+    do ity=1,nnt-1 ! skip ity=nnt
+    do itx=1,nnt
+      do iz=1,nt
+        nlast=cum(nt+ncb,nt+ncb,iz,itx,ity,itz)
+        nlen=nlast-cum(nt+ncb,nt,iz,itx,ity,itz)
+        mlast=cum(nt+ncb,ncb,iz,itx,ity+1,itz)
+#   ifdef PID
+        pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)
+#   endif
+        vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)
+      enddo
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! buffer z direction
+    ! sync z-
+    do itz=1,1 ! do only itz=1
+    do ity=1,nnt
+    do itx=1,nnt
+      nlast=cum(nt+ncb,nt+ncb,0,itx,ity,itz)
+      nlen=nlast-cum(1-ncb,1-ncb,1-ncb,itx,ity,itz)+rhoc(1-ncb,1-ncb,1-ncb,itx,ity,itz)
+      mlast=cum(nt+ncb,nt+ncb,nt,itx,ity,nnt)[image1d(icx,icy,inz)]
+# ifdef PID
+      pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)[image1d(icx,icy,inz)]
+# endif
+      vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)[image1d(icx,icy,inz)]
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! redistribute z-
+    do itz=2,nnt ! skip itz=1
+    do ity=1,nnt
+    do itx=1,nnt
+      nlast=cum(nt+ncb,nt+ncb,0,itx,ity,itz)
+      nlen=nlast-cum(1-ncb,1-ncb,1-ncb,itx,ity,itz)+rhoc(1-ncb,1-ncb,1-ncb,itx,ity,itz)
+      mlast=cum(nt+ncb,nt+ncb,nt,itx,ity,itz-1)
+# ifdef PID
+      pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)
+# endif
+      vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! sync z+
+    do itz=nnt,nnt ! do only itz=nnt
+    do ity=1,nnt
+    do itx=1,nnt
+      nlast=cum(nt+ncb,nt+ncb,nt+ncb,itx,ity,itz)
+      nlen=nlast-cum(nt+ncb,nt+ncb,nt,itx,ity,itz)
+      mlast=cum(nt+ncb,nt+ncb,ncb,itx,ity,1)[image1d(icx,icy,ipz)]
+# ifdef PID
+      pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)[image1d(icx,icy,ipz)]
+# endif
+      vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)[image1d(icx,icy,ipz)]
+    enddo
+    enddo
+    enddo
+    sync all
+
+    ! redistribute z+
+    do itz=1,nnt-1 ! skip itz=nnt
+    do ity=1,nnt
+    do itx=1,nnt
+      nlast=cum(nt+ncb,nt+ncb,nt+ncb,itx,ity,itz)
+      nlen=nlast-cum(nt+ncb,nt+ncb,nt,itx,ity,itz)
+      mlast=cum(nt+ncb,nt+ncb,ncb,itx,ity,itz+1)
+#   ifdef PID
+      pid(nlast-nlen+1:nlast)=pid(mlast-nlen+1:mlast)
+#   endif
+      vp(:,nlast-nlen+1:nlast)=vp(:,mlast-nlen+1:mlast)
+    enddo
+    enddo
+    enddo
+    sync all
+  endsubroutine buffer_vp
+
 
   function cumsum6(rho_input)
     implicit none
