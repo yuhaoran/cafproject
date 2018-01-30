@@ -2,7 +2,7 @@ OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
 
-all: ic.x ic_nu.x cicpower.x #dsp.x qspace.x corr.x #convert.x
+all: ic.x ic_nu.x cicpower.x vel.x #dsp.x qspace.x corr.x #convert.x
 	@echo "done"
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -11,6 +11,8 @@ ic_nu.x: parameters.o initial_conditions_nu.o
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o pencil_fft.o powerspectrum.o cicpower.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+vel.x:  parameters.o pencil_fft.o powerspectrum.o velocity_field.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 corr.x: parameters.o pencil_fft.o powerspectrum.o correlation_qspace.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -36,6 +38,8 @@ xva_qspace.o: xva_qspace.f90 parameters.o
 correlation_qspace.o: correlation_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 cicpower.o: cicpower.f90 parameters.o pencil_fft.o powerspectrum.o
+	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
+velocity_field.o: velocity_field.f90 parameters.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 convert_zip_to_xv.o: convert_zip_to_xv.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $<

@@ -4,6 +4,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 program CUBE
+  use omp_lib
   use variables
   use neutrinos
   use buffer_grid_subroutines

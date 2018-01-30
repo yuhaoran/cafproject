@@ -1,4 +1,5 @@
 module variables
+  use omp_lib
   use parameters
   implicit none
   save
@@ -23,7 +24,7 @@ module variables
   real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
   real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
 
-  integer(4) iseed(nseedmax), iseedsize
+  integer(4) iseed(nseedmax), iseedsize, nth,ith
   integer(8) itx,ity,itz,ix,iy,iz,i_dim
   integer(8) i,j,k,l,ip,ipp,pp
   integer(8) nplocal[*],nplocal_nu[*], nptile(nnt,nnt,nnt)

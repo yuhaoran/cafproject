@@ -42,7 +42,7 @@ module parameters
   integer(8),parameter :: ng_global=ng*nn
   integer(8),parameter :: nyquest=ng_global/2
 
-  integer(8),parameter :: ncore=1 ! number of cores per image
+  integer(8),parameter :: ncore=4 ! number of cores per image
   integer(8),parameter :: n_nest=4 ! number of nested threads
 
   integer(8),parameter :: ncb=6 ! nc in buffer /dim, single side; 6 by default

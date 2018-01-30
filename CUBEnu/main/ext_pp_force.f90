@@ -8,10 +8,13 @@ module pp_force
 contains
 
 subroutine ext_pp_force
+  use omp_lib
   use variables
   !use neutrinos
   implicit none
   save
+
+  integer t1,t2,t_rate
 
 
   if (head) then
@@ -21,6 +24,9 @@ subroutine ext_pp_force
     print*, '  ext_pp_force over',int(nnt**3,2),'tiles'
     print*, '  np_pp_max=',np_pp_max
   endif
+  nth=omp_get_max_threads()
+  print*,'  max num_threads =',nth
+
   itest1=0
   npairs=0
   f2_max_pp(1:nnt,1:nnt,1:nnt)=0
@@ -29,6 +35,7 @@ subroutine ext_pp_force
   do ity=1,nnt
   do itx=1,nnt
     if (head) print*, '  tile:',int(itx,1),int(ity,1),int(itz,1)
+    call system_clock(t1,t_rate)
     ! [1] make linked list
     if (np_pp_max<sum(rhoc(0:nt+1,0:nt+1,0:nt+1,itx,ity,itz))) then
       print*, 'np_pp_max too small'
@@ -53,14 +60,24 @@ subroutine ext_pp_force
     enddo
     enddo
     enddo
+
+
     ! [2] pair particles
+!    !$omp parallel private(ith,nth)
+!      nth=omp_get_num_threads(); ith=omp_get_thread_num(); print*, '  hello from',ith,'/',nth
+!    !$omp endparallel
+
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(igx,igy,igz,ip1,xvec1,vreal,f_tot,ii,jj,kk,ip2,npairs) &
+    !$omp& private(xvec2,xvec21,rmag,rcut,pcut,force_pp,f2_max_pp) &
+    !$omp& reduction(+:itest1)
     do igz=1,nft
     do igy=1,nft
     do igx=1,nft
       ip1=hoc(igx,igy,igz)
       do while (ip1/=0)
         itest1=itest1+1
-!#ifdef SKIP_PP_PAIR
         xvec1=ncell*floor(((/igx,igy,igz/)-1)/4.)+ncell*(int(xp(:,ip1)+ishift,izipx)+rshift)*x_resolution
         vreal=tan(pi*real(vp(:,ip1))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         !ivec1=floor(xvec1)+1
@@ -110,12 +127,15 @@ subroutine ext_pp_force
         vreal=vreal+f_tot*a_mid*dt/6/pi
         vp(:,ip1)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
         f2_max_pp(itx,ity,itz)=max(f2_max_pp(itx,ity,itz),sum(f_tot**2))
-!#endif
         ip1=ll(ip1)
       enddo !! do while (ip1/=0)
-    enddo !! i
-    enddo !! j
-    enddo !! k
+    enddo
+    enddo
+    enddo
+    !$omp endparalleldo
+    call system_clock(t2,t_rate)
+    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    print*, '  itest1 =',itest1
   enddo
   enddo
   enddo !! itz
@@ -146,10 +166,6 @@ subroutine ext_pp_force
   sync all
 
 endsubroutine
-
-
-
-
 
 
 endmodule

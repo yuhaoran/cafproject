@@ -6,7 +6,7 @@ subroutine initialize
   save
   include 'fftw3.f'
 
-  if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'  images'
+  if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'images'
   sync all
   call system('hostname')
   sync all
@@ -58,4 +58,9 @@ subroutine initialize
   call system('mkdir -p '//opath//'/image'//image2str(image))
   sync all
 
+  print*,''
+
+  call omp_set_num_threads(ncore)
+  nth=omp_get_max_threads()
+  print*,'max num_threads =',nth
 endsubroutine
