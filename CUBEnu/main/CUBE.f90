@@ -23,6 +23,7 @@ program CUBE
 
   if (head) print*, '---------- starting main loop ----------'
   DO istep=1,istep_max
+    call system_clock(ttt1,t_rate)
     call timestep
     call update_x
     call buffer_grid
@@ -46,6 +47,8 @@ program CUBE
       checkpoint_step=.false.
       dt=0
     endif
+    call system_clock(ttt2,t_rate)
+    print*, 'total elapsed time =',real(ttt2-ttt1)/t_rate,'secs';
   ENDDO
 
   if (head) close(77)

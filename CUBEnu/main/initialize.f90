@@ -6,20 +6,30 @@ subroutine initialize
   save
   include 'fftw3.f'
 
-  if (this_image()==1) print*, 'Coarray CUBE on',nn**3,'images'
-  sync all
-  call system('hostname')
+  !call system('hostname')
+  if (this_image()==1) then
+    print*, ''
+    print*, 'Coarray CUBE on',int(nn**3,2),'images  x',int(ncore,1),'cores'
+    print*, ''
+    print*, 'initialize'
+    print*, '  call geometry'
+  endif
   sync all
 
-  if (this_image()==1) print*, 'initialize'
-  if (this_image()==1) print*, 'call geometry'
   call geometry
 
-  if (head) print*, 'call create_cubefft_plan ng = ',ng
+  if (head) print*, '  call create_cubefft_plan ng = ',ng
+  call system_clock(t1,t_rate)
   call create_cubefft_plan
+  call system_clock(t2,t_rate)
+  print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+  sync all
 
-  if (head) print*, 'call create_penfft_plan nfe = ',nfe
+  if (head) print*, '  call create_penfft_plan nfe = ',nfe
+  call system_clock(t1,t_rate)
   call create_penfft_plan
+  call system_clock(t2,t_rate)
+  print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
   sync all
   ! omp_init
 
@@ -42,8 +52,9 @@ subroutine initialize
   final_step=.false.
 
   if (head) then
-    print*, 'output: ', opath
-    print*, 'checkpoint at:'
+    print*, 'checkpoint information'
+    print*, '  output: ', opath
+    print*, '  checkpoint at:'
     open(16,file='redshifts.txt',status='old')
     do i=1,nmax_redshift
       read(16,end=71,fmt='(f8.4)') z_checkpoint(i)
@@ -58,9 +69,13 @@ subroutine initialize
   call system('mkdir -p '//opath//'/image'//image2str(image))
   sync all
 
-  print*,''
-
+  print*,'OpenMP information'
+  nth=omp_get_num_procs()
+  print*,'  omp_get_num_procs =',nth
+  nth=omp_get_thread_limit()
+  print*,'  omp_get_thread_limit =',nth
   call omp_set_num_threads(ncore)
   nth=omp_get_max_threads()
-  print*,'max num_threads =',nth
+  print*,'  omp_get_max_threads =',nth
+  print*, ''
 endsubroutine

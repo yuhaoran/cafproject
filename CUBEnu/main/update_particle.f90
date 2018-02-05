@@ -26,7 +26,8 @@ subroutine update_xp()
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
   integer(8) checkv0,checkv1
 
-  if (head) print*,'update_vp'
+  if (head) print*,'update_xp'
+  call system_clock(t1,t_rate)
   dt_mid=(dt_old+dt)/2
   overhead_tile=0
   iright=0
@@ -45,6 +46,10 @@ subroutine update_xp()
     pid_new=0
 #   endif
     !if (head) print*,'    density loop'
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g) &
+    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -63,13 +68,13 @@ subroutine update_xp()
     enddo
     enddo
     enddo
+    !$omp endparalleldo
     ! vfield_new is kept the same as previous-step if the grid is empty.
     ! vfield_new is at most weight_v weighted by previous-step for non-empty grids.
     ! this also gets rid of if statements.
     vfield_new(1,:,:,:)=vfield_new(1,:,:,:)/(rhoce+weight_v)
     vfield_new(2,:,:,:)=vfield_new(2,:,:,:)/(rhoce+weight_v)
     vfield_new(3,:,:,:)=vfield_new(3,:,:,:)/(rhoce+weight_v)
-    !if (head) print*,'    cubesum3'
     cume=cumsum3(rhoce)
     overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max))
     if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>np_tile_max) then
@@ -81,6 +86,10 @@ subroutine update_xp()
     endif
     ! create x_new v_new for this local tile
     !if (head) print*,'    xvnew loop'
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx) 
+!    !$omp& reduction(+:rholocal)
     do k=1-ncb,nt+ncb ! update particle
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -105,6 +114,7 @@ subroutine update_xp()
     enddo
     enddo
     enddo
+    !$omp endparalleldo
     sync all
     ! delete particles
     !if (head) print*,'    delete_particle loop'
@@ -122,9 +132,10 @@ subroutine update_xp()
     enddo
     enddo
     ! update rhoc
+    rhoc(:,:,:,itx,ity,itz)=0
     rhoc(1:nt,1:nt,1:nt,itx,ity,itz)=rhoce(1:nt,1:nt,1:nt)
+    vfield(:,:,:,:,itx,ity,itz)=0
     vfield(:,1:nt,1:nt,1:nt,itx,ity,itz)=vfield_new(:,1:nt,1:nt,1:nt)
-    !print*, sum(rhoce(1:nt,1:nt,1:nt)), sum(rhoce), cume(nt+2*ncb,nt+2*ncb,nt+2*ncb), sum(rhoc(1:nt,1:nt,1:nt,itx,ity,itz))
   enddo
   enddo
   enddo ! end looping over tiles
@@ -140,8 +151,12 @@ subroutine update_xp()
   sync all
 
   ! calculate std of the velocity field
-  ip=0
+  cum=cumsum6(rhoc)
   std_vsim=0; std_vsim_c=0; std_vsim_res=0
+!  !$omp paralleldo &
+!  !$omp& default(shared) &
+!  !$omp& private(itz,ity,itx,k,j,i,nlast,np,l,ip,vreal) &
+!  !$omp& reduction(+:std_vsim_c,std_vsim,std_vsim_res)
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -149,8 +164,10 @@ subroutine update_xp()
     do j=1,nt
     do i=1,nt
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k,itx,ity,itz)**2)
-      do l=1,rhoc(i,j,k,itx,ity,itz)
-        ip=ip+1
+      nlast=cum(i,j,k,itx,ity,itz)
+      np=rhoc(i,j,k,itx,ity,itz)
+      do l=1,np
+        ip=nlast-np+l
         vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
@@ -162,6 +179,7 @@ subroutine update_xp()
   enddo
   enddo
   enddo
+!  !$omp endparalleldo
   sync all
 
   ! co_sum
@@ -207,42 +225,18 @@ subroutine update_xp()
     print*, '  clean buffer of rhoc'
   endif
 
-  ! clean up buffer region of rhoc
-  rhoc(:0,:,:,:,:,:)=0
-  rhoc(nt+1:,:,:,:,:,:)=0
-  rhoc(:,:0,:,:,:,:)=0
-  rhoc(:,nt+1:,:,:,:,:)=0
-  rhoc(:,:,:0,:,:,:)=0
-  rhoc(:,:,nt+1:,:,:,:)=0
-  sync all
-
   if (head) then
     npcheck=0
     do i=1,nn**3
       npcheck=npcheck+nplocal[i]
     enddo
     print*, '  npcheck,npglobal=', npcheck,npglobal
+    call system_clock(t2,t_rate)
+    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
     print*, ''
   endif
   sync all
 endsubroutine update_xp
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -266,16 +260,15 @@ subroutine update_xp_nu()
   integer(8) checkv0,checkv1
 
   if (head) print*,'update_vp_nu'
+  call system_clock(t1,t_rate)
   dt_mid=(dt_old+dt)/2
   overhead_tile=0
   iright=0
   do itz=1,nnt ! loop over tile
   do ity=1,nnt
   do itx=1,nnt
-  !if (head) print*,'  tile',int(itx,1),int(ity,1),int(itz,1)
     rhoce=0
     rholocal=0
-    ! for empty coarse cells, use previous-step vfield
     vfield_new=0
     vfield_new(:,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb)=vfield_nu(:,:,:,:,itx,ity,itz)*weight_v
     xp_new_nu=0
@@ -284,6 +277,10 @@ subroutine update_xp_nu()
     pid_new_nu=0
 #   endif
     !if (head) print*,'    density loop'
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g) &
+    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -302,13 +299,13 @@ subroutine update_xp_nu()
     enddo
     enddo
     enddo
+    !$omp endparalleldo
     ! vfield_new is kept the same as previous-step if the grid is empty.
     ! vfield_new is at most weight_v weighted by previous-step for non-empty grids.
     ! this also gets rid of if statements.
     vfield_new(1,:,:,:)=vfield_new(1,:,:,:)/(rhoce+weight_v)
     vfield_new(2,:,:,:)=vfield_new(2,:,:,:)/(rhoce+weight_v)
     vfield_new(3,:,:,:)=vfield_new(3,:,:,:)/(rhoce+weight_v)
-    !if (head) print*,'    cubesum3'
     cume=cumsum3(rhoce)
     overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max_nu))
     if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>np_tile_max_nu) then
@@ -320,6 +317,10 @@ subroutine update_xp_nu()
     endif
     ! create x_new v_new for this local tile
     !if (head) print*,'    xvnew loop'
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx) &
+    !$omp& reduction(+:rholocal)
     do k=1-ncb,nt+ncb ! update particle
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -344,6 +345,7 @@ subroutine update_xp_nu()
     enddo
     enddo
     enddo
+    !$omp endparalleldo
     sync all
     ! delete particles
     !if (head) print*,'    delete_particle loop'
@@ -361,9 +363,10 @@ subroutine update_xp_nu()
     enddo
     enddo
     ! update rhoc
+    rhoc_nu(:,:,:,itx,ity,itz)=0
     rhoc_nu(1:nt,1:nt,1:nt,itx,ity,itz)=rhoce(1:nt,1:nt,1:nt)
+    vfield_nu(:,:,:,:,itx,ity,itz)=0
     vfield_nu(:,1:nt,1:nt,1:nt,itx,ity,itz)=vfield_new(:,1:nt,1:nt,1:nt)
-    !print*, sum(rhoce(1:nt,1:nt,1:nt)), sum(rhoce), cume(nt+2*ncb,nt+2*ncb,nt+2*ncb), sum(rhoc(1:nt,1:nt,1:nt,itx,ity,itz))
   enddo
   enddo
   enddo ! end looping over tiles
@@ -379,8 +382,12 @@ subroutine update_xp_nu()
   sync all
 
   ! calculate std of the velocity field
-  ip=0
+  cum_nu=cumsum6(rhoc_nu)
   std_vsim_nu=0; std_vsim_c_nu=0; std_vsim_res_nu=0
+  !$omp paralleldo &
+  !$omp& default(shared) &
+  !$omp& private(itz,ity,itx,k,j,i,nlast,np,l,ip,vreal) &
+  !$omp& reduction(+:std_vsim_c_nu,std_vsim_nu,std_vsim_res_nu)
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -388,8 +395,10 @@ subroutine update_xp_nu()
     do j=1,nt
     do i=1,nt
       std_vsim_c_nu=std_vsim_c_nu+sum(vfield_nu(:,i,j,k,itx,ity,itz)**2)
-      do l=1,rhoc_nu(i,j,k,itx,ity,itz)
-        ip=ip+1
+      nlast=cum_nu(i,j,k,itx,ity,itz)
+      np=rhoc_nu(i,j,k,itx,ity,itz)
+      do l=1,np
+        ip=nlast-np+l
         vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
         std_vsim_res_nu=std_vsim_res_nu+sum(vreal**2)
         vreal=vreal+vfield_nu(:,i,j,k,itx,ity,itz)
@@ -401,6 +410,7 @@ subroutine update_xp_nu()
   enddo
   enddo
   enddo
+  !$omp endparalleldo
   sync all
 
   ! co_sum
@@ -446,24 +456,18 @@ subroutine update_xp_nu()
     print*, '  clean buffer of rhoc_nu'
   endif
 
-  ! clean up buffer region of rhoc
-  rhoc_nu(:0,:,:,:,:,:)=0
-  rhoc_nu(nt+1:,:,:,:,:,:)=0
-  rhoc_nu(:,:0,:,:,:,:)=0
-  rhoc_nu(:,nt+1:,:,:,:,:)=0
-  rhoc_nu(:,:,:0,:,:,:)=0
-  rhoc_nu(:,:,nt+1:,:,:,:)=0
-  sync all
-
   if (head) then
     npcheck=0
     do i=1,nn**3
       npcheck=npcheck+nplocal_nu[i]
     enddo
     print*, '  npcheck,npglobal=', npcheck,npglobal_nu
-    print*, ''
+    call system_clock(t2,t_rate)
+    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    print*,''
+    sync all
   endif
-  sync all
+
 endsubroutine update_xp_nu
 
 endmodule

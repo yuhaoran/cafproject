@@ -5,9 +5,25 @@ subroutine particle_initialization
   implicit none
   save
 
-  if (head) print*, 'particle_initialization'
+  character(100) fn10,fn11,fn12,fn13,fn14,fn15,fn21,fn22,fn23,fn24,fn25
 
-  open(10,file=ic_name('info'),status='old',access='stream')
+  if (head) then
+    print*, 'particle_initialization'
+    call system_clock(t1,t_rate)
+  endif
+  fn10=ic_name('info')
+  fn11=ic_name('xp')
+  fn12=ic_name('vp')
+  fn13=ic_name('np')
+  fn14=ic_name('vc')
+  fn15=ic_name('id')
+  fn21=ic_name_nu('xp_nu')
+  fn22=ic_name_nu('vp_nu')
+  fn23=ic_name_nu('np_nu')
+  fn24=ic_name_nu('vc_nu')
+  fn25=ic_name_nu('id_nu')
+
+  open(10,file=fn10,status='old',access='stream')
   read(10) sim
   close(10)
   nplocal=sim%nplocal
@@ -23,49 +39,34 @@ subroutine particle_initialization
     stop
   endif
 
-  open(11,file=ic_name('xp'),status='old',access='stream')
-  read(11) xp(:,:nplocal)
-  close(11)
-
-  open(11,file=ic_name('vp'),status='old',access='stream')
-  read(11) vp(:,:nplocal)
-  close(11)
-
-  open(11,file=ic_name('np'),status='old',access='stream')
-  read(11) rhoc(1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
-  open(11,file=ic_name('vc'),status='old',access='stream')
-  read(11) vfield(:,1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
+! may create separate file names
+  !$omp parallelsections default(shared)
+  !$omp section
+    open(11,file=fn11,status='old',access='stream'); read(11) xp(:,:nplocal); close(11)
+  !$omp section
+    open(12,file=fn12,status='old',access='stream'); read(12) vp(:,:nplocal); close(12)
+  !$omp section
+    open(13,file=fn13,status='old',access='stream'); read(13) rhoc(1:nt,1:nt,1:nt,:,:,:); close(13)
+  !$omp section
+    open(14,file=fn14,status='old',access='stream'); read(14) vfield(:,1:nt,1:nt,1:nt,:,:,:); close(14)
 #ifdef PID
-    open(11,file=ic_name('id'),status='old',access='stream')
-    read(11) pid(:nplocal)
-    close(11)
+  !$omp section
+    open(15,file=fn15,status='old',access='stream'); read(15) pid(:nplocal); close(15)
 #endif
 
-  open(11,file=ic_name('xp_nu'),status='old',access='stream')
-  read(11) xp_nu(:,:nplocal_nu)
-  close(11)
-
-  open(11,file=ic_name('vp_nu'),status='old',access='stream')
-  read(11) vp_nu(:,:nplocal_nu)
-  close(11)
-
-  open(11,file=ic_name('np_nu'),status='old',access='stream')
-  read(11) rhoc_nu(1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
-  open(11,file=ic_name('vc_nu'),status='old',access='stream')
-  read(11) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
+  !$omp section
+    open(21,file=fn21,status='old',access='stream'); read(21) xp_nu(:,:nplocal_nu); close(21)
+  !$omp section
+    open(22,file=fn22,status='old',access='stream'); read(22) vp_nu(:,:nplocal_nu); close(22)
+  !$omp section
+    open(23,file=fn23,status='old',access='stream'); read(23) rhoc_nu(1:nt,1:nt,1:nt,:,:,:); close(23)
+  !$omp section
+    open(24,file=fn24,status='old',access='stream'); read(24) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:); close(24)
 #ifdef EID
-      open(11,file=ic_name('id_nu'),status='old',access='stream')
-      read(11) pid_nu(:nplocal_nu)
-      close(11)
+  !$omp section
+    open(25,file=fn25,status='old',access='stream'); read(25) pid_nu(:nplocal_nu); close(25)
 #endif
+  !$omp endparallelsections
 
   a=a_i
   npglobal=0
@@ -100,6 +101,11 @@ subroutine particle_initialization
     !print*,'  std_vres',sqrt(3.)*sigma_vres*sim%vsim2phys,'km/s'
     print*,'  sigma_vi    =',sigma_vi,'(simulation unit)'
     print*,'  sigma_vi_nu =',sigma_vi_nu,'(simulation unit)'
+  endif
+  if (head) then
+    call system_clock(t2,t_rate)
+    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    print*, ''
   endif
   sync all
 endsubroutine

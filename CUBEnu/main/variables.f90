@@ -22,7 +22,7 @@ module variables
   real dt[*],dt_old[*],dt_mid[*]
   real dt_fine[*],dt_pp[*],dt_coarse[*],dt_vmax[*],dt_vmax_nu[*]
   real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
-  real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp(nnt,nnt,nnt)[*],f2_max_coarse[*]
+  real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp[*],f2_max_coarse[*]
 
   integer(4) iseed(nseedmax), iseedsize, nth,ith
   integer(8) itx,ity,itz,ix,iy,iz,i_dim
@@ -84,6 +84,7 @@ module variables
   real(8) xvec1(3),xvec2(3),xvec21(3),rmag,force_pp(3),rcut,pcut,f_tot(3)
   integer(4) ivec1(3),nlast,nlast1,nlast2,np,ii,jj,kk,np1,np2,l1,l2
   integer igx,igy,igz,lp,ip1,ip2
+  integer t1,t2,tt1,tt2,ttt1,ttt2,t_rate
 
 contains
 

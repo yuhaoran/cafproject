@@ -22,6 +22,8 @@ module parameters
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
   integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
+  integer(8),parameter :: ncore=4 ! number of cores per image
+  integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
   integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
@@ -41,9 +43,6 @@ module parameters
   integer(8),parameter :: npen=ng/nn ! ng /dim in shorter side of the pencil, for pencil decomposition
   integer(8),parameter :: ng_global=ng*nn
   integer(8),parameter :: nyquest=ng_global/2
-
-  integer(8),parameter :: ncore=4 ! number of cores per image
-  integer(8),parameter :: n_nest=4 ! number of nested threads
 
   integer(8),parameter :: ncb=6 ! nc in buffer /dim, single side; 6 by default
   integer(8),parameter :: nce=nc+2*ncb ! extended nc
@@ -256,7 +255,7 @@ module parameters
       output_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'
     endfunction
 
-    function output_suffix()
+    pure function output_suffix()
       character(:),allocatable :: output_suffix
       character(20) :: str_i
       write(str_i,'(i6)') image
@@ -269,8 +268,8 @@ module parameters
       output_name=output_prefix()//zipname//output_suffix()
     endfunction
 
-    function ic_name(zipname)  result(filename)
-      character(*) ::  zipname
+    pure function ic_name(zipname)  result(filename)
+      character(*), intent(in) ::  zipname
       character(:),allocatable :: filename
       character(20) :: str_z,str_i
       write(str_i,'(i6)') image

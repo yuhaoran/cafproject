@@ -105,6 +105,7 @@ endsubroutine
 
 subroutine redistribute_cdm()
   use variables
+  use neutrinos
   implicit none
   save
   integer(8) nshift,nlen,ifrom,checkxp0,checkxp1
@@ -112,6 +113,7 @@ subroutine redistribute_cdm()
   if (head) then
     print*,''
     print*, 'redistribute_cdm'
+    call system_clock(t1,t_rate)
   endif
   ! check
   overhead_image=sum(rhoc*unit8)/real(np_image_max,8)
@@ -136,53 +138,95 @@ subroutine redistribute_cdm()
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
   nshift=np_image_max-nplocal
-  xp(:,nshift+1:np_image_max)=xp(:,1:nplocal)
-  xp(:,1:nshift)=0
-  vp(:,nshift+1:np_image_max)=vp(:,1:nplocal)
-  vp(:,1:nshift)=0
+  !$omp parallelsections default(shared)
+  !$omp section
+    xp(:,nshift+1:np_image_max)=xp(:,1:nplocal)
+    xp(:,1:nshift)=0
+  !$omp section
+    vp(:,nshift+1:np_image_max)=vp(:,1:nplocal)
+    vp(:,1:nshift)=0
 # ifdef PID
+    !$omp section
     pid(nshift+1:np_image_max)=pid(1:nplocal)
     pid(1:nshift)=0
 # endif
+  !$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
-  print*, '  ',np_image_max,nplocal,nshift
+  !print*, '  ',np_image_max,nplocal,nshift
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
   endif
-
   ! shift back
   cum=cumsum6(rhoc)
   ifrom=nshift
-
-  do itz=1,nnt
-  do ity=1,nnt
-  do itx=1,nnt ! loop over tiles
-    do iz=1,nt ! loop over z slab
-    do iy=1,nt ! loog over y slot
-      ! nlast is the last particle's index
-      nlast=cum(nt,iy,iz,itx,ity,itz)
-      ! nlen is the number of particle in this x-slot
-      nlen=nlast-cum(0,iy,iz,itx,ity,itz)
-      xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
-      vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
-      xp(:,ifrom+1:ifrom+nlen)=0
-      vp(:,ifrom+1:ifrom+nlen)=0
-#     ifdef PID
+  !$omp parallelsections default(shared) &
+  !$omp& private(itz,ity,itx,iz,iy,nlast,nlen,ifrom)
+  !! firstprivate(ifrom) causes rhoc=0
+  !$omp section
+    ifrom=nshift
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=1,nnt ! loop over tiles
+      do iz=1,nt ! loop over z slab
+      do iy=1,nt ! loog over y slot
+        nlast=cum(nt,iy,iz,itx,ity,itz) ! nlast is the last particle's index
+        nlen=nlast-cum(0,iy,iz,itx,ity,itz) ! nlen is the number of particle in this x-slot
+        xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
+        xp(:,ifrom+1:ifrom+nlen)=0
+        ifrom=ifrom+nlen
+      enddo
+      enddo
+    enddo
+    enddo
+    enddo
+  !$omp section
+    ifrom=nshift
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=1,nnt
+      do iz=1,nt
+      do iy=1,nt
+        nlast=cum(nt,iy,iz,itx,ity,itz)
+        nlen=nlast-cum(0,iy,iz,itx,ity,itz)
+        vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
+        vp(:,ifrom+1:ifrom+nlen)=0
+        ifrom=ifrom+nlen
+      enddo
+      enddo
+    enddo
+    enddo
+    enddo
+# ifdef PID
+  !$omp section
+    ifrom=nshift
+    do itz=1,nnt
+    do ity=1,nnt
+    do itx=1,nnt
+      do iz=1,nt
+      do iy=1,nt
+        nlast=cum(nt,iy,iz,itx,ity,itz)
+        nlen=nlast-cum(0,iy,iz,itx,ity,itz)
         pid(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
         pid(ifrom+1:ifrom+nlen)=0
-#     endif
-      ifrom=ifrom+nlen
+        ifrom=ifrom+nlen
+      enddo
+      enddo
     enddo
     enddo
-  enddo
-  enddo
-  enddo
+    enddo
+# endif
+  !$omp endparallelsections
 
   checkxp1=sum(xp*int(1,kind=8))
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting back',image,checkxp0,checkxp1
     stop
+  endif
+  if (head) then
+    call system_clock(t2,t_rate)
+    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    print*, ''
   endif
   sync all
 endsubroutine
@@ -197,6 +241,7 @@ subroutine redistribute_nu
   if (head) then
     print*,''
     print*, 'redistribute_nu'
+    call system_clock(t1,t_rate)
   endif
   ! check
   overhead_image=sum(rhoc_nu*unit8)/real(np_image_max_nu,8)
@@ -221,16 +266,21 @@ subroutine redistribute_nu
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
   nshift=np_image_max_nu-nplocal_nu
-  xp_nu(:,nshift+1:np_image_max_nu)=xp_nu(:,1:nplocal_nu)
-  xp_nu(:,1:nshift)=0
-  vp_nu(:,nshift+1:np_image_max_nu)=vp_nu(:,1:nplocal_nu)
-  vp_nu(:,1:nshift)=0
+  !$omp parallelsections
+  !$omp section
+    xp_nu(:,nshift+1:np_image_max_nu)=xp_nu(:,1:nplocal_nu)
+    xp_nu(:,1:nshift)=0
+  !$omp section
+    vp_nu(:,nshift+1:np_image_max_nu)=vp_nu(:,1:nplocal_nu)
+    vp_nu(:,1:nshift)=0
 # ifdef EID
+  !$omp section
     pid_nu(nshift+1:np_image_max_nu)=pid(1:nplocal_nu)
     pid_nu(1:nshift)=0
 # endif
+  !$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
-  print*, '  ',np_image_max_nu,nplocal_nu,nshift
+  !print*, '  ',np_image_max_nu,nplocal_nu,nshift
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
@@ -239,35 +289,72 @@ subroutine redistribute_nu
   ! shift back
   cum_nu=cumsum6(rhoc_nu)
   ifrom=nshift
-
+  !$omp parallelsections default(shared) &
+  !$omp& private(itz,ity,itx,iz,iy,nlast,nlen,ifrom)
+  !$omp section
+  ifrom=nshift
   do itz=1,nnt
   do ity=1,nnt
-  do itx=1,nnt ! loop over tiles
-    do iz=1,nt ! loop over z slab
-    do iy=1,nt ! loog over y slot
-      ! nlast is the last particle's index
+  do itx=1,nnt
+    do iz=1,nt
+    do iy=1,nt
       nlast=cum_nu(nt,iy,iz,itx,ity,itz)
-      ! nlen is the number of particle in this x-slot
       nlen=nlast-cum_nu(0,iy,iz,itx,ity,itz)
       xp_nu(:,nlast-nlen+1:nlast)=xp_nu(:,ifrom+1:ifrom+nlen)
-      vp_nu(:,nlast-nlen+1:nlast)=vp_nu(:,ifrom+1:ifrom+nlen)
       xp_nu(:,ifrom+1:ifrom+nlen)=0
-      vp_nu(:,ifrom+1:ifrom+nlen)=0
-#     ifdef EID
-        pid_nu(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
-        pid_nu(ifrom+1:ifrom+nlen)=0
-#     endif
       ifrom=ifrom+nlen
     enddo
     enddo
   enddo
   enddo
   enddo
+  !$omp section
+  ifrom=nshift
+  do itz=1,nnt
+  do ity=1,nnt
+  do itx=1,nnt
+    do iz=1,nt
+    do iy=1,nt
+      nlast=cum_nu(nt,iy,iz,itx,ity,itz)
+      nlen=nlast-cum_nu(0,iy,iz,itx,ity,itz)
+      vp_nu(:,nlast-nlen+1:nlast)=vp_nu(:,ifrom+1:ifrom+nlen)
+      vp_nu(:,ifrom+1:ifrom+nlen)=0
+      ifrom=ifrom+nlen
+    enddo
+    enddo
+  enddo
+  enddo
+  enddo
+#ifdef EID
+  !$omp section
+  ifrom=nshift
+  do itz=1,nnt
+  do ity=1,nnt
+  do itx=1,nnt
+    do iz=1,nt
+    do iy=1,nt
+      nlast=cum_nu(nt,iy,iz,itx,ity,itz)
+      nlen=nlast-cum_nu(0,iy,iz,itx,ity,itz)
+      pid_nu(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
+      pid_nu(ifrom+1:ifrom+nlen)=0
+      ifrom=ifrom+nlen
+    enddo
+    enddo
+  enddo
+  enddo
+  enddo
+#endif
+  !$omp endparallelsections
 
   checkxp1=sum(xp*int(1,kind=8))
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting back',image,checkxp0,checkxp1
     stop
+  endif
+  if (head) then
+    call system_clock(t2,t_rate)
+    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    print*, ''
   endif
   sync all
 

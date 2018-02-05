@@ -1,5 +1,5 @@
 export FC='gfortran'
-#export XFLAG='-O3 -cpp -fcoarray=single -mcmodel=medium'
+#export XFLAG=' -O3 -cpp -fopenmp -fcoarray=single -mcmodel=medium'
 export XFLAG=' -cpp -fopenmp -fcoarray=single'
 #export XFLAG='-O3 -cpp -fcoarray=single -fopenmp'
 export OFLAG=${XFLAG}' -c'

@@ -12,18 +12,20 @@ subroutine particle_mesh
   !logical,parameter :: coarse_force=.true.
   !logical,parameter :: pp_force=.false.
   !logical,parameter :: ext_pp_force=.false.
-
-  integer(4) ithread, nthread
+! 16777215.951261731        16777216.965942383
+  integer(4) ithread, nthread, nk_tot, nk_thread
   integer(8) idxf(3)
   integer(8) idx1(3), idx2(3)
   real tempx(3), dx1(3), dx2(3)
   real r3t(-1:nt+2,-1:nt+2,-1:nt+2) ! coarse density on tile, with buffer=2
-
+  real(8) testrhof, testrhoc
   if (head) then
     print*, ''
     print*, 'particle mesh'
+    call system_clock(tt1,t_rate)
   endif
 
+  nthread=ncore
   !nthread=1
   !ithread=omp_get_thread_num()+1
   !print*,'ithread'
@@ -34,7 +36,8 @@ subroutine particle_mesh
   f2_max_coarse=0
 
   if (head) print*, '  pm fine over',nnt**3,'tiles'
-
+  call system_clock(t1,t_rate)
+  testrhof=0; testrhoc=0
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -43,12 +46,19 @@ subroutine particle_mesh
     rho_f=0
     crho_f=0
     !if (head) print*,'      fine_cic_mass'
-    do k=2-ncb,nt+ncb-1
+    nk_tot=nt+2*ncb-2
+    nk_thread=ceiling(real(nk_tot)/nthread)
+
+!    !$omp paralleldo ordered&
+!    !$omp& default(shared) &
+!    !$omp& private(ithread,k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2)
+    !!$omp& reduction(+:rho_f) rho_f not thread save
+    do ithread=1,nthread
+    do k=2-ncb+(ithread-1)*nk_thread,min(2-ncb+ithread*nk_thread-1,nt+ncb-1)
     do j=2-ncb,nt+ncb-1
     do i=2-ncb,nt+ncb-1
       nlast=cum(i-1,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
-      !print*,'c',nlast,np
       do l=1,np ! loop over cdm particles
         ip=nlast+l
         tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
@@ -91,6 +101,9 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
+    enddo
+!    !$omp endparalleldo
+    testrhof=testrhof+sum(rho_f(nfb+1:nft+nfb,nfb+1:nft+nfb,nfb+1:nft+nfb)*1d0)
     ! fine force ---------------------------------------------------------------
     !if (head) print*,'      fine_fft'
     call sfftw_execute(plan_fft_fine)
@@ -106,6 +119,9 @@ subroutine particle_mesh
     f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:)**2,1))
     ! fine velocity ------------------------------------------------------------
     !if (head) print*,'      fine velocity'
+!    !$omp paralleldo &
+!    !$omp& default(shared) &
+!    !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal)
     do k=1,nt
     do j=1,nt
     do i=1,nt ! loop over coarse cell
@@ -161,11 +177,14 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
+!    !$omp endparalleldo
   enddo
   enddo
   enddo
   sigma_vi=sigma_vi_new
   sigma_vi_nu=sigma_vi_new_nu
+  call system_clock(t2,t_rate)
+  print*, '    elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all
   !-----------------------------------------------------------------------------
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -173,12 +192,21 @@ subroutine particle_mesh
   if (head) print*, '  pm coarse'
   ! coarse_cic_mass ------------------------------------------------------------
   if (head) print*, '    coarse cic mass'
+  call system_clock(t1,t_rate)
+  nk_tot=nt+2
+  nk_thread=ceiling(real(nk_tot)/nthread)
   r3=0
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt ! loop over tile
     r3t=0
-    do k=0,nt+1
+!    !$omp paralleldo ordered&
+!    !$omp& default(shared) &
+!    !$omp& private(ithread,k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2)
+    !!$omp& reduction(+:r3t) r3t not thread save
+    do ithread=1,nthread
+    do k=0+(ithread-1)*nk_thread,min(0+ithread*nk_thread-1,nt+1)
+    !do k=0,nt+1
     do j=0,nt+1
     do i=0,nt+1
       nlast=cum(i-1,j,k,itx,ity,itz)
@@ -220,15 +248,21 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
+    enddo
+!    !$omp endparalleldo
     ! put center part of r3t into subset of r3
     r3((itx-1)*nt+1:itx*nt,(ity-1)*nt+1:ity*nt,(itz-1)*nt+1:itz*nt)=r3t(1:nt,1:nt,1:nt)
   enddo
   enddo
   enddo
+  testrhoc=sum(r3*1d0)
+  call system_clock(t2,t_rate)
+  print*, '    elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all
   ! coarse force ---------------------------------------------------------------
   if (head) print*, '    coarse cic force'
   if (head) print*,'      coarse_fft'
+  call system_clock(t1,t_rate)
   call pencil_fft_forward
   ! save complex rho_c into crho_c
   crho_c(::2,:,:)=real(cxyz)
@@ -240,9 +274,12 @@ subroutine particle_mesh
     call pencil_fft_backward
     force_c(i_dim,1:nc,1:nc,1:nc)=r3
   enddo
+  call system_clock(t2,t_rate)
+  print*, '      elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all
   ! sync force_c buffer for CIC force
   if (head) print*, '      sync force_c buffer'
+  call system_clock(t1,t_rate)
   force_c(:,0,:,:)=force_c(:,nc,:,:)[image1d(inx,icy,icz)]
   force_c(:,nc+1,:,:)=force_c(:,1,:,:)[image1d(ipx,icy,icz)]
   sync all
@@ -255,11 +292,18 @@ subroutine particle_mesh
   ! coarse_max_dt
   f2_max_coarse=maxval(sum(force_c**2,1))
   sync all
+  call system_clock(t2,t_rate)
+  print*, '      elapsed time =',real(t2-t1)/t_rate,'secs';
   ! coarse velocity ------------------------------------------------------------
   if (head) print*, '    coarse cic velocity'
-  do itz=1,nnt ! loop again
+  call system_clock(t1,t_rate)
+  do itz=1,nnt
   do ity=1,nnt
-  do itx=1,nnt ! loop over tiles
+  do itx=1,nnt
+!    !$omp paralleldo &
+!    !$omp& default(shared) &
+!    !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal) &
+!    !$omp& reduction(max:vmax,vmax_nu)
     do k=1,nt
     do j=1,nt
     do i=1,nt
@@ -309,9 +353,13 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
+!    !$omp endparalleldo
   enddo
   enddo
   enddo
+  call system_clock(t2,t_rate)
+  print*, '      elapsed time =',real(t2-t1)/t_rate,'secs';
+
   sim%vsim2phys=(1.5/a)*box*h0*100.*sqrt(omega_m)/nf_global
   sync all
 
@@ -328,6 +376,15 @@ subroutine particle_mesh
     dt_vmax=min(dt_vmax,dt_vmax[i])
     dt_vmax_nu=min(dt_vmax_nu,dt_vmax_nu[i])
   enddo
+  if (head) then
+    call system_clock(tt2,t_rate)
+    print*, '  mass_f,c =',testrhof,testrhoc
+    print*, '  elapsed time =',real(tt2-tt1)/t_rate,'secs'
+    print*, ''
+  endif
+
+
   sync all
+
 
 endsubroutine
