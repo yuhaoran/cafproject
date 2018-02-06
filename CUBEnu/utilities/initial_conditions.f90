@@ -2,6 +2,7 @@
 !#define READ_NOISE
 
 program initial_conditions
+  use omp_lib
   use pencil_fft
   !use powerspectrum
   use iso_fortran_env, only : int64
@@ -47,8 +48,9 @@ program initial_conditions
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer(izipx) xp(3,npmax)
+  !integer(izipx) xp(3,npmax)
   integer(izipv) vp(3,npmax)
+  integer(4), dimension(3,npmax*4) ::  xp
 #ifdef PID
     integer(8) pid(npmax)
     integer(8) iq(3)
@@ -60,10 +62,6 @@ program initial_conditions
   real(8) std_vsim_c,std_vsim_res,std_vsim
 
   character (10) :: img_s, z_s
-
-  !equivalence(phixx,phixy)
-  !equivalence(phiyy,phiyz)
-  !equivalence(phizz,phizx)
 
   call geometry
   call system('mkdir -p '//opath//'image'//image2str(image))

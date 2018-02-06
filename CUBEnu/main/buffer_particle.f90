@@ -2,13 +2,11 @@ module buffer_particle_subroutines
 
 contains
 
-
 subroutine buffer_x
   use variables
   use neutrinos
   implicit none
   save
-
   call buffer_xp
   call buffer_xp_nu
 endsubroutine
@@ -18,7 +16,6 @@ subroutine buffer_v
   use neutrinos
   implicit none
   save
-
   call buffer_vp
   call buffer_vp_nu
 endsubroutine

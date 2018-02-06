@@ -15,6 +15,7 @@ program CUBE
   save
 
   call initialize
+
   call particle_initialization
   call buffer_grid
   call buffer_x

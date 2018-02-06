@@ -7,7 +7,7 @@ all: ic.x ic_nu.x cicpower.x vel.x #dsp.x qspace.x corr.x #convert.x
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 ic_nu.x: parameters.o initial_conditions_nu.o
-	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o pencil_fft.o powerspectrum.o cicpower.o
@@ -29,8 +29,8 @@ powerspectrum.o: powerspectrum.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 initial_conditions.o: initial_conditions.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o
-	$(FC) $(OFLAG) $(OPTIONS) $<
+initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o pencil_fft.o
+	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 displacement.o: displacement.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 xva_qspace.o: xva_qspace.f90 parameters.o

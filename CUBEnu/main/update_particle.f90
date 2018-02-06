@@ -7,7 +7,6 @@ subroutine update_x
   use neutrinos
   implicit none
   save
-
   call update_xp
   call update_xp_nu
 endsubroutine
@@ -88,7 +87,7 @@ subroutine update_xp()
     !if (head) print*,'    xvnew loop'
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx) 
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx)
 !    !$omp& reduction(+:rholocal)
     do k=1-ncb,nt+ncb ! update particle
     do j=1-ncb,nt+ncb
@@ -153,10 +152,10 @@ subroutine update_xp()
   ! calculate std of the velocity field
   cum=cumsum6(rhoc)
   std_vsim=0; std_vsim_c=0; std_vsim_res=0
-!  !$omp paralleldo &
-!  !$omp& default(shared) &
-!  !$omp& private(itz,ity,itx,k,j,i,nlast,np,l,ip,vreal) &
-!  !$omp& reduction(+:std_vsim_c,std_vsim,std_vsim_res)
+  !$omp paralleldo &
+  !$omp& default(shared) &
+  !$omp& private(itz,ity,itx,k,j,i,nlast,np,l,ip,vreal) &
+  !$omp& reduction(+:std_vsim_c,std_vsim,std_vsim_res)
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -179,7 +178,7 @@ subroutine update_xp()
   enddo
   enddo
   enddo
-!  !$omp endparalleldo
+  !$omp endparalleldo
   sync all
 
   ! co_sum
@@ -319,8 +318,8 @@ subroutine update_xp_nu()
     !if (head) print*,'    xvnew loop'
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx) &
-    !$omp& reduction(+:rholocal)
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx)
+!    !$omp& reduction(+:rholocal)
     do k=1-ncb,nt+ncb ! update particle
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb

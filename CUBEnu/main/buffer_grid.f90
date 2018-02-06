@@ -7,17 +7,16 @@ subroutine buffer_grid
   use neutrinos
   implicit none
   save
-
   call buffer_np(rhoc)
   call buffer_np(rhoc_nu)
   call buffer_vc(vfield)
   call buffer_vc(vfield_nu)
   call redistribute_cdm()
   call redistribute_nu()
-
 endsubroutine
 
 subroutine buffer_np(rhoc)
+  use omp_lib
   use parameters
   implicit none
   save
@@ -28,6 +27,7 @@ subroutine buffer_np(rhoc)
   if (head) then
     print*, 'buffer_np'
   endif
+
   !x
   rhoc(:0,:,:,1,:,:)=rhoc(nt-ncb+1:nt,:,:,nnt,:,:)[image1d(inx,icy,icz)]
   rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
@@ -275,7 +275,7 @@ subroutine redistribute_nu
     vp_nu(:,1:nshift)=0
 # ifdef EID
   !$omp section
-    pid_nu(nshift+1:np_image_max_nu)=pid(1:nplocal_nu)
+    pid_nu(nshift+1:np_image_max_nu)=pid_nu(1:nplocal_nu)
     pid_nu(1:nshift)=0
 # endif
   !$omp endparallelsections
@@ -335,7 +335,7 @@ subroutine redistribute_nu
     do iy=1,nt
       nlast=cum_nu(nt,iy,iz,itx,ity,itz)
       nlen=nlast-cum_nu(0,iy,iz,itx,ity,itz)
-      pid_nu(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
+      pid_nu(nlast-nlen+1:nlast)=pid_nu(ifrom+1:ifrom+nlen)
       pid_nu(ifrom+1:ifrom+nlen)=0
       ifrom=ifrom+nlen
     enddo

@@ -12,7 +12,6 @@ subroutine particle_mesh
   !logical,parameter :: coarse_force=.true.
   !logical,parameter :: pp_force=.false.
   !logical,parameter :: ext_pp_force=.false.
-! 16777215.951261731        16777216.965942383
   integer(4) ithread, nthread, nk_tot, nk_thread
   integer(8) idxf(3)
   integer(8) idx1(3), idx2(3)
@@ -49,9 +48,9 @@ subroutine particle_mesh
     nk_tot=nt+2*ncb-2
     nk_thread=ceiling(real(nk_tot)/nthread)
 
-!    !$omp paralleldo ordered&
-!    !$omp& default(shared) &
-!    !$omp& private(ithread,k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2)
+    !$omp paralleldo ordered&
+    !$omp& default(shared) &
+    !$omp& private(ithread,k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2)
     !!$omp& reduction(+:rho_f) rho_f not thread save
     do ithread=1,nthread
     do k=2-ncb+(ithread-1)*nk_thread,min(2-ncb+ithread*nk_thread-1,nt+ncb-1)
@@ -102,7 +101,7 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
-!    !$omp endparalleldo
+    !$omp endparalleldo
     testrhof=testrhof+sum(rho_f(nfb+1:nft+nfb,nfb+1:nft+nfb,nfb+1:nft+nfb)*1d0)
     ! fine force ---------------------------------------------------------------
     !if (head) print*,'      fine_fft'
@@ -119,9 +118,9 @@ subroutine particle_mesh
     f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:)**2,1))
     ! fine velocity ------------------------------------------------------------
     !if (head) print*,'      fine velocity'
-!    !$omp paralleldo &
-!    !$omp& default(shared) &
-!    !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal)
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal)
     do k=1,nt
     do j=1,nt
     do i=1,nt ! loop over coarse cell
@@ -177,7 +176,7 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
-!    !$omp endparalleldo
+    !$omp endparalleldo
   enddo
   enddo
   enddo
@@ -200,9 +199,9 @@ subroutine particle_mesh
   do ity=1,nnt
   do itx=1,nnt ! loop over tile
     r3t=0
-!    !$omp paralleldo ordered&
-!    !$omp& default(shared) &
-!    !$omp& private(ithread,k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2)
+    !$omp paralleldo ordered&
+    !$omp& default(shared) &
+    !$omp& private(ithread,k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2)
     !!$omp& reduction(+:r3t) r3t not thread save
     do ithread=1,nthread
     do k=0+(ithread-1)*nk_thread,min(0+ithread*nk_thread-1,nt+1)
@@ -249,7 +248,7 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
-!    !$omp endparalleldo
+    !$omp endparalleldo
     ! put center part of r3t into subset of r3
     r3((itx-1)*nt+1:itx*nt,(ity-1)*nt+1:ity*nt,(itz-1)*nt+1:itz*nt)=r3t(1:nt,1:nt,1:nt)
   enddo
@@ -300,10 +299,10 @@ subroutine particle_mesh
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-!    !$omp paralleldo &
-!    !$omp& default(shared) &
-!    !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal) &
-!    !$omp& reduction(max:vmax,vmax_nu)
+    !$omp paralleldo &
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal) &
+    !$omp& reduction(max:vmax,vmax_nu)
     do k=1,nt
     do j=1,nt
     do i=1,nt
@@ -353,7 +352,7 @@ subroutine particle_mesh
     enddo
     enddo
     enddo
-!    !$omp endparalleldo
+    !$omp endparalleldo
   enddo
   enddo
   enddo
