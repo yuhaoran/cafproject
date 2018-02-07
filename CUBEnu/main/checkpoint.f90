@@ -47,16 +47,16 @@ subroutine checkpoint
 
 #ifdef PID
   open(11,file=output_name('id'),status='replace',access='stream')
-  write(11) pid(:nplocal)
+  write(11) pid(:nplocal_nu)
   close(11)
 #endif
 
   open(11,file=output_name('xp_nu'),status='replace',access='stream')
-  write(11) xp_nu(:,:nplocal)
+  write(11) xp_nu(:,:nplocal_nu)
   close(11)
 
   open(11,file=output_name('vp_nu'),status='replace',access='stream')
-  write(11) vp_nu(:,:nplocal)
+  write(11) vp_nu(:,:nplocal_nu)
   close(11)
 
   open(11,file=output_name('np_nu'),status='replace',access='stream')
@@ -69,7 +69,7 @@ subroutine checkpoint
 
 #ifdef EID
   open(11,file=output_name('id_nu'),status='replace',access='stream')
-  write(11) pid_nu(:nplocal)
+  write(11) pid_nu(:nplocal_nu)
   close(11)
 #endif
 sync all

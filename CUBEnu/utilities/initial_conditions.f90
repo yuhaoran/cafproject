@@ -32,7 +32,7 @@ program initial_conditions
   integer(4),allocatable :: iseed(:)
   real,allocatable :: rseed_all(:,:)
 
-  integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,nf_shake
+  integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove
   integer(8) ileft,iright,nlen,nlast,g(3)
   real kr,kx,ky,kz
   !real xi(10,nbin)
@@ -48,9 +48,8 @@ program initial_conditions
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !integer(izipx) xp(3,npmax)
+  integer(izipx) xp(3,npmax)
   integer(izipv) vp(3,npmax)
-  integer(4), dimension(3,npmax*4) ::  xp
 #ifdef PID
     integer(8) pid(npmax)
     integer(8) iq(3)
@@ -73,7 +72,7 @@ program initial_conditions
     print*, 'Resolution', ng*nn
     print*, 'Number of particles per side', np_nc*nc*nn
     print*, 'Box size', box
-    print*, 'np_2n3 =',np_2n3
+    print*, 'body_centered_cubic =',body_centered_cubic
     print*, 'output: ', opath
     print*, 'head image number',icx,icy,icz
     print*, '-----------------------------------------'
@@ -123,12 +122,6 @@ program initial_conditions
   sim%z_i_nu=z_i_nu
   sync all
 
-  ! initialize variables ------------------------------
-  if (np_2n3) then
-    nf_shake=1
-  else
-    nf_shake=0
-  endif
   ! initvar
   phi=0
   tf=0
@@ -490,11 +483,11 @@ program initial_conditions
     do k=1-npb,npt+npb ! calculate coarse mesh density
     do j=1-npb,npt+npb
     do i=1-npb,npt+npb
-    do imove=0,nf_shake
-      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove
-      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove
-      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove
-      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove)/ncell ! Lagrangian position q
+    do imove=0,merge(1,0,body_centered_cubic)
+      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove*(ncell/np_nc/2)
+      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove*(ncell/np_nc/2)
+      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove*(ncell/np_nc/2)
+      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove*(ncell/np_nc/2))/ncell ! Lagrangian position q, in coarse grid
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
@@ -511,15 +504,15 @@ program initial_conditions
     vfield(3,:,:,:)=vfield(3,:,:,:)/rhoce
 
     cume=cumsum3(rhoce)
-
+    if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
     do k=1-npb,npt+npb ! create particles in extended mesh
     do j=1-npb,npt+npb
     do i=1-npb,npt+npb
-    do imove=0,nf_shake
-      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove
-      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove
-      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove
-      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove)/ncell
+    do imove=0,merge(1,0,body_centered_cubic)
+      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove*(ncell/np_nc/2)
+      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove*(ncell/np_nc/2)
+      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove*(ncell/np_nc/2)
+      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove*(ncell/np_nc/2))/ncell
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)

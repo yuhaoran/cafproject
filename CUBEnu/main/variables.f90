@@ -5,7 +5,7 @@ module variables
   save
 
   ! parameters
-  integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
+  integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,body_centered_cubic) ! average number of particles per image
   integer(8),parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
   integer(8),parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
   integer(8),parameter ::  nseedmax=200

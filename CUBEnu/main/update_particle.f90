@@ -47,8 +47,8 @@ subroutine update_xp()
     !if (head) print*,'    density loop'
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g) &
-    !$omp& reduction(+:rhoce,vfield_new)
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g) 
+!    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
@@ -278,8 +278,8 @@ subroutine update_xp_nu()
     !if (head) print*,'    density loop'
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g) &
-    !$omp& reduction(+:rhoce,vfield_new)
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g)
+!    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb

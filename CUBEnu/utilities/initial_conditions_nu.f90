@@ -28,7 +28,7 @@ program initial_conditions_nu
   integer :: itx,ity,itz,i,j,k,l,ip,n,pii,pjj,pkk,b,b1,b2
 
   !Particle information
-  integer(8), parameter :: npt = np_nc_nu*nc
+  integer(8), parameter :: npt = np_nc_nu*nt
   integer(8), parameter :: npmax=npt**3
   integer(izipx_nu) xp(3,npmax)
   integer(izipv_nu) vp(3,npmax)
@@ -175,9 +175,9 @@ program initial_conditions_nu
   enddo
   enddo ! end of tile loop
 
-  close(10)
   close(11)
   close(12)
+  close(13)
   close(14)
   close(15)
 

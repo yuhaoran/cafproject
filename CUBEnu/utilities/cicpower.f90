@@ -6,9 +6,7 @@ program cicpower
   save
   ! nc: coarse grid per node per dim
   ! nf: fine grid per node per dim
-  integer(8),parameter :: npnode=nf**3 ! only true for this project
   real,parameter :: density_buffer=1.2
-  integer(8),parameter :: npmax=npnode*density_buffer
   integer(8) i,j,k,l,i_dim,iq(3),nplocal,nplocal_nu,itx,ity,itz
   integer(8) nlast,ip,np,idx1(3),idx2(3)
 
