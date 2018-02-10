@@ -69,7 +69,6 @@ program cicpower
       print*, 'nplocal =',nplocal
       print*, 'nplocal_nu =',nplocal_nu
     endif
-
     !cdm
     allocate(xp(3,nplocal))
     open(11,file=output_name('xp'),status='old',action='read',access='stream')

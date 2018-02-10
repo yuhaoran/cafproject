@@ -3,6 +3,7 @@ module neutrinos
   implicit none
   save
 
+#ifdef NEUTRINOS
   !parameters
   real,parameter :: image_buffer_nu=1.2
   real,parameter :: tile_buffer_nu=3.0
@@ -18,6 +19,6 @@ module neutrinos
   integer(izipi) pid_nu(np_image_max_nu)[*], pid_new_nu(np_tile_max_nu)
 
   integer(8) npglobal_nu, npcheck_nu
-  real vmax_nu
+#endif
 
 endmodule

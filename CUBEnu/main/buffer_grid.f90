@@ -7,12 +7,22 @@ subroutine buffer_grid
   use neutrinos
   implicit none
   save
+
   call buffer_np(rhoc)
-  call buffer_np(rhoc_nu)
+#ifdef NEUTRINOS
+  if (neutrino_flag) call buffer_np(rhoc_nu)
+#endif
+
   call buffer_vc(vfield)
-  call buffer_vc(vfield_nu)
+#ifdef NEUTRINOS
+  if (neutrino_flag) call buffer_vc(vfield_nu)
+#endif
+
   call redistribute_cdm()
-  call redistribute_nu()
+#ifdef NEUTRINOS
+  if (neutrino_flag) call redistribute_nu()
+#endif
+
 endsubroutine
 
 subroutine buffer_np(rhoc)
@@ -137,22 +147,22 @@ subroutine redistribute_cdm()
 
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
-  nshift=np_image_max-nplocal
+  nshift=np_image_max-sim%nplocal
   !$omp parallelsections default(shared)
   !$omp section
-    xp(:,nshift+1:np_image_max)=xp(:,1:nplocal)
+    xp(:,nshift+1:np_image_max)=xp(:,1:sim%nplocal)
     xp(:,1:nshift)=0
   !$omp section
-    vp(:,nshift+1:np_image_max)=vp(:,1:nplocal)
+    vp(:,nshift+1:np_image_max)=vp(:,1:sim%nplocal)
     vp(:,1:nshift)=0
 # ifdef PID
     !$omp section
-    pid(nshift+1:np_image_max)=pid(1:nplocal)
+    pid(nshift+1:np_image_max)=pid(1:sim%nplocal)
     pid(1:nshift)=0
 # endif
   !$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
-  !print*, '  ',np_image_max,nplocal,nshift
+  !print*, '  ',np_image_max,sim%nplocal,nshift
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
@@ -231,6 +241,7 @@ subroutine redistribute_cdm()
   sync all
 endsubroutine
 
+#ifdef NEUTRINOS
 subroutine redistribute_nu
   use variables
   use neutrinos
@@ -265,22 +276,22 @@ subroutine redistribute_nu
 
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
-  nshift=np_image_max_nu-nplocal_nu
+  nshift=np_image_max_nu-sim%nplocal_nu
   !$omp parallelsections
   !$omp section
-    xp_nu(:,nshift+1:np_image_max_nu)=xp_nu(:,1:nplocal_nu)
+    xp_nu(:,nshift+1:np_image_max_nu)=xp_nu(:,1:sim%nplocal_nu)
     xp_nu(:,1:nshift)=0
   !$omp section
-    vp_nu(:,nshift+1:np_image_max_nu)=vp_nu(:,1:nplocal_nu)
+    vp_nu(:,nshift+1:np_image_max_nu)=vp_nu(:,1:sim%nplocal_nu)
     vp_nu(:,1:nshift)=0
 # ifdef EID
   !$omp section
-    pid_nu(nshift+1:np_image_max_nu)=pid_nu(1:nplocal_nu)
+    pid_nu(nshift+1:np_image_max_nu)=pid_nu(1:sim%nplocal_nu)
     pid_nu(1:nshift)=0
 # endif
   !$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
-  !print*, '  ',np_image_max_nu,nplocal_nu,nshift
+  !print*, '  ',np_image_max_nu,sim%nplocal_nu,nshift
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
@@ -359,5 +370,6 @@ subroutine redistribute_nu
   sync all
 
 endsubroutine
+#endif
 
 endmodule

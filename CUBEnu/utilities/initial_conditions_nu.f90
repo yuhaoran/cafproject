@@ -41,7 +41,6 @@ program initial_conditions_nu
   real(8) vreal(3)
   real(8) sigma_vc,sigma_vf,sigma_vres,sigma_vi
   real(8) std_vsim_c,std_vsim_res,std_vsim
-  integer(8) nplocal_nu
 
   !Setup
   call geometry
@@ -50,7 +49,7 @@ program initial_conditions_nu
      write(*,*) 'Homogeneous Initial Conditions for Massive Neutrinos'
      print*, 'on',nn**3,' images'
      print*, 'Resolution', ng*nn
-     print*, 'Number of particles per side', np_nc_nu*nc*nn
+     print*, 'To genterate npglobal_nu =',int(np_nc_nu*nc*nn,2),'^3'
      print*, 'Box size', box
      print*, 'output: ', opath
      write(*,*) ''
@@ -182,10 +181,13 @@ program initial_conditions_nu
   close(15)
 
 
-  nplocal_nu=(np_nc_nu*nc)**3
+  sim%nplocal_nu=(np_nc_nu*nc)**3
+  sim%npglobal_nu=0
+  do i=1,nn**3
+    sim%npglobal_nu=sim%npglobal_nu+sim[i]%nplocal_nu
+  enddo
   open(unit=10,file=ic_name('info'),access='stream')
   read(10) sim
-  sim%nplocal_nu=nplocal_nu
   sim%sigma_vi_nu=sigma_vi_nu
   sim%dt_vmax_nu=vbuf*20./maxval(abs(vmax))
   rewind(10)
@@ -195,9 +197,9 @@ program initial_conditions_nu
   if (head) then
     print*,''
     print*,'Velocity analysis on head node'
-    std_vsim_res=sqrt(std_vsim_res/nplocal_nu)
+    std_vsim_res=sqrt(std_vsim_res/sim%nplocal_nu)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
-    std_vsim=sqrt(std_vsim/nplocal_nu)
+    std_vsim=sqrt(std_vsim/sim%nplocal_nu)
     print*,'  std_vsim         ',real(std_vsim*sim%vsim2phys,4),'km/s'
     print*,'  std_vsim_c       ',real(std_vsim_c*sim%vsim2phys,4),'km/s'
     print*,'  std_vsim_res     ',real(std_vsim_res*sim%vsim2phys,4),'km/s'

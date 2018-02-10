@@ -4,10 +4,22 @@ subroutine checkpoint
   implicit none
   save
 
+  character(100) fn10,fn11,fn12,fn13,fn14,fn15,fn21,fn22,fn23,fn24,fn25
+
   if (head) print*, 'checkpoint'
 
-  sim%nplocal=nplocal
-  sim%nplocal_nu=nplocal_nu
+  fn10=output_name('info')
+  fn11=output_name('xp')
+  fn12=output_name('vp')
+  fn13=output_name('np')
+  fn14=output_name('vc')
+  fn15=output_name('id')
+  fn21=output_name('xp_nu')
+  fn22=output_name('vp_nu')
+  fn23=output_name('np_nu')
+  fn24=output_name('vc_nu')
+  fn25=output_name('id_nu')
+
   sim%a=a
   sim%t=t
   sim%tau=tau
@@ -22,66 +34,47 @@ subroutine checkpoint
 
   sim%cur_checkpoint=cur_checkpoint
 
-  sim%mass_p=mass_p
   sim%vsim2phys=(1.5/a)*box*h0*100.*sqrt(omega_m)/nf_global
 
-  open(11,file=output_name('info'),status='replace',access='stream')
-  write(11) sim
-  close(11)
+  !$omp parallelsections default(shared)
+  !$omp section
+  open(10,file=fn10,status='replace',access='stream'); write(10) sim; close(10)
+  !$omp section
+  open(11,file=fn11,status='replace',access='stream'); write(11) xp(:,:sim%nplocal); close(11)
+  !$omp section
+  open(12,file=fn12,status='replace',access='stream'); write(12) vp(:,:sim%nplocal); close(12)
+  !$omp section
+  open(13,file=fn13,status='replace',access='stream'); write(13) rhoc(1:nt,1:nt,1:nt,:,:,:); close(13)
+  !$omp section
+  open(14,file=fn14,status='replace',access='stream'); write(14) vfield(:,1:nt,1:nt,1:nt,:,:,:); close(14)
+# ifdef PID
+    !$omp section
+    open(15,file=fn15,status='replace',access='stream'); write(15) pid(:sim%nplocal); close(15)
+# endif
 
-  open(11,file=output_name('xp'),status='replace',access='stream')
-  write(11) xp(:,:nplocal)
-  close(11)
+# ifdef NEUTRINOS
+  open(21,file=fn21,status='replace',access='stream'); write(21) xp_nu(:,:sim%nplocal_nu); close(21)
+  !$omp section
+  open(22,file=fn22,status='replace',access='stream'); write(22) vp_nu(:,:sim%nplocal_nu); close(22)
+  !$omp section
+  open(23,file=fn23,status='replace',access='stream'); write(23) rhoc_nu(1:nt,1:nt,1:nt,:,:,:); close(23)
+  !$omp section
+  open(24,file=fn24,status='replace',access='stream'); write(24) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:); close(24)
+#   ifdef EID
+      !$omp section
+      open(25,file=fn25,status='replace',access='stream'); write(25) pid_nu(:sim%nplocal_nu); close(25)
+#   endif
+#  endif
+  !$omp endparallelsections
+  sync all
 
-  open(11,file=output_name('vp'),status='replace',access='stream')
-  write(11) vp(:,:nplocal)
-  close(11)
-
-  open(11,file=output_name('np'),status='replace',access='stream')
-  write(11) rhoc(1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
-  open(11,file=output_name('vc'),status='replace',access='stream')
-  write(11) vfield(:,1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
-#ifdef PID
-  open(11,file=output_name('id'),status='replace',access='stream')
-  write(11) pid(:nplocal_nu)
-  close(11)
-#endif
-
-  open(11,file=output_name('xp_nu'),status='replace',access='stream')
-  write(11) xp_nu(:,:nplocal_nu)
-  close(11)
-
-  open(11,file=output_name('vp_nu'),status='replace',access='stream')
-  write(11) vp_nu(:,:nplocal_nu)
-  close(11)
-
-  open(11,file=output_name('np_nu'),status='replace',access='stream')
-  write(11) rhoc_nu(1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
-  open(11,file=output_name('vc_nu'),status='replace',access='stream')
-  write(11) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:)
-  close(11)
-
-#ifdef EID
-  open(11,file=output_name('id_nu'),status='replace',access='stream')
-  write(11) pid_nu(:nplocal_nu)
-  close(11)
-#endif
-sync all
-
-print*,'  image',this_image(),'write',nplocal,'particles'
-npglobal=0
-do i=1,nn**3
-  npglobal=npglobal+nplocal[i]
-enddo
-sync all
-if (head) print*, '  npglobal =',npglobal
-sync all
+  print*,'  image',this_image(),'wrote',sim%nplocal,'CDM particles'
+  print*,'  image',this_image(),'wrote',sim%nplocal_nu,'neutrino particles'
+  !npglobal=0
+  !do i=1,nn**3
+  !  npglobal=npglobal+sim%nplocal[i]
+  !enddo
+  sync all
 
 
 endsubroutine

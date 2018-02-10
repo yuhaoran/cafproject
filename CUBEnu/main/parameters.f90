@@ -2,7 +2,7 @@ module parameters
   implicit none
   save
   ! output directory
-  character(*),parameter :: opath='../output/universe1/'
+  character(*),parameter :: opath='../output/universe2/'
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
@@ -26,7 +26,7 @@ module parameters
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -53,13 +53,13 @@ module parameters
 
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
+  logical,parameter :: body_centered_cubic=.true.
   integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
   logical,parameter :: Extended_pp_force=.true.
   real,parameter :: rsoft=0.3 ! PP softening length
   integer,parameter :: pp_range=1 ! set <=4
-  logical,parameter :: body_centered_cubic=.true. ! if there are 2*N**3 particles, body-centered cubic
   real,parameter :: image_buffer=1.2
   real,parameter :: tile_buffer=3.0
   real,parameter :: vbuf=0.9
@@ -81,7 +81,7 @@ module parameters
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
 
   integer, parameter :: Nnu = 3 ! number of massive neutrinos
-  real, dimension(Nnu), parameter :: Mnu = (/ 0.05,0.05,0.05  /)
+  real, dimension(Nnu), parameter :: Mnu = (/ 0.5,0.5,0.5  /)
   real, dimension(Nnu), parameter :: Tnu = (/ Tcnb,Tcnb,Tcnb /)
   real, parameter :: Meff = sum( Mnu*(Tnu/Tcnb)**3. )
 
@@ -101,6 +101,8 @@ module parameters
   real, parameter :: omega_mhd = 0.0 ! mhd energy, evolved separately
   real, parameter :: omega_nu = sum( Mnu*(Tnu/Tcnb)**3 )/94.1/h0**2 ! nu energy
   real, parameter :: omega_m = omega_cdm+omega_bar+omega_mhd+omega_nu ! total matter
+  real, parameter :: f_nu=omega_nu/omega_m
+  real, parameter :: f_cdm=1-f_nu
 
   real, parameter :: omega_l = 1.-omega_m-omega_r
   real, parameter :: wde = -1. ! de equation of state
@@ -132,7 +134,7 @@ module parameters
   logical checkpoint_step[*], final_step[*]
 
   type sim_header
-    integer(8) nplocal,nplocal_nu
+    integer(8) nplocal,npglobal,nplocal_nu,npglobal_nu
     integer(8) izipx,izipv,izipx_nu,izipv_nu
     integer(8) image
     integer(8) nn,nnt,nt,ncell,ncb
@@ -141,7 +143,7 @@ module parameters
 
     real a, t, tau
     real dt_f_acc, dt_pp_acc, dt_c_acc, dt_vmax, dt_vmax_nu
-    real mass_p
+    real mass_p_cdm,mass_p_nu
     real box
 
     real h0
@@ -155,42 +157,42 @@ module parameters
     real z_i,z_i_nu
   endtype
 
-  type(sim_header) sim
+  type(sim_header) sim[*]
 
   contains
     subroutine print_header(s)
       type(sim_header),intent(in) :: s
       if (this_image()==1) then
       print*,'-------------------------------- CUBE info --------------------------------'
-      print*,'| nplocal      =',s%nplocal
-      print*,'| nplocal_nu   =',s%nplocal_nu
-      print*,'| a,t,tau      =',s%a,s%t,s%tau
-      print*,'| istep        =',s%istep
-      print*,'| dt f,pp,c    =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
-      print*,'| dt v,v_nu    =',s%dt_vmax,s%dt_vmax_nu
-      print*,'| cur_steps    =',int(s%cur_checkpoint,2)
-      print*,'| mass_p       =',s%mass_p
+      print*,'| np local/global =',s%nplocal,s%npglobal
+      print*,'|    (neutrinos)  =',s%nplocal_nu,s%npglobal_nu
+      print*,'| a,t,tau         =',s%a,s%t,s%tau
+      print*,'| istep           =',s%istep
+      print*,'| dt f,pp,c       =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
+      print*,'| dt v,v_nu       =',s%dt_vmax,s%dt_vmax_nu
+      print*,'| cur_steps       =',int(s%cur_checkpoint,2)
+      print*,'| mass_p  c/nu    =',s%mass_p_cdm,s%mass_p_nu
       print*,'| '
-      print*,'| box          =',s%box, 'Mpc/h'
-      print*,'| image        =',s%image
-      print*,'| nn           =',s%nn
-      print*,'| nnt          =',s%nnt
-      print*,'| nt           =',s%nt, ' ( nf_tile=',int(ncell*(nt+2*ncb),2),')'
-      print*,'| ncell        =',s%ncell
-      print*,'| ncb          =',s%ncb
-      print*,'| izip x,v     =',int(s%izipx,1),int(s%izipv,1)
-      print*,'| izip x,v(nu) =',int(s%izipx_nu,1),int(s%izipv_nu,1)
+      print*,'| box             =',s%box, 'Mpc/h'
+      print*,'| image           =',s%image
+      print*,'| nn              =',s%nn
+      print*,'| nnt             =',s%nnt
+      print*,'| nt              =',s%nt, ' ( nf_tile=',int(ncell*(nt+2*ncb),2),')'
+      print*,'| ncell           =',s%ncell
+      print*,'| ncb             =',s%ncb
+      print*,'| izip x,v        =',int(s%izipx,1),int(s%izipv,1)
+      print*,'| izip x,v(nu)    =',int(s%izipx_nu,1),int(s%izipv_nu,1)
       print*,'| '
-      print*,'| h_0          =',s%h0,'km/s/Mpc'
-      print*,'| omega_m      =',s%omega_m
-      print*,'| omega_l      =',s%omega_l
-      print*,'| sigma_8      =',s%s8
-      print*,'| vsim2phys    =',s%vsim2phys, '(km/s)/(1.0)'
-      print*,'| sigma_vres   =',s%sigma_vres,'(km/s)'
-      print*,'| sigma_vi     =',s%sigma_vi,'(simulation unit)'
-      print*,'| sigma_vi_nu  =',s%sigma_vi_nu,'(simulation unit)'
-      print*,'| z_i          =',s%z_i
-      print*,'| z_i_nu       =',s%z_i_nu
+      print*,'| h_0             =',s%h0,'km/s/Mpc'
+      print*,'| omega_m         =',s%omega_m
+      print*,'| omega_l         =',s%omega_l
+      print*,'| sigma_8         =',s%s8
+      print*,'| vsim2phys       =',s%vsim2phys, '(km/s)/(1.0)'
+      print*,'| sigma_vres      =',s%sigma_vres,'(km/s)'
+      print*,'| sigma_vi        =',s%sigma_vi,'(simulation unit)'
+      print*,'| sigma_vi_nu     =',s%sigma_vi_nu,'(simulation unit)'
+      print*,'| z_i             =',s%z_i
+      print*,'| z_i_nu          =',s%z_i_nu
       print*,'------------------------------------------------------------------------------'
       endif
       sync all

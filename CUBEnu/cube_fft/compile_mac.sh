@@ -1,3 +1,4 @@
 rm -f *.o *.out
 
-mpif90 -O3 -cpp -fcoarray=single -mcmodel=medium test.f90 -lfftw3f -lm -ldl
+gfortran -O3 -cpp -fcoarray=single -mcmodel=medium test.f90 -I/usr/local/include/ -L/usr/local/lib/ -lfftw3f -lm -ldl
+#gfortran -fopenmp -cpp -fcoarray=single test_parallel.f90 -I/usr/local/include/ -L/usr/local/lib/ -lfftw3f -lm -ldl

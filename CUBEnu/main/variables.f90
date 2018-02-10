@@ -14,8 +14,7 @@ module variables
   real,parameter :: dt_scale=1
   real,parameter :: GG=1.0/6.0/pi
 
-  real,parameter :: f_nu=omega_nu/omega_m
-  real,parameter :: f_cdm=1-f_nu
+  logical neutrino_flag
 
   ! variables
   integer(8) istep
@@ -27,15 +26,12 @@ module variables
   integer(4) iseed(nseedmax), iseedsize, nth,ith
   integer(8) itx,ity,itz,ix,iy,iz,i_dim
   integer(8) i,j,k,l,ip,ipp,pp
-  integer(8) nplocal[*],nplocal_nu[*], nptile(nnt,nnt,nnt)
-  integer(8) npglobal, npcheck
+  integer(8) nptile(nnt,nnt,nnt), npcheck
   real(8) xq(3),deltax(3),deltav(3),vreal(3)
-
-  real mass_p,mass_p_cdm,mass_p_nu
 
   ! FFT plans
   integer(8) plan_fft_fine,plan_ifft_fine
-  real vmax,overhead_tile[*],overhead_image[*]
+  real vmax,vmax_nu,overhead_tile[*],overhead_image[*]
   real sigma_vi,sigma_vi_new,sigma_vi_nu,sigma_vi_new_nu
   !real vdisp(506,2),sigma_vi_old,sigma_vi
   real(4) svz(500,2),svr(100,2)

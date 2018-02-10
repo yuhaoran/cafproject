@@ -86,7 +86,7 @@ subroutine ext_pp_force
             rmag=merge(1d0,rmag,rmag==0)
             rcut=rmag/nf_cutoff
             pcut=1-(7./4*rcut**3)+(3./4*rcut**5)
-            force_pp=mass_p*(xvec21/rmag**3)*pcut
+            force_pp=sim%mass_p_cdm*(xvec21/rmag**3)*pcut
             force_pp=merge(force_pp,force_pp*0,rmag>rsoft)
             f_tot=f_tot+force_pp
             ip2=ll(ip2)
@@ -129,9 +129,9 @@ subroutine ext_pp_force
   endif
   sync all
 
-  if (itest1/=nplocal) then
+  if (itest1/=sim%nplocal) then
     print*, 'itest1/=nplocal'
-    print*, itest1,nplocal
+    print*, itest1,sim%nplocal
     stop
   endif
   sync all

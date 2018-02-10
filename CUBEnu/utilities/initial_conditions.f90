@@ -15,16 +15,13 @@ program initial_conditions
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
 
-  real,parameter :: a=1/(1+z_i)
-  real,parameter :: Vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
   integer(8),parameter :: nk=132 ! ???
-  integer(8) i,j,k
+  integer(8) i,j,k,ip,l
   integer(4) seedsize
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
-  real(8) v8, norm, xq(3),gradphi(3),vreal(3), dvar[*], dvarg
-  integer(int64) :: time64
+  real(8) v8,norm,xq(3),gradphi(3),vreal(3),dvar[*],dvarg
+  integer(int64) time64
 
-  integer(8) nplocal[*],npglobal,ip,l
   ! power spectrum arrays
   real, dimension(14,nk) :: tf    !CAMB ! ???
   real, dimension(2,nc) :: pkm,pkn
@@ -70,7 +67,11 @@ program initial_conditions
     print*, 'CUBE Initial Conditions'
     print*, 'on',nn**3,' images'
     print*, 'Resolution', ng*nn
-    print*, 'Number of particles per side', np_nc*nc*nn
+    if (body_centered_cubic) then
+      print*, 'To genterate npglobal = 2 x', int(np_nc*nc*nn,2),'^3'
+    else
+      print*, 'To genterate npglobal =', np_nc*nc*nn,'^3'
+    endif
     print*, 'Box size', box
     print*, 'body_centered_cubic =',body_centered_cubic
     print*, 'output: ', opath
@@ -98,9 +99,6 @@ program initial_conditions
   sim%dt_vmax_nu=1000
 
   sim%cur_checkpoint=0
-
-  sim%mass_p=real(nf**3)/sim%nplocal ! will be overwritten
-
   sim%box=box
   sim%image=image
   sim%nn=nn
@@ -117,7 +115,7 @@ program initial_conditions
   sim%omega_m=omega_m
   sim%omega_l=omega_l
   sim%s8=s8
-  sim%vsim2phys=(150./a)*box*h0*sqrt(omega_m)/nf_global
+  sim%vsim2phys=(150./sim%a)*box*h0*sqrt(omega_m)/nf_global
   sim%z_i=z_i
   sim%z_i_nu=z_i_nu
   sync all
@@ -290,9 +288,9 @@ program initial_conditions
   !print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'Write delta_L into file'
-  if (head) print*,'Growth factor Dgrow(',a,') =',Dgrow(a)
+  if (head) print*,'Growth factor Dgrow(',sim%a,') =',Dgrow(sim%a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
-  write(11) r3/Dgrow(a)
+  write(11) r3/Dgrow(sim%a)
   close(11)
 
   ! Potential field ----------------------------------------------------
@@ -407,7 +405,7 @@ program initial_conditions
 
   ! zip checkpoints ------------------------------------------------
   if (head) print*, 'zip checkpoints'
-  vf=vfactor(a)
+  vf=vfactor(sim%a)
   if (head) print*, 'vf',vf
   grad_max(1)=maxval(abs(phi(0:nf-1,1:nf,1:nf)-phi(2:nf+1,1:nf,1:nf)))
   grad_max(2)=maxval(abs(phi(1:nf,0:nf-1,1:nf)-phi(1:nf,2:nf+1,1:nf)))
@@ -438,8 +436,8 @@ program initial_conditions
   read(11) svr
   close(11)
 
-  sigma_vf=interp_sigmav(a,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
-  sigma_vc=interp_sigmav(a,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
+  sigma_vf=interp_sigmav(sim%a,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
+  sigma_vc=interp_sigmav(sim%a,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
   sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
   sigma_vi=sigma_vres/sim%vsim2phys/sqrt(3.) ! sigma(v_i) residual, in sim unit
 
@@ -449,8 +447,8 @@ program initial_conditions
   if (head) then
     print*, ''
     print*, 'Read velocity dispersion prediction'
-    print*,'sigma_vf(a=',a,', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
-    print*,'sigma_vc(a=',a,', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
+    print*,'sigma_vf(a=',sim%a,', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
+    print*,'sigma_vc(a=',sim%a,', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
     print*,'sigma_vres=',real(sigma_vres,4),'km/s'
     print*,'sigma_vi =',real(sigma_vi,4),'(simulation unit)'
   endif
@@ -472,7 +470,6 @@ program initial_conditions
 
 
   vfield=0
-  nplocal=0
   std_vsim_c=0; std_vsim_res=0; std_vsim=0;
   do itz=1,nnt
   do ity=1,nnt
@@ -571,7 +568,7 @@ program initial_conditions
 #   ifdef PID
       write(15) pid(1:iright)
 #   endif
-    nplocal=nplocal+iright
+    sim%nplocal=sim%nplocal+iright
 
   enddo
   enddo
@@ -585,14 +582,12 @@ program initial_conditions
     close(15)
 # endif
 
-  sim%nplocal=nplocal
-
   if (head) then
     print*,''
     print*,'Velocity analysis on head node'
-    std_vsim_res=sqrt(std_vsim_res/nplocal)
+    std_vsim_res=sqrt(std_vsim_res/sim%nplocal)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
-    std_vsim=sqrt(std_vsim/nplocal)
+    std_vsim=sqrt(std_vsim/sim%nplocal)
     print*,'  std_vsim         ',real(std_vsim*sim%vsim2phys,4),'km/s'
     print*,'  std_vsim_c       ',real(std_vsim_c*sim%vsim2phys,4),'km/s'
     print*,'  std_vsim_res     ',real(std_vsim_res*sim%vsim2phys,4),'km/s'
@@ -601,14 +596,17 @@ program initial_conditions
   endif
   sync all
 
-  print*,'image',image,', nplocal',nplocal
+  print*,'image',image,', nplocal',sim%nplocal
   sync all
-  npglobal=0
+  sim%npglobal=0
   do i=1,nn**3
-    npglobal=npglobal+nplocal[i]
+    sim%npglobal=sim%npglobal+sim[i]%nplocal
   enddo
-  if (head) print*, 'npglobal =',npglobal
-  sim%mass_p=real(nf_global**3,kind=8)/npglobal
+  sim%nplocal_nu=(np_nc_nu*nc)**3
+  sim%npglobal_nu=(np_nc_nu*nc*nn)**3
+  if (head) print*, 'npglobal =',sim%npglobal
+  sim%mass_p_cdm=real(f_cdm*nf_global**3,kind=8)/sim%npglobal
+  sim%mass_p_nu=real(f_nu*nf_global**3,kind=8)/sim%npglobal_nu
   call print_header(sim)
 
   sync all

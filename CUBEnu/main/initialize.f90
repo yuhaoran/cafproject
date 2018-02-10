@@ -31,8 +31,12 @@ subroutine initialize
   call system_clock(t2,t_rate)
   print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
   sync all
-  ! omp_init
 
+#ifdef NEUTRINOS
+  neutrino_flag=.true.
+#else
+  neutrino_flag=.false.
+#endif
 
   call kernel_f
   call kernel_c

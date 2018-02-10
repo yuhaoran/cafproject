@@ -8,7 +8,9 @@ subroutine update_x
   implicit none
   save
   call update_xp
-  call update_xp_nu
+#ifdef NEUTRINOS
+  if (neutrino_flag) call update_xp_nu
+#endif
 endsubroutine
 
 subroutine update_xp()
@@ -47,7 +49,7 @@ subroutine update_xp()
     !if (head) print*,'    density loop'
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g) 
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g)
 !    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
@@ -138,13 +140,13 @@ subroutine update_xp()
   enddo
   enddo
   enddo ! end looping over tiles
-  nplocal=iright
-  xp(:,nplocal+1:)=0
-  vp(:,nplocal+1:)=0
+  sim%nplocal=iright
+  xp(:,sim%nplocal+1:)=0
+  vp(:,sim%nplocal+1:)=0
 # ifdef PID
-    pid(nplocal+1:)=0
+    pid(sim%nplocal+1:)=0
 # endif
-  !nplocal=sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
+  !sim%nplocal=sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   !print*, iright,sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   !stop
   sync all
@@ -198,9 +200,9 @@ subroutine update_xp()
   sync all
 
   ! divide
-  std_vsim=sqrt(std_vsim/npglobal)
+  std_vsim=sqrt(std_vsim/sim%npglobal)
   std_vsim_c=sqrt(std_vsim_c/nc/nc/nc/nn/nn/nn)
-  std_vsim_res=sqrt(std_vsim_res/npglobal)
+  std_vsim_res=sqrt(std_vsim_res/sim%npglobal)
 
   ! set sigma_vi_new according to particle statistics
   sigma_vi_new=std_vsim_res/sqrt(3.)
@@ -227,9 +229,9 @@ subroutine update_xp()
   if (head) then
     npcheck=0
     do i=1,nn**3
-      npcheck=npcheck+nplocal[i]
+      npcheck=npcheck+sim[i]%nplocal
     enddo
-    print*, '  npcheck,npglobal=', npcheck,npglobal
+    print*, '  npcheck,npglobal=', npcheck,sim%npglobal
     call system_clock(t2,t_rate)
     print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
     print*, ''
@@ -239,10 +241,7 @@ endsubroutine update_xp
 
 
 
-
-
-
-
+#ifdef NEUTRINOS
 subroutine update_xp_nu()
   use variables
   use neutrinos
@@ -258,7 +257,7 @@ subroutine update_xp_nu()
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
   integer(8) checkv0,checkv1
 
-  if (head) print*,'update_vp_nu'
+  if (head) print*,'update_xp_nu'
   call system_clock(t1,t_rate)
   dt_mid=(dt_old+dt)/2
   overhead_tile=0
@@ -369,14 +368,14 @@ subroutine update_xp_nu()
   enddo
   enddo
   enddo ! end looping over tiles
-  nplocal_nu=iright
-  xp_nu(:,nplocal_nu+1:)=0
-  vp_nu(:,nplocal_nu+1:)=0
+  sim%nplocal_nu=iright
+  xp_nu(:,sim%nplocal_nu+1:)=0
+  vp_nu(:,sim%nplocal_nu+1:)=0
 # ifdef PID
-    pid_nu(nplocal_nu+1:)=0
+    pid_nu(sim%nplocal_nu+1:)=0
 # endif
-  !nplocal_nu=sum(rhoc_nu(1:nt,1:nt,1:nt,:,:,:))
-  !print*, iright,nplocal_nu
+  !sim%nplocal_nu=sum(rhoc_nu(1:nt,1:nt,1:nt,:,:,:))
+  !print*, iright,sim%nplocal_nu
   !stop
   sync all
 
@@ -429,9 +428,9 @@ subroutine update_xp_nu()
   sync all
 
   ! divide
-  std_vsim_nu=sqrt(std_vsim_nu/npglobal_nu)
+  std_vsim_nu=sqrt(std_vsim_nu/sim%npglobal_nu)
   std_vsim_c_nu=sqrt(std_vsim_c_nu/nc/nc/nc/nn/nn/nn)
-  std_vsim_res_nu=sqrt(std_vsim_res_nu/npglobal_nu)
+  std_vsim_res_nu=sqrt(std_vsim_res_nu/sim%npglobal_nu)
 
   ! set sigma_vi_new according to particle statistics
   sigma_vi_new_nu=std_vsim_res_nu/sqrt(3.)
@@ -458,15 +457,15 @@ subroutine update_xp_nu()
   if (head) then
     npcheck=0
     do i=1,nn**3
-      npcheck=npcheck+nplocal_nu[i]
+      npcheck=npcheck+sim[i]%nplocal_nu
     enddo
-    print*, '  npcheck,npglobal=', npcheck,npglobal_nu
+    print*, '  npcheck,npglobal=', npcheck,sim%npglobal_nu
     call system_clock(t2,t_rate)
     print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
     print*,''
     sync all
   endif
-
 endsubroutine update_xp_nu
+#endif
 
 endmodule

@@ -29,8 +29,7 @@ subroutine particle_mesh
   !ithread=omp_get_thread_num()+1
   !print*,'ithread'
 
-  vmax=0
-  vmax_nu=0
+  vmax=0; vmax_nu=0
   f2_max_fine(1:nnt,1:nnt,1:nnt)=0
   f2_max_coarse=0
 
@@ -67,18 +66,18 @@ subroutine particle_mesh
         dx2 = 1 - dx1
         idx1=idx1+nfb
         idx2=idx2+nfb
-        rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p_cdm
-        rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p_cdm
-        rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p_cdm
-        rho_f(idx1(1),idx1(2),idx2(3))=rho_f(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*mass_p_cdm
-        rho_f(idx1(1),idx2(2),idx2(3))=rho_f(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*mass_p_cdm
-        rho_f(idx2(1),idx1(2),idx2(3))=rho_f(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*mass_p_cdm
-        rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*mass_p_cdm
-        rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*mass_p_cdm
+        rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_cdm
+        rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_cdm
+        rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_cdm
+        rho_f(idx1(1),idx1(2),idx2(3))=rho_f(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_cdm
+        rho_f(idx1(1),idx2(2),idx2(3))=rho_f(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_cdm
+        rho_f(idx2(1),idx1(2),idx2(3))=rho_f(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_cdm
+        rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_cdm
+        rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_cdm
       enddo
+#ifdef NEUTRINOS
       nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
-      !print*,'n',nlast,np
       do l=1,np ! loop over neutrino particles
         ip=nlast+l
         tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu !-0.5
@@ -88,15 +87,16 @@ subroutine particle_mesh
         dx2 = 1 - dx1
         idx1=idx1+nfb
         idx2=idx2+nfb
-        rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p_nu
-        rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p_nu
-        rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p_nu
-        rho_f(idx1(1),idx1(2),idx2(3))=rho_f(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*mass_p_nu
-        rho_f(idx1(1),idx2(2),idx2(3))=rho_f(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*mass_p_nu
-        rho_f(idx2(1),idx1(2),idx2(3))=rho_f(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*mass_p_nu
-        rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*mass_p_nu
-        rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*mass_p_nu
+        rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+        rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+        rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+        rho_f(idx1(1),idx1(2),idx2(3))=rho_f(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+        rho_f(idx1(1),idx2(2),idx2(3))=rho_f(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_nu
+        rho_f(idx2(1),idx1(2),idx2(3))=rho_f(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+        rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+        rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_nu
       enddo
+#endif
     enddo
     enddo
     enddo
@@ -148,7 +148,7 @@ subroutine particle_mesh
 
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
-
+#ifdef NEUTRINOS
       nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np ! loop over neutrino particles
@@ -173,6 +173,7 @@ subroutine particle_mesh
 
         vp_nu(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_new_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
       enddo
+#endif
     enddo
     enddo
     enddo
@@ -205,7 +206,6 @@ subroutine particle_mesh
     !!$omp& reduction(+:r3t) r3t not thread save
     do ithread=1,nthread
     do k=0+(ithread-1)*nk_thread,min(0+ithread*nk_thread-1,nt+1)
-    !do k=0,nt+1
     do j=0,nt+1
     do i=0,nt+1
       nlast=cum(i-1,j,k,itx,ity,itz)
@@ -217,15 +217,16 @@ subroutine particle_mesh
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:) ! CIC contribution to idx1
         dx2(:)=1-dx1(:) ! CIC contribution to idx2
-        r3t(idx1(1),idx1(2),idx1(3))=r3t(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p_cdm
-        r3t(idx2(1),idx1(2),idx1(3))=r3t(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p_cdm
-        r3t(idx1(1),idx2(2),idx1(3))=r3t(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p_cdm
-        r3t(idx1(1),idx1(2),idx2(3))=r3t(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*mass_p_cdm
-        r3t(idx1(1),idx2(2),idx2(3))=r3t(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*mass_p_cdm
-        r3t(idx2(1),idx1(2),idx2(3))=r3t(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*mass_p_cdm
-        r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*mass_p_cdm
-        r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*mass_p_cdm
+        r3t(idx1(1),idx1(2),idx1(3))=r3t(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_cdm
+        r3t(idx2(1),idx1(2),idx1(3))=r3t(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_cdm
+        r3t(idx1(1),idx2(2),idx1(3))=r3t(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_cdm
+        r3t(idx1(1),idx1(2),idx2(3))=r3t(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_cdm
+        r3t(idx1(1),idx2(2),idx2(3))=r3t(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_cdm
+        r3t(idx2(1),idx1(2),idx2(3))=r3t(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_cdm
+        r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_cdm
+        r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_cdm
       enddo
+#ifdef NEUTRINOS
       nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np ! loop over particle
@@ -235,15 +236,16 @@ subroutine particle_mesh
         idx2(:)=idx1(:)+1
         dx1(:)=idx1(:)-tempx(:) ! CIC contribution to idx1
         dx2(:)=1-dx1(:) ! CIC contribution to idx2
-        r3t(idx1(1),idx1(2),idx1(3))=r3t(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*mass_p_nu
-        r3t(idx2(1),idx1(2),idx1(3))=r3t(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*mass_p_nu
-        r3t(idx1(1),idx2(2),idx1(3))=r3t(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*mass_p_nu
-        r3t(idx1(1),idx1(2),idx2(3))=r3t(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*mass_p_nu
-        r3t(idx1(1),idx2(2),idx2(3))=r3t(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*mass_p_nu
-        r3t(idx2(1),idx1(2),idx2(3))=r3t(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*mass_p_nu
-        r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*mass_p_nu
-        r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*mass_p_nu
+        r3t(idx1(1),idx1(2),idx1(3))=r3t(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+        r3t(idx2(1),idx1(2),idx1(3))=r3t(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+        r3t(idx1(1),idx2(2),idx1(3))=r3t(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+        r3t(idx1(1),idx1(2),idx2(3))=r3t(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+        r3t(idx1(1),idx2(2),idx2(3))=r3t(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_nu
+        r3t(idx2(1),idx1(2),idx2(3))=r3t(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+        r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+        r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_nu
       enddo
+#endif
     enddo
     enddo
     enddo
@@ -327,7 +329,7 @@ subroutine particle_mesh
         vmax=max(vmax,maxval(abs(vreal+vfield(:,i,j,k,itx,ity,itz))))
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
-
+#ifdef NEUTRINOS
       nlast=cum_nu(i-1,j,k,itx,ity,itz)
       np=rhoc_nu(i,j,k,itx,ity,itz)
       do l=1,np ! loop over neutrino particles
@@ -349,6 +351,7 @@ subroutine particle_mesh
         vmax_nu=max(vmax_nu,maxval(abs(vreal+vfield_nu(:,i,j,k,itx,ity,itz))))
         vp_nu(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
       enddo
+#endif
     enddo
     enddo
     enddo
@@ -366,7 +369,7 @@ subroutine particle_mesh
   dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   dt_vmax=vbuf*20/vmax
-  dt_vmax_nu=vbuf*20/vmax_nu
+  dt_vmax_nu=merge(vbuf*20/vmax_nu,1000.,neutrino_flag)
   sync all
 
   do i=1,nn**3

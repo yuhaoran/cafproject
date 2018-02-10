@@ -8,7 +8,9 @@ subroutine buffer_x
   implicit none
   save
   call buffer_xp
-  call buffer_xp_nu
+#ifdef NEUTRINOS
+  if (neutrino_flag) call buffer_xp_nu
+#endif
 endsubroutine
 
 subroutine buffer_v
@@ -17,7 +19,9 @@ subroutine buffer_v
   implicit none
   save
   call buffer_vp
-  call buffer_vp_nu
+#ifdef NEUTRINOS
+  if (neutrino_flag) call buffer_vp_nu
+#endif
 endsubroutine
 
 subroutine buffer_xp
@@ -239,6 +243,7 @@ subroutine buffer_xp
 
 endsubroutine buffer_xp
 
+#ifdef NEUTRINOS
 subroutine buffer_xp_nu
   use variables
   use neutrinos
@@ -429,8 +434,8 @@ subroutine buffer_xp_nu
   enddo
   enddo
   sync all
-
 endsubroutine buffer_xp_nu
+#endif
 
 subroutine buffer_vp
   use variables
@@ -663,6 +668,7 @@ subroutine buffer_vp
   sync all
 endsubroutine buffer_vp
 
+#ifdef NEUTRINOS
 subroutine buffer_vp_nu
   use variables
   use neutrinos
@@ -894,5 +900,6 @@ subroutine buffer_vp_nu
   enddo
   sync all
 endsubroutine buffer_vp_nu
+#endif
 
 endmodule
