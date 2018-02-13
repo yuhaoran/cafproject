@@ -15,6 +15,7 @@ module variables
   real,parameter :: GG=1.0/6.0/pi
 
   logical neutrino_flag
+  integer n_checkpoint_neu ! the checkpoint to switch on neutrinos
 
   ! variables
   integer(8) istep

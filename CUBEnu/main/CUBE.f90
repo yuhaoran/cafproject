@@ -44,8 +44,6 @@ program CUBE
       call buffer_grid
       call buffer_x
       call buffer_v
-      cur_checkpoint=cur_checkpoint+1
-      checkpoint_step=.false.
       dt=0
     endif
     call system_clock(ttt2,t_rate)

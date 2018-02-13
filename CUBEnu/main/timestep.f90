@@ -28,7 +28,7 @@ subroutine timestep
       if (ntemp>10) exit
     enddo
 
-    dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax,dt_vmax_nu)
+    dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax,merge(dt_vmax_nu,1000.,neutrino_flag))
 
     call expansion(a,dt,da_1,da_2)
 

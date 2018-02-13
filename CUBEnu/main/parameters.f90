@@ -72,9 +72,9 @@ module parameters
 
   real,parameter :: z_i=10.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
-  real,parameter :: z_i_nu=10.0 ! initial redshift for neutrinos
+  real,parameter :: z_i_nu=5.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
-  real,parameter :: z_tf=z_i_nu ! redshift of transfer functions
+  real,parameter :: z_tf=z_i ! redshift of transfer functions
 
   ! neutrino parameters
   real, parameter :: Tcmb = 2.7255
@@ -167,10 +167,10 @@ module parameters
       print*,'| np local/global =',s%nplocal,s%npglobal
       print*,'|    (neutrinos)  =',s%nplocal_nu,s%npglobal_nu
       print*,'| a,t,tau         =',s%a,s%t,s%tau
-      print*,'| istep           =',s%istep
+      print*,'| timestep        =',s%istep
       print*,'| dt f,pp,c       =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
       print*,'| dt v,v_nu       =',s%dt_vmax,s%dt_vmax_nu
-      print*,'| cur_steps       =',int(s%cur_checkpoint,2)
+      print*,'| cur_checkpoint  =',int(s%cur_checkpoint,2)
       print*,'| mass_p  c/nu    =',s%mass_p_cdm,s%mass_p_nu
       print*,'| '
       print*,'| box             =',s%box, 'Mpc/h'

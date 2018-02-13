@@ -25,7 +25,8 @@ program initial_conditions_nu
   real, allocatable :: rseed_all(:,:)
 
   !Useful variables and small arrays
-  integer :: itx,ity,itz,i,j,k,l,ip,n,pii,pjj,pkk,b,b1,b2
+  integer :: itx,ity,itz,i,j,k,ii,jj,kk,l,n,pii,pjj,pkk,b,b1,b2
+  integer(8) ip
 
   !Particle information
   integer(8), parameter :: npt = np_nc_nu*nt
@@ -103,50 +104,58 @@ program initial_conditions_nu
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    !Compute Lagrangian positions and Thermal velocities
-    do pkk=1,npt
-    do pjj=1,npt
-    do pii=1,npt
-      ip=pii+npt*(pjj-1)+npt**2*(pkk-1)
-      !Positions stored in xq
-      xq=(/pii,pjj,pkk/)-0.5
-      xp(:,ip)=floor( xq/x_resolution_nu,kind=izipx_nu )
-      !Random velocities
-      call random_number(rng)
-      !Bisection interpolate CDF
-      !Type out fns here to save time in case compiler does not inline
-      b1=1
-      b2=ncdf
-      do while(b2-b1>1)
-        b=(b1+b2)/2
-        if ( rng(1)>cdf(2,b) ) then
-          b1=b
-        else
-          b2=b
-        endif
+    do kk=1,nt
+    do jj=1,nt
+    do ii=1,nt
+      do pkk=1,np_nc_nu
+      do pjj=1,np_nc_nu
+      do pii=1,np_nc_nu
+        ip=pii+np_nc_nu*(pjj-1)+np_nc_nu**2*(pkk-1) &
+        +np_nc_nu**3*(ii-1)+np_nc_nu**3*nt*(jj-1)+np_nc_nu**3*nt**2*(kk-1)
+        xq=([itx,ity,itz]-1)*nt+([ii,jj,kk]-1) + (([pii,pjj,pkk]-1d0)/np_nc_nu)+0.5d0/ncell
+        xp(:,ip)=floor( xq/x_resolution_nu,kind=8 )
+        !print*,ip,xq(1),xp(1,ip)
+        !Random velocities
+        call random_number(rng)
+        !Bisection interpolate CDF
+        !Type out fns here to save time in case compiler does not inline
+        b1=1
+        b2=ncdf
+        do while(b2-b1>1)
+          b=(b1+b2)/2
+          if ( rng(1)>cdf(2,b) ) then
+            b1=b
+          else
+            b2=b
+          endif
+        enddo
+        n=merge(b1,b2,b1<b2)
+        rng(1)=(cdf(1,n)*(cdf(2,n+1)-rng(1))+cdf(1,n+1)*(rng(1)-cdf(2,n)))/(cdf(2,n+1)-cdf(2,n))
+
+        !!Store fraction of max velocity
+        !!Fermi-Dirac CDF Approximated by Gaussian
+        pid(ip)=nint(approxCDF(rng(1))*int(2,8)**(8*izipi)-int(2,8)**(8*izipi-1),kind=izipi)
+
+        !!Amplitude and Angle
+        rng(1)=rng(1)!*fd !!Holds velocity amplitude
+        rng(2)=2.*rng(2)-1. !cosTheta in (-1,1)
+        rng(3)=rng(3)*2.*pi !Phi in 0 to 2*pi
+        !!Direction
+        vq(1)=rng(1)*sqrt(1.-rng(2)**2.)*cos(rng(3))
+        vq(2)=rng(1)*sqrt(1.-rng(2)**2.)*sin(rng(3))
+        vq(3)=rng(1)*rng(2)
+
+        vmax=max(vmax,abs(vq))
+
+        vp(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv_nu)
       enddo
-      n=merge(b1,b2,b1<b2)
-      rng(1)=(cdf(1,n)*(cdf(2,n+1)-rng(1))+cdf(1,n+1)*(rng(1)-cdf(2,n)))/(cdf(2,n+1)-cdf(2,n))
-
-      !!Store fraction of max velocity
-      !!Fermi-Dirac CDF Approximated by Gaussian
-      pid(ip)=nint(approxCDF(rng(1))*int(2,8)**(8*izipi)-int(2,8)**(8*izipi-1),kind=izipi)
-
-      !!Amplitude and Angle
-      rng(1)=rng(1)!*fd !!Holds velocity amplitude
-      rng(2)=2.*rng(2)-1. !cosTheta in (-1,1)
-      rng(3)=rng(3)*2.*pi !Phi in 0 to 2*pi
-      !!Direction
-      vq(1)=rng(1)*sqrt(1.-rng(2)**2.)*cos(rng(3))
-      vq(2)=rng(1)*sqrt(1.-rng(2)**2.)*sin(rng(3))
-      vq(3)=rng(1)*rng(2)
-
-      vmax=max(vmax,abs(vq))
-
-      vp(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vq)/pi,kind=izipv_nu)
+      enddo
+      enddo
+    !stop
     enddo
     enddo
     enddo
+
     write(11) xp
     write(12) vp
     write(13) rhoc
@@ -180,12 +189,7 @@ program initial_conditions_nu
   close(14)
   close(15)
 
-
-  sim%nplocal_nu=(np_nc_nu*nc)**3
-  sim%npglobal_nu=0
-  do i=1,nn**3
-    sim%npglobal_nu=sim%npglobal_nu+sim[i]%nplocal_nu
-  enddo
+  ! update header information
   open(unit=10,file=ic_name('info'),access='stream')
   read(10) sim
   sim%sigma_vi_nu=sigma_vi_nu

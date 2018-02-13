@@ -30,7 +30,7 @@ subroutine particle_initialization
   sigma_vi=sim%sigma_vi
   sigma_vi_nu=sim%sigma_vi_nu
   dt_vmax=sim%dt_vmax
-  dt_vmax_nu=merge(sim%dt_vmax_nu,1000.0,neutrino_flag)
+  dt_vmax_nu=sim%dt_vmax_nu
 
   if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izipx_nu/=izipx_nu .or. sim%izipv_nu/=izipv_nu) then
     print*, '  zip format incompatable'

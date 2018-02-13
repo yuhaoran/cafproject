@@ -51,25 +51,46 @@ subroutine checkpoint
     !$omp section
     open(15,file=fn15,status='replace',access='stream'); write(15) pid(:sim%nplocal); close(15)
 # endif
+  !$omp endparallelsections
+  print*,'  image',this_image(),'wrote',sim%nplocal,'CDM particles'
 
 # ifdef NEUTRINOS
-  open(21,file=fn21,status='replace',access='stream'); write(21) xp_nu(:,:sim%nplocal_nu); close(21)
-  !$omp section
-  open(22,file=fn22,status='replace',access='stream'); write(22) vp_nu(:,:sim%nplocal_nu); close(22)
-  !$omp section
-  open(23,file=fn23,status='replace',access='stream'); write(23) rhoc_nu(1:nt,1:nt,1:nt,:,:,:); close(23)
-  !$omp section
-  open(24,file=fn24,status='replace',access='stream'); write(24) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:); close(24)
+  if (neutrino_flag) then
+    !$omp parallelsections default(shared)
+    !$omp section
+    open(21,file=fn21,status='replace',access='stream'); write(21) xp_nu(:,:sim%nplocal_nu); close(21)
+    !$omp section
+    open(22,file=fn22,status='replace',access='stream'); write(22) vp_nu(:,:sim%nplocal_nu); close(22)
+    !$omp section
+    open(23,file=fn23,status='replace',access='stream'); write(23) rhoc_nu(1:nt,1:nt,1:nt,:,:,:); close(23)
+    !$omp section
+    open(24,file=fn24,status='replace',access='stream'); write(24) vfield_nu(:,1:nt,1:nt,1:nt,:,:,:); close(24)
 #   ifdef EID
       !$omp section
       open(25,file=fn25,status='replace',access='stream'); write(25) pid_nu(:sim%nplocal_nu); close(25)
 #   endif
-#  endif
-  !$omp endparallelsections
+    !$omp endparallelsections
+  endif
+# endif
+
+  if (neutrino_flag) then
+    print*,'  image',this_image(),'wrote',sim%nplocal_nu,'neutrino particles'
+  endif
+
   sync all
 
-  print*,'  image',this_image(),'wrote',sim%nplocal,'CDM particles'
-  print*,'  image',this_image(),'wrote',sim%nplocal_nu,'neutrino particles'
+
+
+  if (cur_checkpoint==n_checkpoint_neu) then
+    print*, cur_checkpoint, n_checkpoint_neu
+    print*, 'turn neutrino_flag on'
+    neutrino_flag=.true.
+    sim%mass_p_cdm=real((nf*nn)**3*f_cdm)/sim%npglobal
+    sim%mass_p_nu=real((nf*nn)**3*f_nu)/sim%npglobal_nu
+  endif
+
+  cur_checkpoint=cur_checkpoint+1
+  checkpoint_step=.false.
   !npglobal=0
   !do i=1,nn**3
   !  npglobal=npglobal+sim%nplocal[i]

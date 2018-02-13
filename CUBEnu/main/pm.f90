@@ -21,6 +21,7 @@ subroutine particle_mesh
   if (head) then
     print*, ''
     print*, 'particle mesh'
+    print*, '  mass_p cdm/nu =',sim%mass_p_cdm,sim%mass_p_nu
     call system_clock(tt1,t_rate)
   endif
 
@@ -76,26 +77,28 @@ subroutine particle_mesh
         rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_cdm
       enddo
 #ifdef NEUTRINOS
-      nlast=cum_nu(i-1,j,k,itx,ity,itz)
-      np=rhoc_nu(i,j,k,itx,ity,itz)
-      do l=1,np ! loop over neutrino particles
-        ip=nlast+l
-        tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu !-0.5
-        idx1 = floor(tempx) + 1
-        idx2 = idx1 + 1
-        dx1 = idx1 - tempx
-        dx2 = 1 - dx1
-        idx1=idx1+nfb
-        idx2=idx2+nfb
-        rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_nu
-        rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_nu
-        rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_nu
-        rho_f(idx1(1),idx1(2),idx2(3))=rho_f(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_nu
-        rho_f(idx1(1),idx2(2),idx2(3))=rho_f(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_nu
-        rho_f(idx2(1),idx1(2),idx2(3))=rho_f(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_nu
-        rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_nu
-        rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_nu
-      enddo
+      if (neutrino_flag) then
+        nlast=cum_nu(i-1,j,k,itx,ity,itz)
+        np=rhoc_nu(i,j,k,itx,ity,itz)
+        do l=1,np ! loop over neutrino particles
+          ip=nlast+l
+          tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu !-0.5
+          idx1 = floor(tempx) + 1
+          idx2 = idx1 + 1
+          dx1 = idx1 - tempx
+          dx2 = 1 - dx1
+          idx1=idx1+nfb
+          idx2=idx2+nfb
+          rho_f(idx1(1),idx1(2),idx1(3))=rho_f(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+          rho_f(idx2(1),idx1(2),idx1(3))=rho_f(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+          rho_f(idx1(1),idx2(2),idx1(3))=rho_f(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+          rho_f(idx1(1),idx1(2),idx2(3))=rho_f(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+          rho_f(idx1(1),idx2(2),idx2(3))=rho_f(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_nu
+          rho_f(idx2(1),idx1(2),idx2(3))=rho_f(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+          rho_f(idx2(1),idx2(2),idx1(3))=rho_f(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+          rho_f(idx2(1),idx2(2),idx2(3))=rho_f(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_nu
+        enddo
+      endif
 #endif
     enddo
     enddo
@@ -149,30 +152,32 @@ subroutine particle_mesh
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 #ifdef NEUTRINOS
-      nlast=cum_nu(i-1,j,k,itx,ity,itz)
-      np=rhoc_nu(i,j,k,itx,ity,itz)
-      do l=1,np ! loop over neutrino particles
-        ip=nlast+l
-        tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu !-0.5
-        idx1 = floor(tempx) + 1
-        idx2 = idx1 + 1
-        dx1 = idx1 - tempx
-        dx2 = 1 - dx1
-        idx1=idx1+nfb
-        idx2=idx2+nfb
-        vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+      if (neutrino_flag) then
+        nlast=cum_nu(i-1,j,k,itx,ity,itz)
+        np=rhoc_nu(i,j,k,itx,ity,itz)
+        do l=1,np ! loop over neutrino particles
+          ip=nlast+l
+          tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu !-0.5
+          idx1 = floor(tempx) + 1
+          idx2 = idx1 + 1
+          dx1 = idx1 - tempx
+          dx2 = 1 - dx1
+          idx1=idx1+nfb
+          idx2=idx2+nfb
+          vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
 
-        vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
-        vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
-        vreal=vreal+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
-        vreal=vreal+force_f(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
-        vreal=vreal+force_f(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
-        vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
-        vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
-        vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+          vreal=vreal+force_f(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+          vreal=vreal+force_f(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
+          vreal=vreal+force_f(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
+          vreal=vreal+force_f(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
+          vreal=vreal+force_f(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
+          vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
+          vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
+          vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
 
-        vp_nu(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_new_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
-      enddo
+          vp_nu(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_new_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
+        enddo
+      endif
 #endif
     enddo
     enddo
@@ -182,7 +187,7 @@ subroutine particle_mesh
   enddo
   enddo
   sigma_vi=sigma_vi_new
-  sigma_vi_nu=sigma_vi_new_nu
+  if (neutrino_flag) sigma_vi_nu=sigma_vi_new_nu
   call system_clock(t2,t_rate)
   print*, '    elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all
@@ -227,24 +232,26 @@ subroutine particle_mesh
         r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_cdm
       enddo
 #ifdef NEUTRINOS
-      nlast=cum_nu(i-1,j,k,itx,ity,itz)
-      np=rhoc_nu(i,j,k,itx,ity,itz)
-      do l=1,np ! loop over particle
-        ip=nlast+l
-        tempx=((/i,j,k/)-1)+(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu-0.5
-        idx1(:)=floor(tempx(:))+1
-        idx2(:)=idx1(:)+1
-        dx1(:)=idx1(:)-tempx(:) ! CIC contribution to idx1
-        dx2(:)=1-dx1(:) ! CIC contribution to idx2
-        r3t(idx1(1),idx1(2),idx1(3))=r3t(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_nu
-        r3t(idx2(1),idx1(2),idx1(3))=r3t(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_nu
-        r3t(idx1(1),idx2(2),idx1(3))=r3t(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_nu
-        r3t(idx1(1),idx1(2),idx2(3))=r3t(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_nu
-        r3t(idx1(1),idx2(2),idx2(3))=r3t(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_nu
-        r3t(idx2(1),idx1(2),idx2(3))=r3t(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_nu
-        r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_nu
-        r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_nu
-      enddo
+      if (neutrino_flag) then
+        nlast=cum_nu(i-1,j,k,itx,ity,itz)
+        np=rhoc_nu(i,j,k,itx,ity,itz)
+        do l=1,np ! loop over particle
+          ip=nlast+l
+          tempx=((/i,j,k/)-1)+(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu-0.5
+          idx1(:)=floor(tempx(:))+1
+          idx2(:)=idx1(:)+1
+          dx1(:)=idx1(:)-tempx(:) ! CIC contribution to idx1
+          dx2(:)=1-dx1(:) ! CIC contribution to idx2
+          r3t(idx1(1),idx1(2),idx1(3))=r3t(idx1(1),idx1(2),idx1(3))+dx1(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+          r3t(idx2(1),idx1(2),idx1(3))=r3t(idx2(1),idx1(2),idx1(3))+dx2(1)*dx1(2)*dx1(3)*sim%mass_p_nu
+          r3t(idx1(1),idx2(2),idx1(3))=r3t(idx1(1),idx2(2),idx1(3))+dx1(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+          r3t(idx1(1),idx1(2),idx2(3))=r3t(idx1(1),idx1(2),idx2(3))+dx1(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+          r3t(idx1(1),idx2(2),idx2(3))=r3t(idx1(1),idx2(2),idx2(3))+dx1(1)*dx2(2)*dx2(3)*sim%mass_p_nu
+          r3t(idx2(1),idx1(2),idx2(3))=r3t(idx2(1),idx1(2),idx2(3))+dx2(1)*dx1(2)*dx2(3)*sim%mass_p_nu
+          r3t(idx2(1),idx2(2),idx1(3))=r3t(idx2(1),idx2(2),idx1(3))+dx2(1)*dx2(2)*dx1(3)*sim%mass_p_nu
+          r3t(idx2(1),idx2(2),idx2(3))=r3t(idx2(1),idx2(2),idx2(3))+dx2(1)*dx2(2)*dx2(3)*sim%mass_p_nu
+        enddo
+      endif
 #endif
     enddo
     enddo
@@ -330,27 +337,29 @@ subroutine particle_mesh
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 #ifdef NEUTRINOS
-      nlast=cum_nu(i-1,j,k,itx,ity,itz)
-      np=rhoc_nu(i,j,k,itx,ity,itz)
-      do l=1,np ! loop over neutrino particles
-        ip=nlast+l
-        tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu-0.5
-        idx1(:)=floor(tempx(:))+1
-        idx2(:)=idx1(:)+1
-        dx1(:)=idx1(:)-tempx(:)
-        dx2(:)=1-dx1(:)
-        vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
-        vreal=vreal+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
-        vreal=vreal+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
-        vreal=vreal+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
-        vreal=vreal+force_c(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
-        vreal=vreal+force_c(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
-        vreal=vreal+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
-        vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
-        vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-        vmax_nu=max(vmax_nu,maxval(abs(vreal+vfield_nu(:,i,j,k,itx,ity,itz))))
-        vp_nu(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
-      enddo
+      if (neutrino_flag) then
+        nlast=cum_nu(i-1,j,k,itx,ity,itz)
+        np=rhoc_nu(i,j,k,itx,ity,itz)
+        do l=1,np ! loop over neutrino particles
+          ip=nlast+l
+          tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp_nu(:,ip)+ishift_nu,izipx_nu)+rshift_nu)*x_resolution_nu-0.5
+          idx1(:)=floor(tempx(:))+1
+          idx2(:)=idx1(:)+1
+          dx1(:)=idx1(:)-tempx(:)
+          dx2(:)=1-dx1(:)
+          vreal=tan(pi*real(vp_nu(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
+          vreal=vreal+force_c(:,idx1(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx1(3)
+          vreal=vreal+force_c(:,idx2(1),idx1(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx1(3)
+          vreal=vreal+force_c(:,idx1(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx1(3)
+          vreal=vreal+force_c(:,idx1(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx1(2)*dx2(3)
+          vreal=vreal+force_c(:,idx1(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx1(1)*dx2(2)*dx2(3)
+          vreal=vreal+force_c(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
+          vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
+          vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
+          vmax_nu=max(vmax_nu,maxval(abs(vreal+vfield_nu(:,i,j,k,itx,ity,itz))))
+          vp_nu(:,ip)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv_nu)
+        enddo
+      endif
 #endif
     enddo
     enddo
@@ -369,14 +378,14 @@ subroutine particle_mesh
   dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   dt_vmax=vbuf*20/vmax
-  dt_vmax_nu=merge(vbuf*20/vmax_nu,1000.,neutrino_flag)
+  if (neutrino_flag) dt_vmax_nu=vbuf*20/vmax_nu
   sync all
 
   do i=1,nn**3
     dt_fine=min(dt_fine,dt_fine[i])
     dt_coarse=min(dt_coarse,dt_coarse[i])
     dt_vmax=min(dt_vmax,dt_vmax[i])
-    dt_vmax_nu=min(dt_vmax_nu,dt_vmax_nu[i])
+    if (neutrino_flag) dt_vmax_nu=min(dt_vmax_nu,dt_vmax_nu[i])
   enddo
   if (head) then
     call system_clock(tt2,t_rate)
