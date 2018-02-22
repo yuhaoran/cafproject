@@ -19,5 +19,4 @@ cd ../main/
 cd ../utilities/
 ./cicpower.x
 
-
 cd ../main/

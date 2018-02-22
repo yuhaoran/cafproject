@@ -29,8 +29,6 @@ subroutine particle_initialization
   a=a_i
   sigma_vi=sim%sigma_vi
   sigma_vi_nu=sim%sigma_vi_nu
-  dt_vmax=sim%dt_vmax
-  dt_vmax_nu=sim%dt_vmax_nu
 
   if (sim%izipx/=izipx .or. sim%izipv/=izipv .or. sim%izipx_nu/=izipx_nu .or. sim%izipv_nu/=izipv_nu) then
     print*, '  zip format incompatable'
@@ -51,6 +49,7 @@ subroutine particle_initialization
 #ifdef PID
   !$omp section
     open(15,file=fn15,status='old',access='stream'); read(15) pid(:sim%nplocal); close(15)
+    print*, 'check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
 #endif
 
 #ifdef NEUTRINOS

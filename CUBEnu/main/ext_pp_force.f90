@@ -29,7 +29,7 @@ subroutine ext_pp_force
   itest1=0
   npairs=0
   f2_max_pp=0
-  print*, '  nplocal =',sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
+  print*, '  sim%nplocal =',sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -114,23 +114,23 @@ subroutine ext_pp_force
   !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   !dt_pp=sqrt(0.1*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
-  dt_pp=sqrt(1.0) / max(sqrt(f2_max_pp)*a_mid*GG,1e-3)
+  sim%dt_pp=sqrt(1.0) / max(sqrt(f2_max_pp)*a_mid*GG,1e-3)
   sync all
   do i=1,nn**3
-    dt_pp=min(dt_pp,dt_pp[i])
+    sim%dt_pp=min(sim%dt_pp,sim[i]%dt_pp)
   enddo
   sync all
 
   if (head) then
     print*,'  max of f_pp', sqrt(f2_max_pp)
-    print*,'  dt_pp',dt_pp
+    print*,'  dt_pp',sim%dt_pp
     print*,'  updated',itest1,'particles'
     print*,'  average pairs',npairs/real(itest1)
   endif
   sync all
 
   if (itest1/=sim%nplocal) then
-    print*, 'itest1/=nplocal'
+    print*, 'itest1/=sim%nplocal'
     print*, itest1,sim%nplocal
     stop
   endif

@@ -3,6 +3,8 @@ module parameters
   save
   ! output directory
   character(*),parameter :: opath='../output/universe2/'
+  !! for Hongming, faster timesteps
+  real,parameter :: faster=1
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
@@ -26,7 +28,7 @@ module parameters
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -67,14 +69,14 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=400.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
-  real,parameter :: z_i=10.0   ! initial redshift
+  real,parameter :: z_i=50.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
   real,parameter :: z_i_nu=5.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
-  real,parameter :: z_tf=z_i ! redshift of transfer functions
+  real,parameter :: z_tf=10 ! redshift of transfer functions
 
   ! neutrino parameters
   real, parameter :: Tcmb = 2.7255
@@ -142,7 +144,7 @@ module parameters
     integer(8) cur_checkpoint
 
     real a, t, tau
-    real dt_f_acc, dt_pp_acc, dt_c_acc, dt_vmax, dt_vmax_nu
+    real dt_pp, dt_fine, dt_coarse, dt_vmax, dt_vmax_nu
     real mass_p_cdm,mass_p_nu
     real box
 
@@ -168,7 +170,7 @@ module parameters
       print*,'|    (neutrinos)  =',s%nplocal_nu,s%npglobal_nu
       print*,'| a,t,tau         =',s%a,s%t,s%tau
       print*,'| timestep        =',s%istep
-      print*,'| dt f,pp,c       =',s%dt_f_acc,s%dt_pp_acc,s%dt_c_acc
+      print*,'| dt pp,f,c       =',s%dt_pp,s%dt_fine,s%dt_coarse
       print*,'| dt v,v_nu       =',s%dt_vmax,s%dt_vmax_nu
       print*,'| cur_checkpoint  =',int(s%cur_checkpoint,2)
       print*,'| mass_p  c/nu    =',s%mass_p_cdm,s%mass_p_nu

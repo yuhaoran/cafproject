@@ -1,3 +1,5 @@
+!! add -DNEUTRINOS to compute cross_power(delta_c,delta_nu)
+!! otherwise compute cross_power(delta_L,delta_c)
 program cicpower
   use parameters
   use pencil_fft
@@ -16,7 +18,9 @@ program cicpower
   real(8) rho8[*]
 
   integer(izipx),allocatable :: xp(:,:)
+#ifdef NEUTRINOS
   integer(izipx_nu),allocatable :: xp_nu(:,:)
+#endif
   integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt)
 
   real xi(10,nbin)[*]
@@ -145,7 +149,7 @@ program cicpower
     open(11,file=output_name('delta_c'),status='replace',access='stream')
     write(11) rho_c
     close(11); sync all
-
+#ifdef NEUTRINOS
     ! neutrinos
     allocate(xp_nu(3,nplocal_nu))
     open(11,file=output_name('xp_nu'),status='old',action='read',access='stream')
@@ -222,11 +226,19 @@ program cicpower
     open(11,file=output_name('delta_nu'),status='replace',access='stream')
     write(11) rho_nu
     close(11); sync all
+#endif
 
     ! power spectrum
     write(str_i,'(i6)') image
     write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
+#ifdef NEUTRINOS
     call cross_power(xi,rho_c,rho_nu)
+#else
+  open(15,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
+  read(15) rho_nu
+  close(15)
+    call cross_power(xi,rho_c,rho_nu)
+#endif
     sync all
     if (head) then
       open(15,file=output_name('cicpower'),status='replace',access='stream')

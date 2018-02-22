@@ -52,9 +52,9 @@ program initial_conditions
     integer(8) iq(3)
 #endif
   real grad_max(3)[*],vmax(3),vf
-  !real vdisp(506,2),sigma_vi
+  !real vdisp(506,2)
   real(4) svz(500,2),svr(100,2)
-  real(8) sigma_vc,sigma_vf,sigma_vres,sigma_vi
+  real(8) sigma_vc,sigma_vf
   real(8) std_vsim_c,std_vsim_res,std_vsim
 
   character (10) :: img_s, z_s
@@ -92,9 +92,9 @@ program initial_conditions
 
   sim%istep=0
 
-  sim%dt_f_acc=1000
-  sim%dt_pp_acc=1000
-  sim%dt_c_acc=1000
+  sim%dt_pp=1000
+  sim%dt_fine=1000
+  sim%dt_coarse=1000
   sim%dt_vmax=1000
   sim%dt_vmax_nu=1000
 
@@ -438,19 +438,16 @@ program initial_conditions
 
   sigma_vf=interp_sigmav(sim%a,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
   sigma_vc=interp_sigmav(sim%a,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
-  sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
-  sigma_vi=sigma_vres/sim%vsim2phys/sqrt(3.) ! sigma(v_i) residual, in sim unit
-
-  sim%sigma_vres=sigma_vres
-  sim%sigma_vi=sigma_vi
+  sim%sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
+  sim%sigma_vi=sim%sigma_vres/sim%vsim2phys/sqrt(3.) ! sigma(v_i) residual, in sim unit
   sync all
   if (head) then
     print*, ''
     print*, 'Read velocity dispersion prediction'
     print*,'sigma_vf(a=',sim%a,', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
     print*,'sigma_vc(a=',sim%a,', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
-    print*,'sigma_vres=',real(sigma_vres,4),'km/s'
-    print*,'sigma_vi =',real(sigma_vi,4),'(simulation unit)'
+    print*,'sigma_vres=',real(sim%sigma_vres,4),'km/s'
+    print*,'sigma_vi =',real(sim%sigma_vi,4),'(simulation unit)'
   endif
 
 
@@ -519,7 +516,7 @@ program initial_conditions
       xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
       vreal=-gradphi/(8*pi)*vf
       vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
-      vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+      vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sim%sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
 #     ifdef PID
         iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
         iq = modulo(iq,nf_global)
@@ -552,7 +549,7 @@ program initial_conditions
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
       do l=1,rhoce(i,j,k)
         ip=ip+1
-        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sim%sigma_vi*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k)
         std_vsim=std_vsim+sum(vreal**2)

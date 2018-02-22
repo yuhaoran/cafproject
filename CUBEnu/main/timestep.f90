@@ -28,7 +28,11 @@ subroutine timestep
       if (ntemp>10) exit
     enddo
 
-    dt=min(dt_e,dt_fine,dt_coarse,dt_pp,dt_vmax,merge(dt_vmax_nu,1000.,neutrino_flag))
+    dt=min(dt_e,sim%dt_fine,sim%dt_coarse,sim%dt_pp,sim%dt_vmax,merge(sim%dt_vmax_nu,1000.,neutrino_flag))
+
+    !! for Hongming, can set timestep 10x larger.
+    dt=min(dt*faster,sim%dt_vmax*0.8)
+    !!
 
     call expansion(a,dt,da_1,da_2)
 
@@ -49,7 +53,7 @@ subroutine timestep
     if (da>=a_checkpoint-a) then
       checkpoint_step=.true.
       if (cur_checkpoint==n_checkpoint) final_step=.true.
-      do while (abs((a+da)/a_checkpoint-1)>=1e-6)
+      do while (abs((a+da)/a_checkpoint-1)>=1e-3)
         dt=dt*(a_checkpoint-a)/da
         call expansion(a,dt,da_1,da_2)
         da=da_1+da_2
@@ -65,11 +69,11 @@ subroutine timestep
     print*, 'expansion   :',ra
     print*, 'dt          :',dt
     print*, 'dt_e        :',dt_e,merge('<',' ',dt==dt_e)
-    print*, 'dt_fine     :',dt_fine,merge('<',' ',dt==dt_fine)
-    print*, 'dt_pp       :',dt_pp,merge('<',' ',dt==dt_pp)
-    print*, 'dt_coarse   :',dt_coarse,merge('<',' ',dt==dt_coarse)
-    print*, 'dt_vmax     :',dt_vmax,merge('<',' ',dt==dt_vmax)
-    print*, 'dt_vmax_nu  :',dt_vmax_nu,merge('<',' ',dt==dt_vmax_nu)
+    print*, 'dt_fine     :',sim%dt_fine,merge('<',' ',dt==sim%dt_fine)
+    print*, 'dt_pp       :',sim%dt_pp,merge('<',' ',dt==sim%dt_pp)
+    print*, 'dt_coarse   :',sim%dt_coarse,merge('<',' ',dt==sim%dt_coarse)
+    print*, 'dt_vmax     :',sim%dt_vmax,merge('<',' ',dt==sim%dt_vmax)
+    print*, 'dt_vmax_nu  :',sim%dt_vmax_nu,merge('<',' ',dt==sim%dt_vmax_nu)
     print*, ''
     tau=tau+dt
     t=t+dt

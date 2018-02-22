@@ -26,12 +26,6 @@ subroutine checkpoint
 
   sim%istep=istep
 
-  sim%dt_f_acc=dt_fine
-  sim%dt_pp_acc=dt_pp
-  sim%dt_c_acc=dt_coarse
-  sim%dt_vmax=dt_vmax
-  sim%dt_vmax_nu=dt_vmax_nu
-
   sim%cur_checkpoint=cur_checkpoint
 
   sim%vsim2phys=(1.5/a)*box*h0*100.*sqrt(omega_m)/nf_global
@@ -50,6 +44,7 @@ subroutine checkpoint
 # ifdef PID
     !$omp section
     open(15,file=fn15,status='replace',access='stream'); write(15) pid(:sim%nplocal); close(15)
+    print*, 'check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
 # endif
   !$omp endparallelsections
   print*,'  image',this_image(),'wrote',sim%nplocal,'CDM particles'

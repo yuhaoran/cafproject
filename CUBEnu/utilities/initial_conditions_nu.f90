@@ -40,7 +40,6 @@ program initial_conditions_nu
   real(4), dimension(3,nt,nt,nt) :: vfield
 
   real(8) vreal(3)
-  real(8) sigma_vc,sigma_vf,sigma_vres,sigma_vi
   real(8) std_vsim_c,std_vsim_res,std_vsim
 
   !Setup

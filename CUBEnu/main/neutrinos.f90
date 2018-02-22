@@ -18,7 +18,7 @@ module neutrinos
   real(4) vfield_nu(3,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt) ! cannot have >7 dims
   integer(izipi) pid_nu(np_image_max_nu)[*], pid_new_nu(np_tile_max_nu)
 
-  integer(8) npglobal_nu, npcheck_nu
+  integer(8) npcheck_nu
 #endif
 
 endmodule

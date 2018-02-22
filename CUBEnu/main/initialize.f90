@@ -41,10 +41,6 @@ subroutine initialize
   t=0
   dt=0
   dt_old=0
-  dt_vmax=1000
-  dt_pp=1000
-  dt_fine=1000
-  dt_coarse=1000
   da=0
   tau=-3/sqrt(a_i)
   cur_checkpoint=1

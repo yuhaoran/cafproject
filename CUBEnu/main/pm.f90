@@ -375,17 +375,17 @@ subroutine particle_mesh
   sync all
 
   if (head) print*, '  constrain dt'
-  dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
-  dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
-  dt_vmax=vbuf*20/vmax
-  if (neutrino_flag) dt_vmax_nu=vbuf*20/vmax_nu
+  sim%dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
+  sim%dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
+  sim%dt_vmax=vbuf*20/vmax
+  if (neutrino_flag) sim%dt_vmax_nu=vbuf*20/vmax_nu
   sync all
 
   do i=1,nn**3
-    dt_fine=min(dt_fine,dt_fine[i])
-    dt_coarse=min(dt_coarse,dt_coarse[i])
-    dt_vmax=min(dt_vmax,dt_vmax[i])
-    if (neutrino_flag) dt_vmax_nu=min(dt_vmax_nu,dt_vmax_nu[i])
+    sim%dt_fine=min(sim%dt_fine,sim[i]%dt_fine)
+    sim%dt_coarse=min(sim%dt_coarse,sim[i]%dt_coarse)
+    sim%dt_vmax=min(sim%dt_vmax,sim[i]%dt_vmax)
+    if (neutrino_flag) sim%dt_vmax_nu=min(sim%dt_vmax_nu,sim[i]%dt_vmax_nu)
   enddo
   if (head) then
     call system_clock(tt2,t_rate)
