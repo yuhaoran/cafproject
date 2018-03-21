@@ -18,12 +18,12 @@ program initial_conditions
   real,parameter :: vsim2phys=1./vphys2sim
   real, parameter :: fdf = 25.8341 !kT/m for T=1K, m=1eV
   real, parameter :: fd = (1./vsim2phys)*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
-  real, parameter :: sigma_vi_nu = 3.59714*fd/sqrt(3.) !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5 
+  real, parameter :: sigma_vi_nu = 3.59714*fd/sqrt(3.) !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5
 
   !Fermi-Dirac CDF
   integer, parameter :: ncdf = 10000
   real, dimension(2,ncdf) :: cdf
-  
+
   integer(8),parameter :: nk=132 ! ???
   integer(8) i,j,k,n
   integer(4) seedsize
@@ -86,58 +86,15 @@ program initial_conditions
     print*, 'Resolution', ng*nn
     print*, 'Number of particles per side', np_nc_nu*nc*nn
     print*, 'Box size', box
-    print*, 'np_2n3 =',np_2n3
+    print*, 'body_centered_cubic =',body_centered_cubic
     print*, 'output: ', opath
     print*, 'head image number',icx,icy,icz
     print*, '-----------------------------------------'
-    call system('mkdir -p '//opath//'code')
-    call system('cp initial_conditions*.f90 '//opath//'code')
-    call system('cp ../main/*.f90 '//opath//'code')
-    call system('cp ../main/redshift.txt '//opath//'code')
   endif
   sync all
 
-  sim%nplocal=0
-  sim%nplocal_nu=0
-  sim%a=1./(1+z_i)
-  sim%t=0
-  sim%tau=0
-
-  sim%istep=0
-
-  sim%dt_f_acc=1000
-  sim%dt_pp_acc=1000
-  sim%dt_c_acc=1000
-  sim%dt_vmax=1000
-  sim%dt_vmax_nu=1000
-
-  sim%cur_checkpoint=0
-
-  sim%mass_p=real(nf**3)/sim%nplocal ! will be overwritten
-
-  sim%box=box
-  sim%image=image
-  sim%nn=nn
-  sim%nnt=nnt
-  sim%nt=nt
-  sim%ncell=ncell
-  sim%ncb=ncb
-  sim%izipx=izipx
-  sim%izipv=izipv
-  sim%izipx_nu=izipx_nu
-  sim%izipv_nu=izipv_nu
-
-  sim%h0=h0
-  sim%omega_m=omega_m
-  sim%omega_l=omega_l
-  sim%s8=s8
-  sim%vsim2phys=1./vphys2sim!(150./a)*box*h0*sqrt(omega_m)/nf_global
-  sim%z_i=z_i
-  sim%z_i_nu=z_i_nu
-  sync all
-
   ! initialize variables ------------------------------
-  if (np_2n3) then
+  if (body_centered_cubic) then
     nf_shake=1
   else
     nf_shake=0
@@ -186,7 +143,6 @@ program initial_conditions
   ! propagate to starting redshift
   if (head .and. z_i_nu .ne. z_tf) write(*,*) 'Warning: z_i_nu != z_tf',z_i_nu,z_tf,DgrowRatio(z_i_nu,z_tf)
   tf(2,:) = tf(2,:)*DgrowRatio(z_i_nu,z_tf)**2
-
   sync all
 
   ! noisemap -------------------------------------
@@ -268,7 +224,7 @@ program initial_conditions
   if (head) print*,'Start btran'
   call pencil_fft_backward
   !print*,'r3',r3(1,1,1)
-  !print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
+  print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'Write delta_L_nu into file'
   if (head) print*,'Growth factor DgrowRatio(',a,') =',DgrowRatio(z_i_nu,z_tf)
@@ -347,7 +303,7 @@ program initial_conditions
 
   ! Complex multiply delta_L with potential kernel
   cxyz=real(cxyz)*delta_k
-  delta_k=cxyz  ! backup phi(k)
+
   call pencil_fft_backward
 
   ! Primordial Non-Gaussianity
@@ -363,7 +319,7 @@ program initial_conditions
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
   if (head) print*, 'Write phi1_nu into file'
-  open(11,file=ic_name('phi1_nu'),status='replace',access='stream')
+  open(11,file=ic_name_nu('phi1_nu'),status='replace',access='stream')
   write(11) r3
   close(11)
 
@@ -383,10 +339,10 @@ program initial_conditions
 
   ! potential field v ------------------------------------------------
   if (head) write(*,*) 'Computing velocity potential'
-  
+
   if (head) write(*,*) 'ftran'
   call pencil_fft_forward
-
+  !! ? cxyz=delta_k ! use backed-up delta_L in k-space
   do k=1,npen
   do j=1,nf
   do i=1,nyquest+1
@@ -403,7 +359,7 @@ program initial_conditions
     cxyz(i,j,k)=cxyz(i,j,k)*pow*kr
   enddo
   enddo
-  enddo  
+  enddo
   sync all
 
   if (head) write(*,*) 'btran'
@@ -411,8 +367,12 @@ program initial_conditions
   sync all
 
   phiv=0
-  phiv(1:nf,1:nf,1:nf)=r3 
+  phiv(1:nf,1:nf,1:nf)=r3
   sync all
+  if (head) print*, 'Write phiv_nu into file'
+  open(11,file=ic_name_nu('phiv_nu'),status='replace',access='stream')
+  write(11) r3
+  close(11)
 
   if (head) write(*,*) 'buffer'
   phiv(:0,:,:)=phiv(nf-nfb:nf,:,:)[image1d(inx,icy,icz)]
@@ -446,9 +406,11 @@ program initial_conditions
     grad_max=max(grad_max,grad_max(:)[i])
     gradv_max=max(gradv_max,gradv_max(:)[i])
   enddo
-  !print*, grad_max
+  !print*, 'grad_max',grad_max
+  !print*, 'gradv_max',gradv_max
+  !stop
   vmax=gradv_max/2/(4*pi)*vf
-  sim%dt_vmax=vbuf*20./maxval(abs(vmax))
+  sim%dt_vmax_nu=vbuf*20./maxval(abs(vmax))
   if (head) then
     print*, 'grad_max',grad_max
     print*, 'max dsp',grad_max/2/(4*pi)
@@ -502,7 +464,7 @@ program initial_conditions
      end do
      close(11)
   end if
-
+stop
   ! create particles (no communication) ----------------------------
   if (head) print*,''
   if (head) print*, 'Create particles'
@@ -521,7 +483,7 @@ program initial_conditions
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    
+
     !Neutrino random velocities
     call random_number(rng)
     do k=1,npmax
@@ -532,7 +494,7 @@ program initial_conditions
        rng(1,k)=kx*sqrt(1.-ky**2.)*cos(kz)
        rng(1,k)=kx*sqrt(1.-ky**2.)*sin(kz)
        rng(1,k)=kx*ky
-    enddo 
+    enddo
 
     iright=0
     rhoce=0
@@ -545,15 +507,15 @@ program initial_conditions
       jj=nft*(ity-1)+(ncell/np_nc_nu)*(j-1)+1+imove
       ii=nft*(itx-1)+(ncell/np_nc_nu)*(i-1)+1+imove
       xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove)/ncell ! Lagrangian position q
-      
+
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
-      
+
       gradphiv(1)=phiv(ii+1,jj,kk)-phiv(ii-1,jj,kk)
       gradphiv(2)=phiv(ii,jj+1,kk)-phiv(ii,jj-1,kk)
       gradphiv(3)=phiv(ii,jj,kk+1)-phiv(ii,jj,kk-1)
-      
+
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1
       vreal=-gradphiv/(8*pi)*vf
@@ -579,11 +541,11 @@ program initial_conditions
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
-      
+
       gradphiv(1)=phiv(ii+1,jj,kk)-phiv(ii-1,jj,kk)
       gradphiv(2)=phiv(ii,jj+1,kk)-phiv(ii,jj-1,kk)
       gradphiv(3)=phiv(ii,jj,kk+1)-phiv(ii,jj,kk-1)
-      
+
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
@@ -595,7 +557,7 @@ program initial_conditions
       else
          !true random velocities
          !rng1=rng(:,idx)
-         
+
          !neg rng dir, conserves momentum
          rng1=-1.*rng1
 
@@ -690,7 +652,7 @@ program initial_conditions
     npglobal=npglobal+nplocal[i]
   enddo
   if (head) print*, 'npglobal =',npglobal
-  sim%mass_p=real(nf_global**3,kind=8)/npglobal
+  !sim%mass_p=real(nf_global**3,kind=8)/npglobal
   call print_header(sim)
 
   sync all

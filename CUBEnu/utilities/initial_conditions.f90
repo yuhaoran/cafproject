@@ -285,7 +285,7 @@ program initial_conditions
   if (head) print*,'Start btran'
   call pencil_fft_backward
   !print*,'r3',r3(1,1,1)
-  !print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
+  print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'Write delta_L into file'
   if (head) print*,'Growth factor Dgrow(',sim%a,') =',Dgrow(sim%a)
@@ -414,7 +414,6 @@ program initial_conditions
   do i=1,nn**3 ! co_max
     grad_max=max(grad_max,grad_max(:)[i])
   enddo
-  !print*, grad_max
   vmax=grad_max/2/(4*pi)*vf
   sim%dt_vmax=vbuf*20./maxval(abs(vmax))
   if (head) then
@@ -449,8 +448,6 @@ program initial_conditions
     print*,'sigma_vres=',real(sim%sigma_vres,4),'km/s'
     print*,'sigma_vi =',real(sim%sigma_vi,4),'(simulation unit)'
   endif
-
-
   sync all
 
   ! create particles (no communication) ----------------------------

@@ -4,7 +4,7 @@ module parameters
   ! output directory
   character(*),parameter :: opath='../output/universe2/'
   !! for Hongming, faster timesteps
-  real,parameter :: faster=1
+  real,parameter :: faster=0
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
@@ -28,7 +28,7 @@ module parameters
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -55,7 +55,7 @@ module parameters
 
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
-  logical,parameter :: body_centered_cubic=.true.
+  logical,parameter :: body_centered_cubic=.false.
   integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
@@ -69,7 +69,7 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=400.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
   real,parameter :: z_i=50.0   ! initial redshift
@@ -83,7 +83,7 @@ module parameters
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
 
   integer, parameter :: Nnu = 3 ! number of massive neutrinos
-  real, dimension(Nnu), parameter :: Mnu = (/ 0.5,0.5,0.5  /)
+  real, dimension(Nnu), parameter :: Mnu = (/ 0.05,0.05,0.05  /)
   real, dimension(Nnu), parameter :: Tnu = (/ Tcnb,Tcnb,Tcnb /)
   real, parameter :: Meff = sum( Mnu*(Tnu/Tcnb)**3. )
 

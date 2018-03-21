@@ -7,7 +7,7 @@ all: ic.x ic_nu.x cicpower.x #dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
-ic_nu.x: parameters.o initial_conditions_nu.o
+ic_nu.x: parameters.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)

@@ -9,6 +9,7 @@ module halo_output
 endmodule
 
 program halofinder
+  use omp_lib
   use parameters
   use halo_output
   !use buffer_particle_subroutines, only :: buffer_vp
@@ -27,7 +28,7 @@ program halofinder
   logical(1) select_vir(max_halo_np),select_odc(max_halo_np)
   integer(8) ilist_odc(max_halo_np),ilist_vir(max_halo_np)
 
-  integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,np_2n3) ! average number of particles per image
+  integer(8),parameter :: np_image=(nc*np_nc)**3*merge(2,1,body_centered_cubic) ! average number of particles per image
   integer(8),parameter :: np_image_max=np_image*(nte*1./nt)**3*image_buffer
   integer(8),parameter :: np_tile_max=np_image/nnt**3*(nte*1./nt)**3*tile_buffer
   integer(izipx) xp(3,np_image_max)[*]
@@ -139,7 +140,7 @@ program halofinder
     endif
     nplocal=sim%nplocal
     nplocal_nu=sim%nplocal_nu
-    mass_p=sim%mass_p
+    mass_p=sim%mass_p_cdm
     !mass_p=1.
     sigma_vi=sim%sigma_vi
     if (head) then
