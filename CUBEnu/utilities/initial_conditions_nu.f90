@@ -13,11 +13,9 @@ program initial_conditions
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
 
-  real,parameter :: a=1/(1+z_i_nu)
-  real,parameter :: vphys2sim=1.0/(300.*sqrt(omega_m)*box/a/2/nf_global)
-  real,parameter :: vsim2phys=1./vphys2sim
+  real,parameter :: vsim2phys_zi_nu=(150./a_i_nu)*box*h0*sqrt(omega_m)/nf_global
   real, parameter :: fdf = 25.8341 !kT/m for T=1K, m=1eV
-  real, parameter :: fd = (1./vsim2phys)*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
+  real, parameter :: fd = (1./vsim2phys_zi_nu)*fdf*maxval(Tnu/Mnu)/a_i_nu !kBcTnu/mass with temp in K and mass in eV
   real, parameter :: sigma_vi_nu = 3.59714*fd/sqrt(3.) !fd velocity dispersion (45/3 * Zeta(5)/Zeta(3))**0.5
 
   !Fermi-Dirac CDF
@@ -31,7 +29,7 @@ program initial_conditions
   real(8) v8, norm, xq(3),gradphi(3),gradphiv(3),vreal(3), dvar[*], dvarg
   integer(int64) :: time64
 
-  integer(8) nplocal[*],npglobal,ip,l
+  integer(8) nplocal[*],npglobal,ip,l,idx_v
   ! power spectrum arrays
   real, dimension(20,nk) :: tf, tfv, tfd !CLASS
   real, dimension(2,nc) :: pkm,pkn
@@ -51,7 +49,7 @@ program initial_conditions
   ! zip arrays
   integer(8),parameter :: npt=nt*np_nc_nu ! np / tile / dim !64
   integer(8),parameter :: npb=ncb*np_nc_nu !24
-  integer(8),parameter :: npmax=2*(npt+2*npb)**3
+  integer(8),parameter :: npmax=tile_buffer*(npt+2*npb)**3
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
@@ -60,14 +58,14 @@ program initial_conditions
   integer(izipv) vp(3,npmax)
   real :: rng(3,npmax)
   real :: rng1(3)
-#ifdef PID
+#ifdef EID
     integer(8) pid(npmax)
     integer(8) iq(3)
 #endif
   real grad_max(3)[*],gradv_max(3)[*],vmax(3),vf
   !real vdisp(506,2),sigma_vi
   real(4) svz(500,2),svr(100,2)
-  real(8) sigma_vc,sigma_vf,sigma_vres,sigma_vi
+  real(8) sigma_vc,sigma_vf,sigma_vres
   real(8) std_vsim_c,std_vsim_res,std_vsim
 
   character (10) :: img_s, z_s
@@ -91,6 +89,11 @@ program initial_conditions
     print*, 'head image number',icx,icy,icz
     print*, '-----------------------------------------'
   endif
+
+  open(10,file=ic_name('info'),status='old',access='stream')
+  read(10) sim
+  close(10)
+
   sync all
 
   ! initialize variables ------------------------------
@@ -127,7 +130,7 @@ program initial_conditions
      tfd(2,:)=tfd(2,:)+kr*tfd(5+i-1,:)
      tfd(3,:)=tfd(3,:)+kr*tfv(5+i-1,:) !velocity, units are km/s
   end do
-  tfd(3,:) = -tfd(3,:)*vphys2sim
+  tfd(3,:) = -tfd(3,:)/vsim2phys_zi_nu
 
 !!$  !!@cdm
 !!$  tfd(2,:)=tfd(4,:)
@@ -227,7 +230,7 @@ program initial_conditions
   print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'Write delta_L_nu into file'
-  if (head) print*,'Growth factor DgrowRatio(',a,') =',DgrowRatio(z_i_nu,z_tf)
+  if (head) print*,'Growth factor DgrowRatio(',a_i_nu,') =',DgrowRatio(z_i_nu,z_tf)
   open(11,file=output_dir()//'delta_L_nu'//output_suffix(),status='replace',access='stream')
   write(11) r3/DgrowRatio(z_i_nu,z_tf)
   close(11)
@@ -435,22 +438,23 @@ program initial_conditions
 !!$  sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
 !!$  sigma_vi=sigma_vres/sim%vsim2phys/sqrt(3.) ! sigma(v_i) residual, in sim unit
 
-  sigma_vf=sigma_vi_nu/vphys2sim
-  sigma_vc=sigma_vf/vphys2sim
-  sigma_vres=0.
-  sigma_vi=0.
+  !sigma_vf=sigma_vi_nu/vphys2sim
+  !sigma_vc=sigma_vf/vphys2sim
+  !sigma_vres=0.
+  !sigma_vi=0.
 
-  sim%sigma_vres=sigma_vres
-  sim%sigma_vi=sigma_vi
-  sync all
+  !sim%sigma_vres=sigma_vres
+  !sim%sigma_vi=sigma_vi
+  !sync all
+
   if (head) then
-    print*, ''
-    print*, 'Theory velocity dispersion prediction'
-    print*,'sigma_vf(a=',a,', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
-    print*,'sigma_vc(a=',a,', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
-    print*,'sigma_vres=',real(sigma_vres,4),'km/s'
-    print*,'sigma_vi =',real(sigma_vi,4),'(simulation unit)'
+    print*,''
+    print*,'Theory velocity dispersion prediction'
+    print*,' =',real(sigma_vi_nu,4)*vsim2phys_zi_nu*sqrt(3.),'km/s'
+    print*,'sigma_vi_nu =',real(sigma_vi_nu,4),'(simulation unit)'
+    print*,''
   endif
+  sim%sigma_vi_nu=sigma_vi_nu
   sync all
 
   if (head) write(*,*) 'Generating cdf'
@@ -464,7 +468,7 @@ program initial_conditions
      end do
      close(11)
   end if
-stop
+
   ! create particles (no communication) ----------------------------
   if (head) print*,''
   if (head) print*, 'Create particles'
@@ -472,9 +476,9 @@ stop
   open(12,file=ic_name('vp_nu'),status='replace',access='stream')
   open(13,file=ic_name('np_nu'),status='replace',access='stream')
   open(14,file=ic_name('vc_nu'),status='replace',access='stream')
-#ifdef PID
-  if (head) print*, '  also create PID'
-  open(15,file=ic_name('id'),status='replace',access='stream')
+#ifdef EID
+  if (head) print*, '  also create EID'
+  open(15,file=ic_name('id_nu'),status='replace',access='stream')
 #endif
 
   vfield=0
@@ -483,6 +487,7 @@ stop
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
+    print*, 'working on tile',itx,ity,itz
 
     !Neutrino random velocities
     call random_number(rng)
@@ -492,21 +497,22 @@ stop
        ky=2.*rng(2,k)-1.
        kz=2.*pi*rng(3,k)
        rng(1,k)=kx*sqrt(1.-ky**2.)*cos(kz)
-       rng(1,k)=kx*sqrt(1.-ky**2.)*sin(kz)
-       rng(1,k)=kx*ky
+       rng(2,k)=kx*sqrt(1.-ky**2.)*sin(kz)
+       rng(3,k)=kx*ky
     enddo
 
+    idx_v=0
     iright=0
     rhoce=0
     rholocal=0
     do k=1-npb,npt+npb ! calculate coarse mesh density
     do j=1-npb,npt+npb
     do i=1-npb,npt+npb
-    do imove=0,nf_shake
-      kk=nft*(itz-1)+(ncell/np_nc_nu)*(k-1)+1+imove
-      jj=nft*(ity-1)+(ncell/np_nc_nu)*(j-1)+1+imove
-      ii=nft*(itx-1)+(ncell/np_nc_nu)*(i-1)+1+imove
-      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove)/ncell ! Lagrangian position q
+    do imove=0,merge(1,0,body_centered_cubic)
+      kk=nft*(itz-1)+(ncell/np_nc_nu)*(k-1)+1+imove*(ncell/np_nc_nu/2)
+      jj=nft*(ity-1)+(ncell/np_nc_nu)*(j-1)+1+imove*(ncell/np_nc_nu/2)
+      ii=nft*(itx-1)+(ncell/np_nc_nu)*(i-1)+1+imove*(ncell/np_nc_nu/2)
+      xq=((/i,j,k/)-1d0)/np_nc_nu + (0.5d0+imove*(ncell/np_nc_nu/2))/ncell ! Lagrangian position q
 
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
@@ -524,50 +530,51 @@ stop
     enddo
     enddo
     enddo
-    vfield(1,:,:,:)=vfield(1,:,:,:)/rhoce
-    vfield(2,:,:,:)=vfield(2,:,:,:)/rhoce
-    vfield(3,:,:,:)=vfield(3,:,:,:)/rhoce
 
+    vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
+    vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
+    vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
     cume=cumsum3(rhoce)
 
+    if (body_centered_cubic .and. ncell/np_nc_nu/2==0) stop 'ncell/np_nc_nu/2 = 0, unsuitable for body centered cubic'
     do k=1-npb,npt+npb ! create particles in extended mesh
     do j=1-npb,npt+npb
     do i=1-npb,npt+npb
-    do imove=0,nf_shake
-      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove
-      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove
-      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove
-      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove)/ncell
+    do imove=0,merge(1,0,body_centered_cubic)
+      idx_v=idx_v+1
+      kk=nft*(itz-1)+(ncell/np_nc_nu)*(k-1)+1+imove*(ncell/np_nc_nu/2)
+      jj=nft*(ity-1)+(ncell/np_nc_nu)*(j-1)+1+imove*(ncell/np_nc_nu/2)
+      ii=nft*(itx-1)+(ncell/np_nc_nu)*(i-1)+1+imove*(ncell/np_nc_nu/2)
+      xq=((/i,j,k/)-1d0)/np_nc_nu + (0.5d0+imove*(ncell/np_nc_nu/2))/ncell ! Lagrangian position q
+
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
 
-      gradphiv(1)=phiv(ii+1,jj,kk)-phiv(ii-1,jj,kk)
-      gradphiv(2)=phiv(ii,jj+1,kk)-phiv(ii,jj-1,kk)
-      gradphiv(3)=phiv(ii,jj,kk+1)-phiv(ii,jj,kk-1)
-
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-      xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
-      if (imove.eq.0) then
-         !pos rng dir
-         rng1=rng(:,idx)
-         vreal=-gradphiv/(8*pi)*vf+rng1
-      else
-         !true random velocities
-         !rng1=rng(:,idx)
+      xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution_nu,kind=8)
+      rng1=rng(:,idx_v)
+      vreal=rng1
+      !if (imove==0) then
+      !   !pos rng dir
+      !   rng1=rng(:,idx)
+      !   vreal=-gradphiv/(8*pi)*vf+rng1
+      !else
+      !   !true random velocities
+      !   !rng1=rng(:,idx)
+      !   !neg rng dir, conserves momentum
+      !   rng1=-1.*rng1
 
-         !neg rng dir, conserves momentum
-         rng1=-1.*rng1
-
-         vreal=-gradphiv/(8*pi)*vf+rng1
-      end if
-      vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
-
-      vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
-#     ifdef PID
-        iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
+      !   vreal=-gradphiv/(8*pi)*vf+rng1
+      !end if
+      vp(:,idx)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sigma_vi_nu*vrel_boost)*vreal)/pi,kind=izipv)
+      !print*, vreal
+      !print*, sigma_vi_nu
+      !print*, vp(:,idx)
+#     ifdef EID
+        iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc_nu)*((/i,j,k/)-1)+imove
         iq = modulo(iq,nf_global)
         pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
 #     endif
@@ -584,7 +591,7 @@ stop
       iright=ileft+nlen-1
       xp(:,ileft:iright)=xp(:,nlast-nlen+1:nlast)
       vp(:,ileft:iright)=vp(:,nlast-nlen+1:nlast)
-#     ifdef PID
+#     ifdef EID
         pid(ileft:iright)=pid(nlast-nlen+1:nlast)
 #     endif
     enddo
@@ -598,7 +605,7 @@ stop
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
       do l=1,rhoce(i,j,k)
         ip=ip+1
-        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sigma_vi_nu*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k)
         std_vsim=std_vsim+sum(vreal**2)
@@ -611,11 +618,11 @@ stop
     write(12) vp(:,1:iright)
     write(13) rhoce(1:nt,1:nt,1:nt)
     write(14) vfield(:,1:nt,1:nt,1:nt)
-#   ifdef PID
+#   ifdef EID
       write(15) pid(1:iright)
 #   endif
     nplocal=nplocal+iright
-
+    !stop 'here'
   enddo
   enddo
   enddo ! end of tile loop
@@ -624,7 +631,7 @@ stop
   close(12)
   close(13)
   close(14)
-# ifdef PID
+# ifdef EID
     close(15)
 # endif
 
@@ -636,7 +643,7 @@ stop
     std_vsim_res=sqrt(std_vsim_res/nplocal)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
     std_vsim=sqrt(std_vsim/nplocal)
-    print*,'  vsim2phys        ',vsim2phys
+    print*,'  vsim2phys_zi_nu ',vsim2phys_zi_nu
     print*,'  std_vsim         ',real(std_vsim*sim%vsim2phys,4),'km/s'
     print*,'  std_vsim_c       ',real(std_vsim_c*sim%vsim2phys,4),'km/s'
     print*,'  std_vsim_res     ',real(std_vsim_res*sim%vsim2phys,4),'km/s'
@@ -656,7 +663,7 @@ stop
   call print_header(sim)
 
   sync all
-  open(10,file=ic_name('info_nu'),status='replace',access='stream')
+  open(10,file=ic_name('info'),status='replace',access='stream')
   write(10) sim
   close(10)
   sync all
@@ -861,7 +868,7 @@ stop
     cdfn(2,:)=cdf0(2,:)
     do n=1,Nnu
        fnu=Mnu(n)*(Tnu(n)/Tcnb)**3/Meff ! fraction of energy in this neutrino
-       fdnu=(1./vsim2phys)*fdf*Tnu(n)/Mnu(n)/a_i_nu
+       fdnu=(1./vsim2phys_zi_nu)*fdf*Tnu(n)/Mnu(n)/a_i_nu
        cdfn(1,:)=cdf0(1,:)*fdnu
        do i=1,ncdf
           j=nearest_loc(cdf(1,i),cdfn(1,:))

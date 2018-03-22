@@ -448,6 +448,7 @@ program initial_conditions
     print*,'sigma_vres=',real(sim%sigma_vres,4),'km/s'
     print*,'sigma_vi =',real(sim%sigma_vi,4),'(simulation unit)'
   endif
+
   sync all
 
   ! create particles (no communication) ----------------------------
@@ -490,11 +491,12 @@ program initial_conditions
     enddo
     enddo
     enddo
-    vfield(1,:,:,:)=vfield(1,:,:,:)/rhoce
-    vfield(2,:,:,:)=vfield(2,:,:,:)/rhoce
-    vfield(3,:,:,:)=vfield(3,:,:,:)/rhoce
 
+    vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
+    vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
+    vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
     cume=cumsum3(rhoce)
+
     if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
     do k=1-npb,npt+npb ! create particles in extended mesh
     do j=1-npb,npt+npb

@@ -1,6 +1,6 @@
 OPTIONS=-DFFTFINE
 #OPTIONS+=-Wall
-OPTIONS+=-DPID
+#OPTIONS+=-DPID
 #OPTIONS+=-DRECONSTRUCTION
 
 all: ic.x ic_nu.x cicpower.x #dsp.x #vel.x qspace.x corr.x #convert.x
