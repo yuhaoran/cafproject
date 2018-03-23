@@ -598,8 +598,8 @@ program initial_conditions
   do i=1,nn**3
     sim%npglobal=sim%npglobal+sim[i]%nplocal
   enddo
-  sim%nplocal_nu=(np_nc_nu*nc)**3
-  sim%npglobal_nu=(np_nc_nu*nc*nn)**3
+  !sim%nplocal_nu=(np_nc_nu*nc)**3
+  !sim%npglobal_nu=(np_nc_nu*nc*nn)**3
   if (head) print*, 'npglobal =',sim%npglobal
   sim%mass_p_cdm=real(f_cdm*nf_global**3,kind=8)/sim%npglobal
   sim%mass_p_nu=real(f_nu*nf_global**3,kind=8)/sim%npglobal_nu

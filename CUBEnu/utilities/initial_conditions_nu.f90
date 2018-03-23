@@ -550,13 +550,16 @@ program initial_conditions
       gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
       gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
+      gradphiv(1)=phiv(ii+1,jj,kk)-phiv(ii-1,jj,kk)
+      gradphiv(2)=phiv(ii,jj+1,kk)-phiv(ii,jj-1,kk)
+      gradphiv(3)=phiv(ii,jj,kk+1)-phiv(ii,jj,kk-1)
 
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
       idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
       xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution_nu,kind=8)
       rng1=rng(:,idx_v)
-      vreal=rng1
+      vreal=rng1-gradphiv/(8*pi)*vf-vfield(:,g(1),g(2),g(3)) ! save relative velocity
       !if (imove==0) then
       !   !pos rng dir
       !   rng1=rng(:,idx)
@@ -635,7 +638,7 @@ program initial_conditions
     close(15)
 # endif
 
-  sim%nplocal=nplocal
+  sim%nplocal_nu=nplocal
 
   if (head) then
     print*,''
@@ -659,6 +662,8 @@ program initial_conditions
     npglobal=npglobal+nplocal[i]
   enddo
   if (head) print*, 'npglobal =',npglobal
+  sync all
+  sim%npglobal_nu=npglobal
   !sim%mass_p=real(nf_global**3,kind=8)/npglobal
   call print_header(sim)
 

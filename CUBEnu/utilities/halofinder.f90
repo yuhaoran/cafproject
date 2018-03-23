@@ -226,7 +226,7 @@ program halofinder
       enddo
 
       ! find maxima
-      print*, 'find_halo_candidates'
+      print*, '  find_halo_candidates'
       do k0=1-ncell,nft+ncell  ! 1 more coarse cell layer
       do j0=1-ncell,nft+ncell
       do i0=1-ncell,nft+ncell
@@ -376,11 +376,17 @@ program halofinder
             exit
           endif
         enddo
+
+print*,'  r',rrefine,rsearch;stop
+
+
         if (i_vir==0 .or. i_odc==0) then ! check number of particles
           n_search_fail=n_search_fail+1
-          print*,'  search fail'
+          print*,'  search fail:'
           print*, ii,i_vir,i_odc
-          stop
+          print*,iloc,np_vir,np_odc
+          print*,'  r',rrefine,rsearch
+          !stop
         endif
         !print*,'  new hpos =',halo_info%hpos
         !open(12,file='finegrid.dat',access='stream')

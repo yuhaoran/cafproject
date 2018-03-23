@@ -13,5 +13,6 @@ cafrun -np 8 ./cafcube.x
 
 cd ../utilities/
 cafrun -np 8 ./cicpower.x
+source findhalos.sh
 
 cd ../main/

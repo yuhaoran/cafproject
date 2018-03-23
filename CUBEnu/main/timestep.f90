@@ -30,10 +30,6 @@ subroutine timestep
 
     dt=min(dt_e,sim%dt_fine,sim%dt_coarse,sim%dt_pp,sim%dt_vmax,merge(sim%dt_vmax_nu,1000.,neutrino_flag))
 
-    !! for Hongming, can set timestep 10x larger.
-    dt=min(dt*faster,sim%dt_vmax*0.8)
-    !!
-
     call expansion(a,dt,da_1,da_2)
 
     da=da_1+da_2

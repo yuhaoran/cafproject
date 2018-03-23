@@ -51,6 +51,7 @@ subroutine particle_initialization
     open(15,file=fn15,status='old',access='stream'); read(15) pid(:sim%nplocal); close(15)
     print*, 'check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
 #endif
+  print*,'  from image',this_image(),'read',sim%nplocal,' CDM particles'
 
 #ifdef NEUTRINOS
   !$omp section
@@ -65,6 +66,7 @@ subroutine particle_initialization
   !$omp section
     open(25,file=fn25,status='old',access='stream'); read(25) pid_nu(:sim%nplocal_nu); close(25)
 # endif
+  print*,'  from image',this_image(),'read',sim%nplocal_nu,' neutrino particles'
 #endif
   !$omp endparallelsections
   sync all
@@ -74,8 +76,6 @@ subroutine particle_initialization
 #else
   sim%mass_p_cdm=real((nf*nn)**3)/sim%npglobal
 #endif
-
-  print*,'  from image',this_image(),'read',sim%nplocal,sim%nplocal_nu,' CDM/nu particles'
   sync all
 
   if (head) then

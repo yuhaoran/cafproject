@@ -18,5 +18,6 @@ cd ../main/
 ./cube.x
 cd ../utilities/
 ./cicpower.x
+source findhalos.sh
 
 cd ../main/

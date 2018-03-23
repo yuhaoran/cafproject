@@ -3,8 +3,6 @@ module parameters
   save
   ! output directory
   character(*),parameter :: opath='../output/universe2/'
-  !! for Hongming, faster timesteps
-  real,parameter :: faster=0
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
@@ -28,7 +26,7 @@ module parameters
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -61,7 +59,7 @@ module parameters
 
   logical,parameter :: Extended_pp_force=.true.
   real,parameter :: rsoft=0.3 ! PP softening length
-  integer,parameter :: pp_range=1 ! set <=4
+  integer,parameter :: pp_range=2 ! set <=4
   real,parameter :: image_buffer=1.2
   real,parameter :: tile_buffer=3.0
   real,parameter :: vbuf=0.9
