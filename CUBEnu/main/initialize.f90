@@ -11,7 +11,7 @@ subroutine initialize
   !call system('hostname')
   if (this_image()==1) then
     print*, ''
-    print*, 'Coarray CUBE on',int(nn**3,2),'images  x',int(ncore,1),'cores'
+    print*, 'CUBE run on',int(nn**3,2),'images  x',int(ncore,1),'cores'
     print*, ''
     print*, 'initialize'
     print*, '  call geometry'
@@ -44,22 +44,50 @@ subroutine initialize
   da=0
   tau=-3/sqrt(a_i)
   cur_checkpoint=1
+  cur_halofind=1
+  z_checkpoint=-0.5
+  z_checkpoint=-0.5
   checkpoint_step=.false.
+  halofind_step=.false.
   final_step=.false.
 
   if (head) then
-    open(16,file='redshifts.txt',status='old')
+    open(16,file='z_checkpoint.txt',status='old')
     do i=1,nmax_redshift-1
       read(16,end=71,fmt='(f8.4)') z_checkpoint(i)
     enddo
     71 n_checkpoint=i-1
     close(16)
+    open(16,file='z_halofind.txt',status='old')
+    do i=1,nmax_redshift-1
+      read(16,end=81,fmt='(f8.4)') z_halofind(i)
+    enddo
+    81 n_halofind=i-1
+    close(16)
   endif
-  if (n_checkpoint==0) stop 'redshifts.txt empty'
+  if (n_checkpoint==0) stop 'z_checkpoint.txt empty'
+  if (n_halofind==0) stop 'z_halofind.txt empty'
   sync all
   n_checkpoint=n_checkpoint[1]
   z_checkpoint(:)=z_checkpoint(:)[1]
+  n_halofind=n_halofind[1]
+  z_halofind(:)=z_halofind(:)[1]
+  ! create output directories
   call system('mkdir -p '//opath//'/image'//image2str(image))
+
+# ifdef HALOFIND
+  if (head) then
+    print*, ''
+    print*, 'runtime halofind information'
+    print*, '  ',z_i,'< CDM initial conditions'
+    do i=1,n_halofind
+      print*, '  ',z_halofind(i)
+    enddo
+  endif
+  sync all
+
+
+# endif
 
   n_checkpoint_neu=0
 # ifdef NEUTRINOS
@@ -110,10 +138,11 @@ subroutine initialize
     neutrino_flag=.false.
 # endif
   if (head) then
-    print*, '  checkpoint information'
-    print*, '    ',z_i,'< CDM initial conditions'
+    print*, ''
+    print*, 'checkpoint information'
+    print*, '  ',z_i,'< CDM initial conditions'
     do i=1,n_checkpoint
-      print*, '    ',z_checkpoint(i),merge('< adding neutrinos','                  ',i==n_checkpoint_neu)
+      print*, '  ',z_checkpoint(i),merge('< adding neutrinos','                  ',i==n_checkpoint_neu)
     enddo
   endif
   sync all

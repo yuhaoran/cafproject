@@ -2,7 +2,7 @@ module parameters
   implicit none
   save
   ! output directory
-  character(*),parameter :: opath='../output/universe2/'
+  character(*),parameter :: opath='../output/universe1/'
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
@@ -53,11 +53,11 @@ module parameters
 
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
-  logical,parameter :: body_centered_cubic=.false.
+  logical,parameter :: body_centered_cubic=.true.
   integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
 
-  logical,parameter :: Extended_pp_force=.true.
+  logical,parameter :: Extended_pp_force=.false.
   real,parameter :: rsoft=0.3 ! PP softening length
   integer,parameter :: pp_range=2 ! set <=4
   real,parameter :: image_buffer=1.2
@@ -114,7 +114,7 @@ module parameters
   real,parameter :: A_s=2.215e-9
   real,parameter :: k_o=0.05/h0
 
-  integer(8),parameter :: istep_max=1000 ! maximum number of timesteps
+  integer(8),parameter :: istep_max=10000 ! maximum number of timesteps
   real,parameter :: ra_max=0.2
   real(8),parameter :: v_resolution=2.1/(int(2,8)**(izipv*8))
   real(8),parameter :: x_resolution=1.0/(int(2,8)**(izipx*8))
@@ -128,10 +128,11 @@ module parameters
   integer(8) m1,m2,m3,m
   logical head
   ! checkpoint variables
-  integer(8),parameter :: nmax_redshift=100
-  integer(8) cur_checkpoint, n_checkpoint[*]
-  real z_checkpoint(nmax_redshift)[*]
-  logical checkpoint_step[*], final_step[*]
+  integer(8),parameter :: nmax_redshift=1000
+  integer(8) cur_checkpoint,n_checkpoint[*]
+  integer(8) cur_halofind,n_halofind[*]
+  real z_checkpoint(nmax_redshift)[*],z_halofind(nmax_redshift)[*]
+  logical checkpoint_step[*],halofind_step[*],final_step[*]
 
   type sim_header
     integer(8) nplocal,npglobal,nplocal_nu,npglobal_nu
@@ -140,6 +141,7 @@ module parameters
     integer(8) nn,nnt,nt,ncell,ncb
     integer(8) istep
     integer(8) cur_checkpoint
+    integer(8) cur_halofind
 
     real a, t, tau
     real dt_pp, dt_fine, dt_coarse, dt_vmax, dt_vmax_nu
@@ -171,6 +173,7 @@ module parameters
       print*,'| dt pp,f,c       =',s%dt_pp,s%dt_fine,s%dt_coarse
       print*,'| dt v,v_nu       =',s%dt_vmax,s%dt_vmax_nu
       print*,'| cur_checkpoint  =',int(s%cur_checkpoint,2)
+      print*,'| cur_halofind    =',int(s%cur_halofind,2)
       print*,'| mass_p  c/nu    =',s%mass_p_cdm,s%mass_p_nu
       print*,'| '
       print*,'| box             =',s%box, 'Mpc/h'
@@ -198,92 +201,5 @@ module parameters
       sync all
     endsubroutine
 
-    subroutine geometry
-      image=this_image()
-      rank=image-1            ! MPI_rank
-      icz=rank/(nn**2)+1             ! image_z
-      icy=(rank-nn**2*(icz-1))/nn+1  ! image_y
-      icx=mod(rank,nn)+1             ! image_x
-      m1=icx ! pencil_fft convension
-      m2=icy
-      m3=icz
-      m=num_images()
-      ! adjacent images
-      inx=modulo(icx-2,nn)+1
-      iny=modulo(icy-2,nn)+1
-      inz=modulo(icz-2,nn)+1
-      ipx=modulo(icx,nn)+1
-      ipy=modulo(icy,nn)+1
-      ipz=modulo(icz,nn)+1
-      head=(this_image()==1)
-
-      sync all
-    endsubroutine
-
-    pure integer(8) function image1d(cx,cy,cz)
-      integer(8), intent(in) :: cx,cy,cz
-      image1d=cx+nn*(cy-1)+nn**2*(cz-1)
-    endfunction
-
-    pure function image2str(nimage)
-      character(:),allocatable :: image2str
-      character(20) :: str
-      integer(8),intent(in) :: nimage
-      write(str,'(i6)') nimage
-      image2str=trim(adjustl(str))
-    endfunction
-
-    pure function z2str(z)
-      character(:),allocatable :: z2str
-      character(20) :: str
-      real,intent(in) :: z
-      write(str,'(f7.3)') z
-      z2str=trim(adjustl(str))
-    endfunction
-
-    function output_dir()
-      character(:),allocatable :: output_dir
-      character(20) :: str_z,str_i
-      write(str_i,'(i6)') image
-      write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
-      output_dir=opath//'image'//trim(adjustl(str_i))//'/'
-    endfunction
-
-    function output_prefix()
-      character(:),allocatable :: output_prefix
-      character(20) :: str_z,str_i
-      write(str_i,'(i6)') image
-      write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
-      output_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'
-    endfunction
-
-    pure function output_suffix()
-      character(:),allocatable :: output_suffix
-      character(20) :: str_i
-      write(str_i,'(i6)') image
-      output_suffix='_'//trim(adjustl(str_i))//'.bin'
-    endfunction
-
-    function output_name(zipname)
-      character(*) ::  zipname
-      character(:),allocatable :: output_name
-      output_name=output_prefix()//zipname//output_suffix()
-    endfunction
-
-    pure function ic_name(zipname)  result(filename)
-      character(*), intent(in) ::  zipname
-      character(:),allocatable :: filename
-      character(20) :: str_z,str_i
-      write(str_i,'(i6)') image
-      write(str_z,'(f7.3)') z_i
-      filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
-    endfunction
-    function ic_name_nu(zipname) result(filename)
-      character(*) ::  zipname
-      character(:),allocatable :: filename
-      character(20) :: str_z,str_i
-      write(str_i,'(i6)') image
-      write(str_z,'(f7.3)') z_i_nu
-      filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
-    endfunction
+    include 'basic_functions.fh'
 endmodule

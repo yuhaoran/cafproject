@@ -35,7 +35,7 @@ program cicpower
 
   if (head) then
     print*, 'checkpoint at:'
-    open(16,file='../main/redshifts.txt',status='old')
+    open(16,file='../main/z_checkpoint.txt',status='old')
     do i=1,nmax_redshift
       read(16,end=71,fmt='(f8.4)') z_checkpoint(i)
       print*, z_checkpoint(i)

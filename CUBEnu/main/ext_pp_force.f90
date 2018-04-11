@@ -14,7 +14,7 @@ subroutine ext_pp_force
   implicit none
   save
 
-  integer ntest
+  integer(8) ntest,ip_offset,ipll1,ipll2
 
   if (head) then
     print*, ''
@@ -40,7 +40,9 @@ subroutine ext_pp_force
       print*, np_pp_max, sum(rhoc(0:nt+1,0:nt+1,0:nt+1,itx,ity,itz))
       stop
     endif
-
+    ! the offset to use tile-based linked-list
+    ip_offset=cum(-1,0,0,itx,ity,itz)
+    print*,'  ip_offset',ip_offset
     hoc=0; ll=0
     do igz=0,nt+1
     do igy=0,nt+1
@@ -51,8 +53,9 @@ subroutine ext_pp_force
         ip1=nlast+lp
         xvec1=ncell*((/igx,igy,igz/)-1)+ncell*(int(xp(:,ip1)+ishift,izipx)+rshift)*x_resolution
         ivec1=floor(xvec1)+1
-        ll(ip1)=hoc(ivec1(1),ivec1(2),ivec1(3))
-        hoc(ivec1(1),ivec1(2),ivec1(3))=ip1
+        ipll1=ip1-ip_offset
+        ll(ipll1)=hoc(ivec1(1),ivec1(2),ivec1(3))
+        hoc(ivec1(1),ivec1(2),ivec1(3))=ipll1
       enddo
     enddo
     enddo
@@ -67,19 +70,21 @@ subroutine ext_pp_force
     do igz=1,nft
     do igy=1,nft
     do igx=1,nft
-      ip1=hoc(igx,igy,igz)
-      do while (ip1/=0)
+      ipll1=hoc(igx,igy,igz)
+      do while (ipll1/=0)
         itest1=itest1+1
+        ip1=ipll1+ip_offset
         xvec1=ncell*floor(((/igx,igy,igz/)-1)/4.)+ncell*(int(xp(:,ip1)+ishift,izipx)+rshift)*x_resolution
         vreal=tan(pi*real(vp(:,ip1))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         f_tot=0; ntest=0
         do kk=igz-pp_range,igz+pp_range
         do jj=igy-pp_range,igy+pp_range
         do ii=igx-pp_range,igx+pp_range
-          ip2=hoc(ii,jj,kk)
-          do while (ip2/=0) ! loop over particle 2
+          ipll2=hoc(ii,jj,kk)
+          do while (ipll2/=0) ! loop over particle 2
             ntest=ntest+1
             npairs=npairs+1
+            ip2=ipll2+ip_offset
             xvec2=ncell*floor(((/ii,jj,kk/)-1)/4.)+ncell*(int(xp(:,ip2)+ishift,izipx)+rshift)*x_resolution
             xvec21=xvec2-xvec1
             rmag=sqrt(sum(xvec21**2))
@@ -89,7 +94,7 @@ subroutine ext_pp_force
             force_pp=sim%mass_p_cdm*(xvec21/rmag**3)*pcut
             force_pp=merge(force_pp,force_pp*0,rmag>rsoft)
             f_tot=f_tot+force_pp
-            ip2=ll(ip2)
+            ipll2=ll(ipll2)
           enddo !! do while (ip2/=0)
         enddo !! kk
         enddo !! jj
@@ -97,7 +102,7 @@ subroutine ext_pp_force
         vreal=vreal+f_tot*a_mid*dt/6/pi
         vp(:,ip1)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
         f2_max_pp=max(f2_max_pp,sum(f_tot**2))
-        ip1=ll(ip1)
+        ipll1=ll(ipll1)
 
       enddo !! do while (ip1/=0)
     enddo

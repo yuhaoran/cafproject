@@ -737,6 +737,7 @@ program initial_conditions
     else
       tophat=1
     endif
+    !tophat=merge(1,3*(sin(x)-cos(x)*x)/x**3,x==0)
   endfunction tophat
 
   function Dgrow(a)

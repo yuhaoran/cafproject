@@ -3,7 +3,7 @@
 !   haoran@cita.utoronto.ca   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-program CUBE
+program main
   use omp_lib
   use variables
   use neutrinos
@@ -34,11 +34,12 @@ program CUBE
     endif
     call particle_mesh
     call buffer_v
-    if (checkpoint_step) then
+    if (checkpoint_step .or. halofind_step) then
       dt_old=0
       call update_x
-      call checkpoint
-      call projection
+      if (checkpoint_step) call checkpoint
+      if (halofind_step) call halofind
+      !call projection
       call print_header(sim)
       if (final_step) exit
       call buffer_grid

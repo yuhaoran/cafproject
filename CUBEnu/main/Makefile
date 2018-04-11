@@ -2,18 +2,19 @@ OPTIONS=
 #OPTIONS+=-DPID
 #OPTIONS+=-DEID
 #OPTIONS+=-DNEUTRINOS
+OPTIONS+=-DHALOFIND
 #OPTIONS+=-Wall
 
 MODFILE:=$(wildcard *.f90)
 OBJFILE:=$(addprefix ,$(notdir $(MODFILE:.f90=.o)))
 
-all: cube.x
+all: main.x
 	@echo "done"
-cube.x: $(OBJFILE)
+main.x: $(OBJFILE)
 	@echo "Link files:"
 	$(FC) $(XFLAG) $(OPTIONS) $(OBJFILE) -o $@ $(FFTFLAG)
 
-## For addtional subroutines, add its dependency on variables.o, and dependency of CUBE.o on it.
+## For addtional subroutines, add its dependency on variables.o, and dependency of main.o on it.
 
 variables.o: parameters.o
 neutrinos.o: parameters.o
@@ -29,15 +30,16 @@ kernel_f.o: variables.o
 kernel_c.o: variables.o
 particle_initialization.o: variables.o neutrinos.o
 timestep.o: variables.o neutrinos.o
+halofind.o: variables.o neutrinos.o
 
 projection.o: variables.o
 
-initialize.o: variables.o cubefft.o pencil_fft.o redshifts.txt
+initialize.o: variables.o cubefft.o pencil_fft.o z_checkpoint.txt z_halofind.txt
 finalize.o: variables.o cubefft.o pencil_fft.o
-CUBE.o: variables.o cubefft.o pencil_fft.o
+main.o: variables.o cubefft.o pencil_fft.o
 pm.o: variables.o neutrinos.o cubefft.o pencil_fft.o
 
-CUBE.o: parameters.o variables.o initialize.o ext_pp_force.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_grid.o buffer_particle.o pm.o update_particle.o checkpoint.o projection.o finalize.o
+main.o: parameters.o variables.o initialize.o ext_pp_force.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_grid.o buffer_particle.o pm.o update_particle.o checkpoint.o projection.o halofind.o finalize.o
 
 %.o: %.f90 Makefile
 	$(FC) $(OFLAG) $(OPTIONS) $< -o $@ $(FFTFLAG)

@@ -2,8 +2,8 @@ subroutine timestep
   use variables
   implicit none
   save
-  integer(8) ntemp,i_images
-  real ra,da_1,da_2,dt_e,a_checkpoint
+  integer(8) ntry,i_images
+  real ra,da_1,da_2,dt_e,a_next,z_next
 
   dt_old=dt
   sync all
@@ -14,9 +14,9 @@ subroutine timestep
     print*, 'timestep    :',istep
 
     dt_e=dt_max
-    ntemp=0
+    ntry=0
     do
-      ntemp=ntemp+1
+      ntry=ntry+1
       call expansion(a,dt_e,da_1,da_2)
       da=da_1+da_2
       ra=da/(a+da)
@@ -25,7 +25,7 @@ subroutine timestep
       else
         exit
       endif
-      if (ntemp>10) exit
+      if (ntry>10) exit
     enddo
 
     dt=min(dt_e,sim%dt_fine,sim%dt_coarse,sim%dt_pp,sim%dt_vmax,merge(sim%dt_vmax_nu,1000.,neutrino_flag))
@@ -36,24 +36,28 @@ subroutine timestep
 
     ! check if checkpointing is needed
     checkpoint_step=.false.
+    halofind_step=.false.
+#   ifdef HALOFIND
+      z_next=max(z_checkpoint(cur_checkpoint),z_halofind(cur_halofind))
+#   else
+      z_next=z_checkpoint(cur_checkpoint)
+#   endif
+    a_next=1.0/(1+z_next) ! next checkpoint or halofind
+    if (da>=a_next-a) then
+      if (z_next==z_checkpoint(cur_checkpoint)) then
+        checkpoint_step=.true.
+        if (cur_checkpoint==n_checkpoint) final_step=.true.
+      endif
+      if (z_next==z_halofind(cur_halofind)) halofind_step=.true.
 
-    a_checkpoint=1.0/(1+z_checkpoint(cur_checkpoint))
-    !if (a+da>a_checkpoint) then
-    !  checkpoint_step=.true.
-    !  dt=dt*(a_checkpoint-a)/da
-    !  call expansion(a,dt,da_1,da_2)
-    !  if (cur_checkpoint==n_checkpoint) final_step=.true.
-    !  da=da_1+da_2
-    !endif
+print*,'DEBUG:', cur_checkpoint,n_checkpoint,cur_halofind,n_halofind
+print*,''
 
-    if (da>=a_checkpoint-a) then
-      checkpoint_step=.true.
-      if (cur_checkpoint==n_checkpoint) final_step=.true.
-      do while (abs((a+da)/a_checkpoint-1)>=1e-3)
-        dt=dt*(a_checkpoint-a)/da
+      do while (abs((a+da)/a_next-1)>=1e-6)
+        dt=dt*(a_next-a)/da
         call expansion(a,dt,da_1,da_2)
         da=da_1+da_2
-        print*, 'a+da, dt, z+dz, err_a', a+da, dt, 1.0/(a+da)-1.0, (a+da)/a_checkpoint-1
+        print*, 'a+da, dt, z+dz, err_a', a+da, dt, 1.0/(a+da)-1.0, (a+da)/a_next-1
       enddo
     endif
 
@@ -70,6 +74,7 @@ subroutine timestep
     print*, 'dt_coarse   :',sim%dt_coarse,merge('<',' ',dt==sim%dt_coarse)
     print*, 'dt_vmax     :',sim%dt_vmax,merge('<',' ',dt==sim%dt_vmax)
     print*, 'dt_vmax_nu  :',sim%dt_vmax_nu,merge('<',' ',dt==sim%dt_vmax_nu)
+print*, 'cur',cur_checkpoint, cur_halofind,checkpoint_step,halofind_step
     print*, ''
     tau=tau+dt
     t=t+dt
@@ -82,6 +87,7 @@ subroutine timestep
   a_mid=a_mid[1]
   dt=dt[1]
   checkpoint_step=checkpoint_step[1]
+  halofind_step=halofind_step[1]
   final_step=final_step[1]
   sync all
 endsubroutine timestep

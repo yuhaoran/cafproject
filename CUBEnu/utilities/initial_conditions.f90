@@ -80,7 +80,7 @@ program initial_conditions
     call system('mkdir -p '//opath//'code')
     call system('cp initial_conditions*.f90 '//opath//'code/')
     call system('cp ../main/*.f90 '//opath//'code/')
-    call system('cp ../main/redshifts.txt '//opath//'code/')
+    call system('cp ../main/z_*.txt '//opath//'code/')
   endif
   sync all
 

@@ -13,11 +13,11 @@ make
 
 cd ../utilities/
 ./ic.x
-./ic_nu.x
+#./ic_nu.x
 cd ../main/
-./cube.x
+./main.x
 cd ../utilities/
 ./cicpower.x
-source findhalos.sh
+#source findhalos.sh
 
 cd ../main/

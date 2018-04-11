@@ -1,3 +1,4 @@
+fort.*
 log*
 *.o*
 *.e*
@@ -7,3 +8,4 @@ a.out
 .*
 /CUBE/output/
 /CUBE/batch/many/
+/CUBEnu/output/

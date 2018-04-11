@@ -1,4 +1,5 @@
 subroutine checkpoint
+  use omp_lib
   use variables
   use neutrinos
   implicit none
