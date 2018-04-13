@@ -22,7 +22,7 @@ module parameters
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
   integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
-  integer(8),parameter :: ncore=4 ! number of cores per image
+  integer(8),parameter :: ncore=4
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
@@ -55,7 +55,7 @@ module parameters
 
   logical,parameter :: body_centered_cubic=.true.
   integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
-  integer, parameter :: np_nc_nu = ncell ! number of neutrinos per dim per coarse cell
+  integer, parameter :: np_nc_nu = ncell/2 ! number of neutrinos per dim per coarse cell
 
   logical,parameter :: Extended_pp_force=.false.
   real,parameter :: rsoft=0.3 ! PP softening length

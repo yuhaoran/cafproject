@@ -3,7 +3,7 @@ subroutine timestep
   implicit none
   save
   integer(8) ntry,i_images
-  real ra,da_1,da_2,dt_e,a_next,z_next
+  real ra,da_1,da_2,a_next,z_next
 
   dt_old=dt
   sync all
@@ -49,10 +49,6 @@ subroutine timestep
         if (cur_checkpoint==n_checkpoint) final_step=.true.
       endif
       if (z_next==z_halofind(cur_halofind)) halofind_step=.true.
-
-print*,'DEBUG:', cur_checkpoint,n_checkpoint,cur_halofind,n_halofind
-print*,''
-
       do while (abs((a+da)/a_next-1)>=1e-6)
         dt=dt*(a_next-a)/da
         call expansion(a,dt,da_1,da_2)
@@ -68,13 +64,12 @@ print*,''
     print*, 'scale factor:',a,a_mid,a+da
     print*, 'expansion   :',ra
     print*, 'dt          :',dt
-    print*, 'dt_e        :',dt_e,merge('<',' ',dt==dt_e)
-    print*, 'dt_fine     :',sim%dt_fine,merge('<',' ',dt==sim%dt_fine)
-    print*, 'dt_pp       :',sim%dt_pp,merge('<',' ',dt==sim%dt_pp)
-    print*, 'dt_coarse   :',sim%dt_coarse,merge('<',' ',dt==sim%dt_coarse)
-    print*, 'dt_vmax     :',sim%dt_vmax,merge('<',' ',dt==sim%dt_vmax)
-    print*, 'dt_vmax_nu  :',sim%dt_vmax_nu,merge('<',' ',dt==sim%dt_vmax_nu)
-print*, 'cur',cur_checkpoint, cur_halofind,checkpoint_step,halofind_step
+    print*, 'dt_e        :',dt_e!,merge('<',' ',dt==1.0)
+    print*, 'dt_fine     :',sim%dt_fine!,merge('<',' ',dt==sim%dt_fine)
+    print*, 'dt_pp       :',sim%dt_pp!,merge('<',' ',dt==sim%dt_pp)
+    print*, 'dt_coarse   :',sim%dt_coarse!,merge('<',' ',dt==sim%dt_coarse)
+    print*, 'dt_vmax     :',sim%dt_vmax!,merge('<',' ',dt==sim%dt_vmax)
+    print*, 'dt_vmax_nu  :',sim%dt_vmax_nu!,merge('<',' ',dt==sim%dt_vmax_nu)
     print*, ''
     tau=tau+dt
     t=t+dt

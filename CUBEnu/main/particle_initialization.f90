@@ -36,7 +36,6 @@ subroutine particle_initialization
     stop
   endif
 
-! may create separate file names
   !$omp parallelsections default(shared)
   !$omp section
     open(11,file=fn11,status='old',access='stream'); read(11) xp(:,:sim%nplocal); close(11)

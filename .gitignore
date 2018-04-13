@@ -6,6 +6,7 @@ log*
 a.out
 *.x
 .*
+core.*
 /CUBE/output/
 /CUBE/batch/many/
 /CUBEnu/output/

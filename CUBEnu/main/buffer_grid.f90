@@ -58,58 +58,58 @@ subroutine buffer_np(rhoc)
   sync all
 endsubroutine
 
-subroutine buffer_vc(vfield)
-  use parameters
+subroutine buffer_vc(vfield1)
+  use variables
   implicit none
   save
 
-  real(4) vfield(3,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
+  real(4) vfield1(3,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
   ! the following variables are introduced because
   ! gcc only allows <= 7 ranks in arrays
-  real(4) vtransx(3,ncb,nt+2*ncb,nt+2*ncb,nnt,nnt)[*]
-  real(4) vtransy(3,nt+2*ncb,ncb,nt+2*ncb,nnt,nnt)[*]
-  real(4) vtransz(3,nt+2*ncb,nt+2*ncb,ncb,nnt,nnt)[*]
+  !real(4) vtransx(3,ncb,nt+2*ncb,nt+2*ncb,nnt,nnt)[*]
+  !real(4) vtransy(3,nt+2*ncb,ncb,nt+2*ncb,nnt,nnt)[*]
+  !real(4) vtransz(3,nt+2*ncb,nt+2*ncb,ncb,nnt,nnt)[*]
   if (head) print*, 'buffer_vc'
   !x
-  vtransx=vfield(:,nt-ncb+1:nt,:,:,nnt,:,:)
+  vtransx=vfield1(:,nt-ncb+1:nt,:,:,nnt,:,:)
   sync all
-  vfield(:,:0,:,:,1,:,:)=vtransx(:,:,:,:,:,:)[image1d(inx,icy,icz)]
+  vfield1(:,:0,:,:,1,:,:)=vtransx(:,:,:,:,:,:)[image1d(inx,icy,icz)]
   sync all
-  vfield(:,:0,:,:,2:,:,:)=vfield(:,nt-ncb+1:nt,:,:,:nnt-1,:,:)
+  vfield1(:,:0,:,:,2:,:,:)=vfield1(:,nt-ncb+1:nt,:,:,:nnt-1,:,:)
 
-  vtransx=vfield(:,1:ncb,:,:,1,:,:)
+  vtransx=vfield1(:,1:ncb,:,:,1,:,:)
   sync all
-  vfield(:,nt+1:,:,:,nnt,:,:)=vtransx(:,:,:,:,:,:)[image1d(ipx,icy,icz)]
+  vfield1(:,nt+1:,:,:,nnt,:,:)=vtransx(:,:,:,:,:,:)[image1d(ipx,icy,icz)]
   sync all
-  vfield(:,nt+1:,:,:,:nnt-1,:,:)=vfield(:,1:ncb,:,:,2:,:,:)
+  vfield1(:,nt+1:,:,:,:nnt-1,:,:)=vfield1(:,1:ncb,:,:,2:,:,:)
   sync all
 
   !y
-  vtransy=vfield(:,:,nt-ncb+1:nt,:,:,nnt,:)
+  vtransy=vfield1(:,:,nt-ncb+1:nt,:,:,nnt,:)
   sync all
-  vfield(:,:,:0,:,:,1,:)=vtransy(:,:,:,:,:,:)[image1d(icx,iny,icz)]
+  vfield1(:,:,:0,:,:,1,:)=vtransy(:,:,:,:,:,:)[image1d(icx,iny,icz)]
   sync all
-  vfield(:,:,:0,:,:,2:,:)=vfield(:,:,nt-ncb+1:nt,:,:,1:nnt-1,:)
+  vfield1(:,:,:0,:,:,2:,:)=vfield1(:,:,nt-ncb+1:nt,:,:,1:nnt-1,:)
 
-  vtransy=vfield(:,:,1:ncb,:,:,1,:)
+  vtransy=vfield1(:,:,1:ncb,:,:,1,:)
   sync all
-  vfield(:,:,nt+1:,:,:,nnt,:)=vtransy(:,:,:,:,:,:)[image1d(icx,ipy,icz)]
+  vfield1(:,:,nt+1:,:,:,nnt,:)=vtransy(:,:,:,:,:,:)[image1d(icx,ipy,icz)]
   sync all
-  vfield(:,:,nt+1:,:,:,:nnt-1,:)=vfield(:,:,1:ncb,:,1:,2:,:)
+  vfield1(:,:,nt+1:,:,:,:nnt-1,:)=vfield1(:,:,1:ncb,:,1:,2:,:)
   sync all
 
   !z
-  vtransz=vfield(:,:,:,nt-ncb+1:nt,:,:,nnt)
+  vtransz=vfield1(:,:,:,nt-ncb+1:nt,:,:,nnt)
   sync all
-  vfield(:,:,:,:0,:,:,1)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,inz)]
+  vfield1(:,:,:,:0,:,:,1)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,inz)]
   sync all
-  vfield(:,:,:,:0,:,:,2:)=vfield(:,:,:,nt-ncb+1:nt,:,:,:nnt-1)
+  vfield1(:,:,:,:0,:,:,2:)=vfield1(:,:,:,nt-ncb+1:nt,:,:,:nnt-1)
 
-  vtransz=vfield(:,:,:,1:ncb,:,:,1)
+  vtransz=vfield1(:,:,:,1:ncb,:,:,1)
   sync all
-  vfield(:,:,:,nt+1:,:,:,nnt)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,ipz)]
+  vfield1(:,:,:,nt+1:,:,:,nnt)=vtransz(:,:,:,:,:,:)[image1d(icx,icy,ipz)]
   sync all
-  vfield(:,:,:,nt+1:,:,:,:nnt-1)=vfield(:,:,:,1:ncb,:,:,2:)
+  vfield1(:,:,:,nt+1:,:,:,:nnt-1)=vfield1(:,:,:,1:ncb,:,:,2:)
   sync all
 endsubroutine
 
@@ -145,24 +145,26 @@ subroutine redistribute_cdm()
     stop
   endif
 
+print*,'1'
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
   nshift=np_image_max-sim%nplocal
-  !$omp parallelsections default(shared)
-  !$omp section
+  !!$omp parallelsections default(shared)
+  !!$omp section
     xp(:,nshift+1:np_image_max)=xp(:,1:sim%nplocal)
     xp(:,1:nshift)=0
-  !$omp section
+  !!$omp section
     vp(:,nshift+1:np_image_max)=vp(:,1:sim%nplocal)
     vp(:,1:nshift)=0
 # ifdef PID
-    !$omp section
+    !!$omp section
     pid(nshift+1:np_image_max)=pid(1:sim%nplocal)
     pid(1:nshift)=0
 # endif
-  !$omp endparallelsections
+  !!$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
-  !print*, '  ',np_image_max,sim%nplocal,nshift
+print*, '  ',np_image_max,sim%nplocal,nshift
+
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
@@ -170,10 +172,10 @@ subroutine redistribute_cdm()
   ! shift back
   cum=cumsum6(rhoc)
   ifrom=nshift
-  !$omp parallelsections default(shared) &
-  !$omp& private(itz,ity,itx,iz,iy,nlast,nlen,ifrom)
+  !!$omp parallelsections default(shared) &
+  !!$omp& private(itz,ity,itx,iz,iy,nlast,nlen,ifrom)
   !! firstprivate(ifrom) causes rhoc=0
-  !$omp section
+  !!$omp section
     ifrom=nshift
     do itz=1,nnt
     do ity=1,nnt
@@ -190,7 +192,7 @@ subroutine redistribute_cdm()
     enddo
     enddo
     enddo
-  !$omp section
+  !!$omp section
     ifrom=nshift
     do itz=1,nnt
     do ity=1,nnt
@@ -208,7 +210,7 @@ subroutine redistribute_cdm()
     enddo
     enddo
 # ifdef PID
-  !$omp section
+  !!$omp section
     ifrom=nshift
     do itz=1,nnt
     do ity=1,nnt
@@ -226,7 +228,7 @@ subroutine redistribute_cdm()
     enddo
     enddo
 # endif
-  !$omp endparallelsections
+  !!$omp endparallelsections
 
   checkxp1=sum(xp*int(1,kind=8))
   if (checkxp0/=checkxp1) then

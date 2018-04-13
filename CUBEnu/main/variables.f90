@@ -19,7 +19,7 @@ module variables
 
   ! variables
   integer(8) istep
-  real dt[*],dt_old[*],dt_mid[*]
+  real dt[*],dt_old[*],dt_mid[*],dt_e
   real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
   real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp[*],f2_max_coarse[*]
 
