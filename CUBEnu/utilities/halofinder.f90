@@ -39,6 +39,7 @@ program halofinder
   integer(8) cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
   real rhof(1-nfb:nft+nfb,1-nfb:nft+nfb,1-nfb:nft+nfb)
+  real rho_f(nfe+2,nfe,nfe)
 
   integer idist(3,nlist),isortdist(nlist),idist_tmp(3,nlist),isortpeak(max_maxima)
   integer isortpos_vir(max_halo_np),isortpos_odc(max_halo_np)
@@ -69,7 +70,7 @@ program halofinder
   if (head) then
     print*, 'halofinder'
     print*, 'checkpoint at:'
-    open(16,file='../main/redshifts.txt',status='old')
+    open(16,file='../main/z_checkpoint.txt',status='old')
     do i0=1,nmax_redshift
       read(16,end=71,fmt='(f8.4)') z_checkpoint(i0)
       print*, z_checkpoint(i0)
@@ -117,7 +118,7 @@ program halofinder
   !idist(:,:irtot)=idist_tmp(:,:irtot)
 
   ! Find halo candidates based on local overdensities for each tile
-  n_checkpoint=1
+  !n_checkpoint=1
   do cur_checkpoint= 1,n_checkpoint
     if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
     ! Determine which candidates are to be considered halos and write their properties to file.
@@ -178,6 +179,7 @@ program halofinder
 
     ! Open halo file
     open(11,file=output_name('halo'),status='replace',access='stream')
+    open(12,file=output_name('fail'),status='replace',access='stream')
     ! Determine which candidates are to be considered halos and write their properties to file.
     nhalo=0
     n_search_fail=0 ! Ticker recording how many particle searches end up empty handed
@@ -185,7 +187,7 @@ program halofinder
     hpart_vir=0
     write(11) nhalo_tot,nhalo,halo_vir,halo_odc
 
-    do itz=1,nnt
+    do itz=1,1
     do ity=1,nnt
     do itx=1,nnt
       print*, '  on tile',int(itx,1),int(ity,1),int(itz,1)
@@ -194,9 +196,9 @@ program halofinder
       !subroutine find_halo_candidates(tile, ic)
       rhof=0; isortpeak=0; den_peak=0;
       n_candidate=0; n_candidate_real=0;
-      do k0=-1,nt+2 ! 2 more coarse cell layers
-      do j0=-1,nt+2
-      do i0=-1,nt+2
+      do k0=2-ncb,nt+ncb-1
+      do j0=2-ncb,nt+ncb-1
+      do i0=2-ncb,nt+ncb-1
         nlast=cum(i0-1,j0,k0,itx,ity,itz)
         np=rhoc(i0,j0,k0,itx,ity,itz)
         do l0=1,np
@@ -236,9 +238,10 @@ program halofinder
           ! Find the fine mesh mass of this peak
           amtot=0
           do ii=1,irtot ! keep adding mass until mean density is less than halo_odc
-            ix=i0+idist(1,ii); if(ix<5-nfb .or. ix>nft+nfb-4) cycle
-            iy=j0+idist(2,ii); if(iy<5-nfb .or. iy>nft+nfb-4) cycle
-            iz=k0+idist(3,ii); if(iz<5-nfb .or. iz>nft+nfb-4) cycle
+            ix=i0+idist(1,ii); if(ix<=1-nfb .or. ix>=nft+nfb-1) cycle
+            iy=j0+idist(2,ii); if(iy<=1-nfb .or. iy>=nft+nfb-1) cycle
+            iz=k0+idist(3,ii); if(iz<=1-nfb .or. iz>=nft+nfb-1) cycle
+            ! skip the outerest layer, due to CIC mass assignment
             amtot=amtot+rhof(ix,iy,iz)
             if (complete_shell .and. rdist(ii+1)==rdist(ii)) cycle
             if (ii>18 .and. amtot/ii<halo_odc) exit
@@ -247,7 +250,7 @@ program halofinder
           if (amtot>mass_p*min_halo_particles/2.) then
             n_candidate=n_candidate+1
             n_candidate_real=n_candidate_real+merge(1,0,minval([i0,j0,k0])>=1 .and. maxval([i0,j0,k0])<=nft)
-            ipeak(:,n_candidate)=[i0,j0,k0]-0.5
+            ipeak(:,n_candidate)=[i0,j0,k0]-0.5 ! may need interpolation
             den_peak(n_candidate)=denmax
             halo_mesh_mass(n_candidate)=amtot
           endif
@@ -377,15 +380,12 @@ program halofinder
           endif
         enddo
 
-print*,'  r',rrefine,rsearch;stop
-
-
         if (i_vir==0 .or. i_odc==0) then ! check number of particles
           n_search_fail=n_search_fail+1
           print*,'  search fail:'
-          print*, ii,i_vir,i_odc
-          print*,iloc,np_vir,np_odc
+          print*, ipeak(:,iloc)+(itile-1)*nft
           print*,'  r',rrefine,rsearch
+          write(12) ipeak(:,iloc)+(itile-1)*nft
           !stop
         endif
         !print*,'  new hpos =',halo_info%hpos
@@ -439,6 +439,7 @@ print*,'  r',rrefine,rsearch;stop
     rewind(11)
     write(11) nhalo_tot,nhalo
     close(11)
+    close(12)
   enddo ! do cur_checkpoint= 1,n_checkpoint
   sync all
   if (head) print*, 'halofinder done'

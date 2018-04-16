@@ -38,13 +38,14 @@ program main
       dt_old=0
       call update_x
       if (checkpoint_step) call checkpoint
+      call buffer_grid
+      call buffer_x
+      call buffer_v
       if (halofind_step) call halofind
       !call projection
       call print_header(sim)
       if (final_step) exit
-      call buffer_grid
-      call buffer_x
-      call buffer_v
+
       dt=0
     endif
     call system_clock(ttt2,t_rate)

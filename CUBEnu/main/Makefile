@@ -30,7 +30,7 @@ kernel_f.o: variables.o
 kernel_c.o: variables.o
 particle_initialization.o: variables.o neutrinos.o
 timestep.o: variables.o neutrinos.o
-halofind.o: variables.o neutrinos.o
+halofind.o: variables.o neutrinos.o indexedsort.o
 
 projection.o: variables.o
 

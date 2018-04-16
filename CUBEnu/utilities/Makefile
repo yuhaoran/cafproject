@@ -3,7 +3,7 @@ OPTIONS=-DFFTFINE
 #OPTIONS+=-DPID
 #OPTIONS+=-DRECONSTRUCTION
 
-all: ic.x ic_nu.x cicpower.x #dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x cicpower.x #dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 ic.x: parameters.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)

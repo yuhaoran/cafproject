@@ -145,7 +145,6 @@ subroutine redistribute_cdm()
     stop
   endif
 
-print*,'1'
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
   nshift=np_image_max-sim%nplocal
