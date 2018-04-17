@@ -37,7 +37,9 @@ subroutine buffer_np(rhoc)
   if (head) then
     print*, 'buffer_np'
   endif
-
+# ifdef FORCETEST
+    print*,'sum of rhoc =',sum(rhoc)
+# endif
   !x
   rhoc(:0,:,:,1,:,:)=rhoc(nt-ncb+1:nt,:,:,nnt,:,:)[image1d(inx,icy,icz)]
   rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
@@ -55,6 +57,9 @@ subroutine buffer_np(rhoc)
   rhoc(:,:,:0,:,:,2:)=rhoc(:,:,nt-ncb+1:nt,:,:,:nnt-1)
   rhoc(:,:,nt+1:,:,:,nnt)=rhoc(:,:,1:ncb,:,:,1)[image1d(icx,icy,ipz)]
   rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
+# ifdef FORCETEST
+    print*,'sum of rhoc =',sum(rhoc)
+# endif
   sync all
 endsubroutine
 

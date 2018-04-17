@@ -27,6 +27,14 @@ program main
     call system_clock(ttt1,t_rate)
     call timestep
     call update_x
+#   ifdef FORCETEST
+      sim%nplocal=2
+      sim%mass_p_cdm=1
+      rhoc=0;vfield=0;xp=0;vp=0
+      rhoc(1,1,1,1,1,1)=2
+      xp(:,1:2)=16383
+      xp(1,2)=-16385 ! offset the second particle to +x by 1 fine cell.
+#   endif
     call buffer_grid
     call buffer_x
     if (Extended_pp_force) then
@@ -34,6 +42,11 @@ program main
     endif
     call particle_mesh
     call buffer_v
+#   ifdef FORCETEST
+
+
+      stop
+#   endif
     if (checkpoint_step .or. halofind_step) then
       dt_old=0
       call update_x

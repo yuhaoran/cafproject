@@ -42,7 +42,7 @@ subroutine ext_pp_force
     endif
     ! the offset to use tile-based linked-list
     ip_offset=cum(-1,0,0,itx,ity,itz)
-    print*,'  ip_offset',ip_offset
+    !print*,'  ip_offset',ip_offset
     hoc=0; ll=0
     do igz=0,nt+1
     do igy=0,nt+1
@@ -100,10 +100,13 @@ subroutine ext_pp_force
         enddo !! jj
         enddo !! ii
         vreal=vreal+f_tot*a_mid*dt/6/pi
+#       ifdef FORCETEST
+          print*,'v_pp',ip,vreal
+          print*,'vfield',vfield(:,i,j,k,itx,ity,itz)
+#       endif
         vp(:,ip1)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
         f2_max_pp=max(f2_max_pp,sum(f_tot**2))
         ipll1=ll(ipll1)
-
       enddo !! do while (ip1/=0)
     enddo
     enddo

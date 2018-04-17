@@ -26,16 +26,15 @@ subroutine kernel_f
     rho_f=0
     mfactor=merge(-1,1,(/1,2,3/)==i_dim)
     rho_f(:nf_cutoff,:nf_cutoff,:nf_cutoff)=fk_table(:,:,:,i_dim)
-    rho_f(nfe-nf_cutoff+2:nfe,:,:)=mfactor(1)*rho_f(nf_cutoff:2:-1,:,:)
-    rho_f(:,nfe-nf_cutoff+2:nfe,:)=mfactor(2)*rho_f(:,nf_cutoff:2:-1,:)
-    rho_f(:,:,nfe-nf_cutoff+2:nfe)=mfactor(3)*rho_f(:,:,nf_cutoff:2:-1)
     if (Extended_pp_force) then
       rho_f(1:pp_range+1,1:pp_range+1,1:pp_range+1)=0
     endif
+    rho_f(nfe-nf_cutoff+2:nfe,:,:)=mfactor(1)*rho_f(nf_cutoff:2:-1,:,:)
+    rho_f(:,nfe-nf_cutoff+2:nfe,:)=mfactor(2)*rho_f(:,nf_cutoff:2:-1,:)
+    rho_f(:,:,nfe-nf_cutoff+2:nfe)=mfactor(3)*rho_f(:,:,nf_cutoff:2:-1)
     call sfftw_execute(plan_fft_fine)
     kern_f(:,:,:,i_dim)=rho_f(2::2,:,:)
   enddo
-
 
   !open(21,file=output_dir()//'kern_f'//output_suffix(),access='stream',status='replace')
   !write(21) kern_f

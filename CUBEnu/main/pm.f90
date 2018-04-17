@@ -148,7 +148,10 @@ subroutine particle_mesh
         vreal=vreal+force_f(:,idx2(1),idx1(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx1(2)*dx2(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_f(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
-
+#       ifdef FORCETEST
+          print*,'v_fine',ip,vreal
+          print*,'vfield',vfield(:,i,j,k,itx,ity,itz)
+#       endif
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi_new*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 #ifdef NEUTRINOS
@@ -334,6 +337,12 @@ subroutine particle_mesh
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx1(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx1(3)
         vreal=vreal+force_c(:,idx2(1),idx2(2),idx2(3))*a_mid*dt/6/pi*dx2(1)*dx2(2)*dx2(3)
         vmax=max(vmax,maxval(abs(vreal+vfield(:,i,j,k,itx,ity,itz))))
+#       ifdef FORCETEST
+          print*,'v_coarse',ip,vreal
+          print*,'vfield',vfield(:,i,j,k,itx,ity,itz)
+#       endif
+
+
         vp(:,ip)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
       enddo
 #ifdef NEUTRINOS

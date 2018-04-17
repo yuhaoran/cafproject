@@ -31,6 +31,9 @@ subroutine buffer_xp
   integer(8) nshift,nlen,ifrom,mlast
 
   if (head) print*, 'buffer_xp'
+# ifdef FORCETEST
+    print*,'xp =',xp(:,1:20)
+# endif
   ! buffer x direction
   ! sync x- buffer with node on the left
   call system_clock(t1,t_rate)
@@ -240,7 +243,9 @@ subroutine buffer_xp
   sync all
   call system_clock(t2,t_rate)
   print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
-
+# ifdef FORCETEST
+    print*,'xp =',xp(:,1:20)
+# endif
 endsubroutine buffer_xp
 
 #ifdef NEUTRINOS
