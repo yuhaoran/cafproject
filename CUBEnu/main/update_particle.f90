@@ -18,12 +18,18 @@ subroutine update_xp()
   implicit none
   save
 
-  integer(8) ileft,iright,nlen,idx
-  integer(8) g(3) ! index of grid
+  !integer(8) ileft,iright,nlen
+  integer(8) idx,np_prev
+  integer(8) ig(3) ! index of grid
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
   real(4) vfield_new(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(8),parameter :: weight_v=0.1 ! how previous-step vfield is mostly weighted
-  integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !integer(8) cume2(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+
+  integer(8) idx_ex_r(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  integer(8),dimension(nt,nt) :: pp_l,pp_r,ppe_l,ppe_r
+
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
   integer(8) checkv0,checkv1
 
@@ -31,7 +37,8 @@ subroutine update_xp()
   call system_clock(t1,t_rate)
   dt_mid=(dt_old+dt)/2
   overhead_tile=0
-  iright=0
+  !iright=0
+  np_prev=0
   do itz=1,nnt ! loop over tile
   do ity=1,nnt
   do itx=1,nnt
@@ -47,40 +54,51 @@ subroutine update_xp()
     pid_new=0
 #   endif
     !if (head) print*,'    density loop'
-    !$omp paralleldo &
-    !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g)
+    !!$omp paralleldo &
+    !!$omp& default(shared) &
+    !!$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,ig)
 !    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
-      nlast=cum(i,j,k,itx,ity,itz)
+      !nlast=cum(i,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
+      nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
+      !print*,nlast,np
+      !print*,idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i+1:,j,k,itx,ity,itz))
+      !stop
       do l=1,np
-        ip=nlast-np+l
+        !ip=nlast-np+l
+        ip=nzero+l
+        !if(ip/=nzero+l) stop
         xq=((/i,j,k/)-1d0) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
         vreal=tan((pi*real(vp(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
-        g=ceiling(xq+deltax)
-        rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! update mesh
-        vfield_new(:,g(1),g(2),g(3))=vfield_new(:,g(1),g(2),g(3))+vreal
+        ig=ceiling(xq+deltax)
+        rhoce(ig(1),ig(2),ig(3))=rhoce(ig(1),ig(2),ig(3))+1 ! update mesh
+        vfield_new(:,ig(1),ig(2),ig(3))=vfield_new(:,ig(1),ig(2),ig(3))+vreal
       enddo
     enddo
     enddo
     enddo
-    !$omp endparalleldo
+    !!$omp endparalleldo
     ! vfield_new is kept the same as previous-step if the grid is empty.
     ! vfield_new is at most weight_v weighted by previous-step for non-empty grids.
     ! this also gets rid of if statements.
     vfield_new(1,:,:,:)=vfield_new(1,:,:,:)/(rhoce+weight_v)
     vfield_new(2,:,:,:)=vfield_new(2,:,:,:)/(rhoce+weight_v)
     vfield_new(3,:,:,:)=vfield_new(3,:,:,:)/(rhoce+weight_v)
-    cume=cumsum3(rhoce)
-    overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max))
-    if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>np_tile_max) then
+    !cume=cumsum3(rhoce)
+    !cume2=spine3(rhoce)
+    call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
+    !print*, cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),cume2(nt+2*ncb,nt+2*ncb)
+
+    !overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max))
+    overhead_tile=max(overhead_tile,idx_ex_r(nt+2*ncb,nt+2*ncb)/real(np_tile_max))
+    if (idx_ex_r(nt+2*ncb,nt+2*ncb)>np_tile_max) then
       print*, '  error: too many particles in this tile+buffer'
-      print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',np_tile_max
+      print*, '  ',idx_ex_r(nt+2*ncb,nt+2*ncb),'>',np_tile_max
       print*, '  on',this_image(), itx,ity,itz
       print*, '  please set tile_buffer larger'
       stop
@@ -89,24 +107,32 @@ subroutine update_xp()
     !if (head) print*,'    xvnew loop'
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g,idx)
+    !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,ig,idx)
 !    !$omp& reduction(+:rholocal)
     do k=1-ncb,nt+ncb ! update particle
     do j=1-ncb,nt+ncb
     do i=1-ncb,nt+ncb
-      nlast=cum(i,j,k,itx,ity,itz)
+      !nlast=cum(i,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
+      nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
       do l=1,np
-        ip=nlast-np+l
+        !ip=nlast-np+l
+        ip=nzero+l
         xq=((/i,j,k/)-1d0) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
         vreal=tan((pi*real(vp(:,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
         deltax=(dt_mid*vreal)/ncell
-        g=ceiling(xq+deltax)
-        rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
-        idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
+        ig=ceiling(xq+deltax)
+        rholocal(ig(1),ig(2),ig(3))=rholocal(ig(1),ig(2),ig(3))+1
+        !idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
+        !print*,idx
+        !idx=cume2(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
+        !print*,idx
+        idx=idx_ex_r(ig(2),ig(3))-sum(rhoce(ig(1):,ig(2),ig(3)))+rholocal(ig(1),ig(2),ig(3))
+        !print*,idx;stop
+
         xp_new(:,idx)=xp(:,ip)+nint(dt_mid*vreal/(x_resolution*ncell))
-        vreal=vreal-vfield_new(:,g(1),g(2),g(3))
+        vreal=vreal-vfield_new(:,ig(1),ig(2),ig(3))
         vp_new(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
 #       ifdef PID
           pid_new(idx)=pid(ip)
@@ -121,17 +147,34 @@ subroutine update_xp()
     !if (head) print*,'    delete_particle loop'
     do k=1,nt
     do j=1,nt
-      ileft=iright+1
-      nlast=cume(nt,j,k)
-      nlen=nlast-cume(0,j,k)
-      iright=ileft+nlen-1
-      xp(:,ileft:iright)=xp_new(:,nlast-nlen+1:nlast)
-      vp(:,ileft:iright)=vp_new(:,nlast-nlen+1:nlast)
+      !ileft=iright+1
+      !nlast=cume(nt,j,k)
+      !print*,nlast
+      !nlast=cume2(j,k)-sum(rhoce(nt+1:,j,k))
+      !print*,nlast
+
+      !nlen=nlast-cume(0,j,k)
+      !print*,nlen
+      !nlen=sum(rhoce(1:nt,j,k))
+      !print*,nlen
+
+      !iright=ileft+nlen-1
+
+      !print*, ileft,iright,nlast-nlen+1,nlast
+      !print*, np_prev+pp_l(j,k),np_prev+pp_r(j,k),ppe_l(j,k),ppe_r(j,k)
+      !print*,''
+
+      !xp(:,ileft:iright)=xp_new(:,nlast-nlen+1:nlast)
+      !vp(:,ileft:iright)=vp_new(:,nlast-nlen+1:nlast)
+      xp(:,np_prev+pp_l(j,k):np_prev+pp_r(j,k))=xp_new(:,ppe_l(j,k):ppe_r(j,k))
+      vp(:,np_prev+pp_l(j,k):np_prev+pp_r(j,k))=vp_new(:,ppe_l(j,k):ppe_r(j,k))
 #     ifdef PID
-        pid(ileft:iright)=pid_new(nlast-nlen+1:nlast)
+        !pid(ileft:iright)=pid_new(nlast-nlen+1:nlast)
+        pid(np_prev+pp_l(j,k):np_prev+pp_r(j,k))=pid_new(ppe_l(j,k):ppe_r(j,k))
 #     endif
     enddo
     enddo
+    np_prev=np_prev+pp_r(nt,nt)
     ! update rhoc
     rhoc(:,:,:,itx,ity,itz)=0
     rhoc(1:nt,1:nt,1:nt,itx,ity,itz)=rhoce(1:nt,1:nt,1:nt)
@@ -140,7 +183,8 @@ subroutine update_xp()
   enddo
   enddo
   enddo ! end looping over tiles
-  sim%nplocal=iright
+
+  sim%nplocal=np_prev
   xp(:,sim%nplocal+1:)=0
   vp(:,sim%nplocal+1:)=0
 # ifdef PID
@@ -152,7 +196,8 @@ subroutine update_xp()
   sync all
 
   ! calculate std of the velocity field
-  cum=cumsum6(rhoc)
+  !cum=cumsum6(rhoc)
+  call spine_image(rhoc,idx_b_l,idx_b_r,ppl0,pplr,pprl,ppr0,ppl,ppr)
   std_vsim=0; std_vsim_c=0; std_vsim_res=0
   !$omp paralleldo &
   !$omp& default(shared) &
@@ -165,10 +210,13 @@ subroutine update_xp()
     do j=1,nt
     do i=1,nt
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k,itx,ity,itz)**2)
-      nlast=cum(i,j,k,itx,ity,itz)
+      !nlast=cum(i,j,k,itx,ity,itz)
       np=rhoc(i,j,k,itx,ity,itz)
+      nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
       do l=1,np
-        ip=nlast-np+l
+        !ip=nlast-np+l
+        !if(ip/=nzero+l) stop
+        ip=nzero+l
         vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
@@ -253,7 +301,8 @@ subroutine update_xp_nu()
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! double buffer tile
   real(4) vfield_new(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(8),parameter :: weight_v=0.1 ! how previous-step vfield is mostly weighted
-  integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !integer(8) cume2(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb) ! count writing
   integer(8) checkv0,checkv1
 
@@ -304,11 +353,12 @@ subroutine update_xp_nu()
     vfield_new(1,:,:,:)=vfield_new(1,:,:,:)/(rhoce+weight_v)
     vfield_new(2,:,:,:)=vfield_new(2,:,:,:)/(rhoce+weight_v)
     vfield_new(3,:,:,:)=vfield_new(3,:,:,:)/(rhoce+weight_v)
-    cume=cumsum3(rhoce)
-    overhead_tile=max(overhead_tile,cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)/real(np_tile_max_nu))
-    if (cume(nt+2*ncb,nt+2*ncb,nt+2*ncb)>np_tile_max_nu) then
+    !cume=cumsum3(rhoce)
+    !cume2=spine3(rhoce)
+    overhead_tile=max(overhead_tile,cume2(nt+2*ncb,nt+2*ncb)/real(np_tile_max_nu))
+    if (cume2(nt+2*ncb,nt+2*ncb)>np_tile_max_nu) then
       print*, '  error: too many particles in this tile+buffer'
-      print*, '  ',cume(nt+2*ncb,nt+2*ncb,nt+2*ncb),'>',np_tile_max_nu
+      print*, '  ',cume2(nt+2*ncb,nt+2*ncb),'>',np_tile_max_nu
       print*, '  on',this_image(), itx,ity,itz
       print*, '  please set tile_buffer_nu larger'
       stop
@@ -350,8 +400,15 @@ subroutine update_xp_nu()
     do k=1,nt
     do j=1,nt
       ileft=iright+1
-      nlast=cume(nt,j,k)
-      nlen=nlast-cume(0,j,k)
+      !nlast=cume(nt,j,k)
+      !print*,nlast
+      nlast=cume2(j,k)-sum(rhoce(nt+1:,j,k))
+      !print*,nlast
+
+      !nlen=nlast-cume(0,j,k)
+      !print*,nlen
+      nlen=sum(rhoce(1:nt,j,k))
+      !print*,nlen
       iright=ileft+nlen-1
       xp_nu(:,ileft:iright)=xp_new_nu(:,nlast-nlen+1:nlast)
       vp_nu(:,ileft:iright)=vp_new_nu(:,nlast-nlen+1:nlast)

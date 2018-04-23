@@ -41,16 +41,24 @@ subroutine ext_pp_force
       stop
     endif
     ! the offset to use tile-based linked-list
-    ip_offset=cum(-1,0,0,itx,ity,itz)
+    !ip_offset=cum(-1,0,0,itx,ity,itz)
     !print*,'  ip_offset',ip_offset
+    !print*,'           ',idx_b_l(0,0,itx,ity,itz)+sum(rhoc(:-1,0,0,itx,ity,itz))
+    ip_offset=idx_b_l(0,0,itx,ity,itz)+sum(rhoc(:-1,0,0,itx,ity,itz))
     hoc=0; ll=0
     do igz=0,nt+1
     do igy=0,nt+1
     do igx=0,nt+1
-      nlast=cum(igx-1,igy,igz,itx,ity,itz)
+      !nlast=cum(igx-1,igy,igz,itx,ity,itz)
       np=rhoc(igx,igy,igz,itx,ity,itz)
+      nzero=idx_b_r(igy,igz,itx,ity,itz)-sum(rhoc(igx:,igy,igz,itx,ity,itz))
       do lp=1,np ! loop over cdm particles
-        ip1=nlast+lp
+        !ip1=nlast+lp
+        ip1=nzero+lp
+        !if(ip1/=nzero+lp) then
+        !   print*,'1',nzero,nlast
+        !   stop
+        !endif
         xvec1=ncell*((/igx,igy,igz/)-1)+ncell*(int(xp(:,ip1)+ishift,izipx)+rshift)*x_resolution
         ivec1=floor(xvec1)+1
         ipll1=ip1-ip_offset
@@ -122,7 +130,7 @@ subroutine ext_pp_force
   !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   !dt_pp=sqrt(0.1*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
-  sim%dt_pp=sqrt(1.0) / max(sqrt(f2_max_pp)*a_mid*GG,1e-3)
+  sim%dt_pp=5*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
   sync all
   do i=1,nn**3
     sim%dt_pp=min(sim%dt_pp,sim[i]%dt_pp)

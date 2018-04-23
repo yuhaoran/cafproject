@@ -44,7 +44,8 @@ program initial_conditions
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  integer(8) cume2(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(izipx) xp(3,npmax)
   integer(izipv) vp(3,npmax)
 #ifdef PID
@@ -472,6 +473,8 @@ program initial_conditions
     iright=0
     rhoce=0
     rholocal=0
+
+    print*,'loop 1'
     do k=1-npb,npt+npb ! calculate coarse mesh density
     do j=1-npb,npt+npb
     do i=1-npb,npt+npb
@@ -495,8 +498,11 @@ program initial_conditions
     vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
     vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
     vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
-    cume=cumsum3(rhoce)
+    !cume=cumsum3(rhoce)
+    cume2=spine3(rhoce)
+    !print*,sum(rhoce)
 
+    print*,'loop 2'
     if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
     do k=1-npb,npt+npb ! create particles in extended mesh
     do j=1-npb,npt+npb
@@ -511,7 +517,10 @@ program initial_conditions
       gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
       g=ceiling(xq-gradphi/(8*pi*ncell))
       rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
-      idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
+!      idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
+!print*,idx
+      idx=cume2(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
+!print*,idx
       xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
       vreal=-gradphi/(8*pi)*vf
       vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
@@ -526,12 +535,23 @@ program initial_conditions
     enddo
     enddo
 
+    print*,'loop 3'
     do k=1,nt ! delete buffer particles
     do j=1,nt
       ileft=iright+1
-      nlast=cume(nt,j,k)
-      nlen=nlast-cume(0,j,k)
+
+      !nlast=cume(nt,j,k)
+      !print*,nlast
+      nlast=cume2(j,k)-sum(rhoce(nt+1:,j,k))
+      !print*,nlast
+
+      !nlen=nlast-cume(0,j,k)
+      !print*,nlen
+      nlen=sum(rhoce(1:nt,j,k))
+      !print*,nlen
+
       iright=ileft+nlen-1
+
       xp(:,ileft:iright)=xp(:,nlast-nlen+1:nlast)
       vp(:,ileft:iright)=vp(:,nlast-nlen+1:nlast)
 #     ifdef PID
@@ -614,18 +634,32 @@ program initial_conditions
 
   contains
 
-  function cumsum3(input)
+  !pure function cumsum3(input)
+  !  implicit none
+  !  integer(4), intent(in) :: input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !  integer(8) cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+  !  integer(8) nsum,igx,igy,igz
+  !  nsum=0
+  !  do igz=1-2*ncb,nt+2*ncb
+  !  do igy=1-2*ncb,nt+2*ncb
+  !  do igx=1-2*ncb,nt+2*ncb
+  !    nsum=nsum+input(igx,igy,igz)
+  !    cumsum3(igx,igy,igz)=nsum
+  !  enddo
+  !  enddo
+  !  enddo
+  !endfunction
+
+  pure function spine3(rho) ! cumulative sum record at the yz-plane
     implicit none
-    integer(4) input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-    integer(8) cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-    integer(8) nsum,igx,igy,igz
+    integer(4),intent(in) :: rho(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer(8) spine3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
+    integer(8) nsum,igy,igz
     nsum=0
     do igz=1-2*ncb,nt+2*ncb
     do igy=1-2*ncb,nt+2*ncb
-    do igx=1-2*ncb,nt+2*ncb
-      nsum=nsum+input(igx,igy,igz)
-      cumsum3(igx,igy,igz)=nsum
-    enddo
+      nsum=nsum+sum(rho(:,igy,igz))
+      spine3(igy,igz)=nsum
     enddo
     enddo
   endfunction

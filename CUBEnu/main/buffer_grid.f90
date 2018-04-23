@@ -9,19 +9,19 @@ subroutine buffer_grid
   save
 
   call buffer_np(rhoc)
-#ifdef NEUTRINOS
-  if (neutrino_flag) call buffer_np(rhoc_nu)
-#endif
+# ifdef NEUTRINOS
+    if (neutrino_flag) call buffer_np(rhoc_nu)
+# endif
 
   call buffer_vc(vfield)
-#ifdef NEUTRINOS
-  if (neutrino_flag) call buffer_vc(vfield_nu)
-#endif
+# ifdef NEUTRINOS
+    if (neutrino_flag) call buffer_vc(vfield_nu)
+# endif
 
   call redistribute_cdm()
-#ifdef NEUTRINOS
-  if (neutrino_flag) call redistribute_nu()
-#endif
+# ifdef NEUTRINOS
+    if (neutrino_flag) call redistribute_nu()
+# endif
 
 endsubroutine
 
@@ -167,6 +167,7 @@ subroutine redistribute_cdm()
 # endif
   !!$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
+print*, '   np_image_max,sim%nplocal,nshift'
 print*, '  ',np_image_max,sim%nplocal,nshift
 
   if (checkxp0/=checkxp1) then
@@ -174,40 +175,64 @@ print*, '  ',np_image_max,sim%nplocal,nshift
     stop
   endif
   ! shift back
-  cum=cumsum6(rhoc)
-  ifrom=nshift
+  !cum=cumsum6(rhoc)
+  !cum5=spine6(rhoc)
+  call spine_image(rhoc,idx_b_l,idx_b_r,ppl0,pplr,pprl,ppr0,ppl,ppr)
+
+  !print*,sum(rhoc),cum(nt+ncb,nt+ncb,nt+ncb,nnt,nnt,nnt),cum5(nt+ncb,nt+ncb,nnt,nnt,nnt)
+
+!  ifrom=nshift
   !!$omp parallelsections default(shared) &
   !!$omp& private(itz,ity,itx,iz,iy,nlast,nlen,ifrom)
   !! firstprivate(ifrom) causes rhoc=0
   !!$omp section
-    ifrom=nshift
+!    ifrom=nshift
     do itz=1,nnt
     do ity=1,nnt
     do itx=1,nnt ! loop over tiles
       do iz=1,nt ! loop over z slab
       do iy=1,nt ! loog over y slot
-        nlast=cum(nt,iy,iz,itx,ity,itz) ! nlast is the last particle's index
-        nlen=nlast-cum(0,iy,iz,itx,ity,itz) ! nlen is the number of particle in this x-slot
-        xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
-        xp(:,ifrom+1:ifrom+nlen)=0
-        ifrom=ifrom+nlen
+        !nlast=cum(nt,iy,iz,itx,ity,itz) ! nlast is the last particle's index
+        !nlen=nlast-cum(0,iy,iz,itx,ity,itz) ! nlen is the number of particle in this x-slot
+        !print*,nlast,nlen
+!        nlast=cum5(iy,iz,itx,ity,itz)-sum(rhoc(nt+1:,iy,iz,itx,ity,itz))
+!        nlen=sum(rhoc(1:nt,iy,iz,itx,ity,itz))
+        !print*,nlast,nlen
+        !stop
+
+        !print*, nlast-nlen+1,nlast
+        !print*, ppl0(iy,iz,itx,ity,itz)+1,ppr0(iy,iz,itx,ity,itz)
+        !print*,ifrom+1,ifrom+nlen
+        !print*,nshift+ppl(iy,iz,itx,ity,itz)+1,nshift+ppr(iy,iz,itx,ity,itz)
+
+        !xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
+        xp(:,ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=xp(:,nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
+        vp(:,ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=vp(:,nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
+#       ifdef PID
+          pid(ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=pid(nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
+#       endif
+!        xp(:,ifrom+1:ifrom+nlen)=0
+!        ifrom=ifrom+nlen
       enddo
       enddo
     enddo
     enddo
     enddo
+    !xp(:,idx_b_r(nt+ncb,nt+ncb,nnt,nnt,nnt):)=0
   !!$omp section
-    ifrom=nshift
-    do itz=1,nnt
+!    ifrom=nshift
+    do itz=1,0
     do ity=1,nnt
     do itx=1,nnt
       do iz=1,nt
       do iy=1,nt
-        nlast=cum(nt,iy,iz,itx,ity,itz)
-        nlen=nlast-cum(0,iy,iz,itx,ity,itz)
-        vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
-        vp(:,ifrom+1:ifrom+nlen)=0
-        ifrom=ifrom+nlen
+        !nlast=cum(nt,iy,iz,itx,ity,itz)
+        !nlen=nlast-cum(0,iy,iz,itx,ity,itz)
+        !nlast=cum5(iy,iz,itx,ity,itz)-sum(rhoc(nt+1:,iy,iz,itx,ity,itz))
+        !nlen=sum(rhoc(1:nt,iy,iz,itx,ity,itz))
+        !vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
+        !vp(:,ifrom+1:ifrom+nlen)=0
+        !ifrom=ifrom+nlen
       enddo
       enddo
     enddo
@@ -216,13 +241,15 @@ print*, '  ',np_image_max,sim%nplocal,nshift
 # ifdef PID
   !!$omp section
     ifrom=nshift
-    do itz=1,nnt
+    do itz=1,0
     do ity=1,nnt
     do itx=1,nnt
       do iz=1,nt
       do iy=1,nt
-        nlast=cum(nt,iy,iz,itx,ity,itz)
-        nlen=nlast-cum(0,iy,iz,itx,ity,itz)
+        !nlast=cum(nt,iy,iz,itx,ity,itz)
+        !nlen=nlast-cum(0,iy,iz,itx,ity,itz)
+        !nlast=cum5(iy,iz,itx,ity,itz)-sum(rhoc(nt+1:,iy,iz,itx,ity,itz))
+        nlen=sum(rhoc(1:nt,iy,iz,itx,ity,itz))
         pid(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
         pid(ifrom+1:ifrom+nlen)=0
         ifrom=ifrom+nlen
@@ -237,7 +264,7 @@ print*, '  ',np_image_max,sim%nplocal,nshift
   checkxp1=sum(xp*int(1,kind=8))
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting back',image,checkxp0,checkxp1
-    stop
+    !stop
   endif
   if (head) then
     call system_clock(t2,t_rate)

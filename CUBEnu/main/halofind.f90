@@ -119,10 +119,16 @@ subroutine halofind
     do k0=2-ncb,nt+ncb-1
     do j0=2-ncb,nt+ncb-1
     do i0=2-ncb,nt+ncb-1
-      nlast=cum(i0-1,j0,k0,itx,ity,itz)
+      !nlast=cum(i0-1,j0,k0,itx,ity,itz)
       np=rhoc(i0,j0,k0,itx,ity,itz)
+      nzero=idx_b_r(j0,k0,itx,ity,itz)-sum(rhoc(i0:,j0,k0,itx,ity,itz))
       do l0=1,np
-        ip=nlast+l0
+        !ip=nlast+l0
+        !if(ip/=nzero+l0) then
+        !   print*,'1',nzero,nlast
+        !   stop
+        !endif
+        ip=nzero+l0
         if (NGP) then
           pos1=ncell*([i0,j0,k0]-1) + ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
           idx1=floor(pos1)+1
@@ -224,10 +230,16 @@ subroutine halofind
         do k0=csbox(3,1),csbox(3,2)
         do j0=csbox(2,1),csbox(2,2)
         do i0=csbox(1,1),csbox(1,2)
-          nlast=cum(i0-1,j0,k0,itile(1),itile(2),itile(3))
+          !nlast=cum(i0-1,j0,k0,itile(1),itile(2),itile(3))
           np=rhoc(i0,j0,k0,itile(1),itile(2),itile(3))
+          nzero=idx_b_r(j0,k0,itx,ity,itz)-sum(rhoc(i0:,j0,k0,itx,ity,itz))
           do l0=1,np
-            ip=nlast+l0
+            !ip=nlast+l0
+            !if(ip/=nzero+l0) then
+            !   print*,'1',nzero,nlast
+            !   stop
+            !endif
+            ip=nzero+l0
             pos1=ncell*([i0,j0,k0]-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
             dr=pos1-hpos
             rr=norm2(dr)

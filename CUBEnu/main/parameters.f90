@@ -57,7 +57,7 @@ module parameters
   integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell/2 ! number of neutrinos per dim per coarse cell
 
-  logical,parameter :: Extended_pp_force=.false.
+  logical,parameter :: Extended_pp_force=.true.
   real,parameter :: rsoft=0.3 ! PP softening length
   integer,parameter :: pp_range=2 ! set <=4
   real,parameter :: image_buffer=1.2
@@ -70,7 +70,7 @@ module parameters
   real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0 !not used
 
-  real,parameter :: z_i=50.0   ! initial redshift
+  real,parameter :: z_i=20.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
   real,parameter :: z_i_nu=5.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos

@@ -92,6 +92,7 @@ pure function ic_name(zipname)  result(filename)
   write(str_z,'(f7.3)') z_i
   filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
 endfunction
+
 function ic_name_nu(zipname) result(filename)
   character(*) ::  zipname
   character(:),allocatable :: filename
