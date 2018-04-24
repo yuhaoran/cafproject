@@ -5,7 +5,7 @@ OPTIONS=-DFFTFINE
 
 all: ic.x cicpower.x #dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
-ic.x: parameters.o pencil_fft.o initial_conditions.o
+ic.x: parameters.o variables.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 ic_nu.x: parameters.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -24,11 +24,13 @@ qspace.x: parameters.o xva_qspace.o
 
 parameters.o: ../main/parameters.f90
 	$(FC) $(OFLAG) $(OPTIONS) $<
+variables.o: ../main/variables.f90
+	$(FC) $(OFLAG) $(OPTIONS) $<
 pencil_fft.o: ../main/pencil_fft.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 powerspectrum.o: powerspectrum.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-initial_conditions.o: initial_conditions.f90 parameters.o pencil_fft.o
+initial_conditions.o: initial_conditions.f90 parameters.o variables.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
