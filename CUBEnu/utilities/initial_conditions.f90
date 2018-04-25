@@ -18,7 +18,8 @@ program initial_conditions
 
   integer(8),parameter :: nk=132 ! ???
   integer(8) i,j,k,ip,l
-  integer(4) seedsize
+  integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,g(3),iq(3)
+  integer(4) seedsize,t1,t2,tt1,tt2,ttt1,ttt2,t_rate,ilayer,nlayer
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
   real(8) v8,norm,xq(3),gradphi(3),vreal(3),dvar[*],dvarg
   integer(int64) time64
@@ -30,8 +31,7 @@ program initial_conditions
   integer(4),allocatable :: iseed(:)
   real,allocatable :: rseed_all(:,:)
 
-  integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,g(3)
-  !integer(8) ileft,iright,nlen,nlast,np_prev
+
   real kr,kx,ky,kz
   !real xi(10,nbin)
 
@@ -56,7 +56,6 @@ program initial_conditions
   integer(izipv) vp(3,npmax)
 #ifdef PID
     integer(8) pid(npmax)
-    integer(8) iq(3)
 #endif
   real grad_max(3)[*],vmax(3),vf
   !real vdisp(506,2)
@@ -66,6 +65,8 @@ program initial_conditions
 
   character (10) :: img_s, z_s
 
+  call system_clock(ttt1,t_rate)
+  call omp_set_num_threads(ncore)
   call geometry
   call system('mkdir -p '//opath//'image'//image2str(image))
 
@@ -134,12 +135,19 @@ program initial_conditions
   pkn=0
   sync all
 
+  if (head) print*,''
   if (head) print*,'Creating FFT plans'
+  call system_clock(t1,t_rate)
   call create_penfft_plan
+  call system_clock(t2,t_rate)
+  if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all
 
   ! transferfnc --------------------------------------
   ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
+  if (head) print*,''
+  if (head) print*,'Transfer function'
+  call system_clock(t1,t_rate)
   open(11,file='../tf/caf_z10_tk.dat',form='formatted')
   read(11,*) !header
   read(11,*) tf
@@ -197,14 +205,15 @@ program initial_conditions
 !stop
 
   ! noisemap -------------------------------------
+  if (head) print*,''
   if (head) print*,'Generating random noise'
   call random_seed(size=seedsize)
-  if (head) print*,'min seedsize =', seedsize
+  if (head) print*,'  min seedsize =', seedsize
   seedsize=max(seedsize,36)
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
-    if (head) print*, 'Copy and read seeds from ../confings/'
+    if (head) print*, '  Copy and read seeds from ../confings/'
     call system('cp ../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image))
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
     read(11) iseed
@@ -239,17 +248,17 @@ program initial_conditions
     open(11,file=output_dir()//'noise'//output_suffix(),access='stream')
     read(11) r3
     close(11)
-    print*, 'READ IN NOISE MAP:', r3(1,1,1), r3(ng,ng,ng)
+    print*, '  READ IN NOISE MAP:', r3(1,1,1), r3(ng,ng,ng)
 # else
     open(11,file=output_dir()//'noise'//output_suffix(),status='replace',access='stream')
     write(11) r3
     close(11)
-    print*, 'noise',int(image,1),r3(1:2,1,1)
+    print*, '  noise',int(image,1),r3(1:2,1,1)
 # endif
   sync all
 
   ! Box-Muller transform ----------------------------------------------
-  if (head) print*,'Box-Muller transform'
+  if (head) print*,'  Box-Muller transform'
   do k=1,nf
   do j=1,nf
   do i=1,nf,2
@@ -261,13 +270,16 @@ program initial_conditions
   enddo
   enddo
   sync all
+  call system_clock(t2,t_rate)
+  if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
 
   ! delta_field ----------------------------------------------------
   if (head) print*, ''
   if (head) print*, 'Delta field'
-  if (head) print*, 'Start ftran'
+  call system_clock(t1,t_rate)
+  if (head) print*, '  ftran'
   call pencil_fft_forward
-  if (head) print*, 'Wiener filter on white noise'
+  if (head) print*, '  Wiener filter'
   do k=1,npen
   do j=1,nf
   do i=1,nyquest+1
@@ -289,20 +301,24 @@ program initial_conditions
   sync all
   delta_k=cxyz ! backup k-space delta_L
 
-  if (head) print*,'Start btran'
+  if (head) print*,'  btran'
   call pencil_fft_backward
   !print*,'r3',r3(1,1,1)
-  print*,'rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
+  print*,'  rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
-  if (head) print*,'Write delta_L into file'
-  if (head) print*,'Growth factor Dgrow(',sim%a,') =',Dgrow(sim%a)
+  if (head) print*,'  write delta_L into file'
+  if (head) print*,'  growth factor Dgrow(',sim%a,') =',Dgrow(sim%a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
   write(11) r3/Dgrow(sim%a)
   close(11)
+  sync all
+  call system_clock(t2,t_rate)
+  if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
 
   ! Potential field ----------------------------------------------------
   if (head) print*, ''
   if (head) print*, 'Potential field'
+  call system_clock(t1,t_rate)
   do k=1,npen
   do j=1,nf
   do i=1,nyquest+1
@@ -325,7 +341,7 @@ program initial_conditions
   sync all
 
   if (correct_kernel) then
-    if (head) print*, 'correct kernel'
+    if (head) print*, '  correct kernel'
     call pencil_fft_backward
     temp8=0
     if (image==1) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
@@ -342,9 +358,9 @@ program initial_conditions
     enddo
     sync all
     phi8=phi8/6
-    if (head) print*,'phi8 =',phi8
+    if (head) print*,'  phi8 =',phi8
     sync all
-    if (head) print*, 'Construct Ewald potential kernel in real space'
+    if (head) print*, '  construct Ewald potential kernel in real space'
     do k=1,nf
     do j=1,nf
     do i=1,nf
@@ -388,7 +404,7 @@ program initial_conditions
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
   if (write_potential) then
-    if (head) print*, 'Write phi1 into file'
+    if (head) print*, '  write phi1 into file'
     open(11,file=ic_name('phi1'),status='replace',access='stream')
     write(11) r3
     close(11)
@@ -397,7 +413,7 @@ program initial_conditions
   sync all
 
   ! buffer phi ---------------------------------------------------
-  if (head) print*, 'Buffer phi'
+  if (head) print*, '  buffer phi'
   phi(:0,:,:)=phi(nf-nfb:nf,:,:)[image1d(inx,icy,icz)]
   phi(nf+1:,:,:)=phi(1:nfb+1,:,:)[image1d(ipx,icy,icz)]
   sync all
@@ -408,14 +424,18 @@ program initial_conditions
   phi(:,:,nf+1:)=phi(:,:,1:nfb+1)[image1d(icx,icy,ipz)]
   sync all
 
-  if (head) print*, 'Destroying FFT plans'
+  if (head) print*, '  destroying FFT plans'
   call destroy_penfft_plan
+  sync all
+  call system_clock(t2,t_rate)
+  if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all
 
   ! zip checkpoints ------------------------------------------------
+  if (head) print*, ''
   if (head) print*, 'zip checkpoints'
   vf=vfactor(sim%a)
-  if (head) print*, 'vf',vf
+  if (head) print*, '  vf =',vf
   grad_max(1)=maxval(abs(phi(0:nf-1,1:nf,1:nf)-phi(2:nf+1,1:nf,1:nf)))
   grad_max(2)=maxval(abs(phi(1:nf,0:nf-1,1:nf)-phi(1:nf,2:nf+1,1:nf)))
   grad_max(3)=maxval(abs(phi(1:nf,1:nf,0:nf-1)-phi(1:nf,1:nf,2:nf+1)))
@@ -426,14 +446,16 @@ program initial_conditions
   vmax=grad_max/2/(4*pi)*vf
   sim%dt_vmax=vbuf*20./maxval(abs(vmax))
   if (head) then
-    print*, 'grad_max',grad_max
-    print*, 'max dsp',grad_max/2/(4*pi)
-    print*, 'vmax',vmax
+    print*, '  grad_max',grad_max
+    print*, '  max dsp',grad_max/2/(4*pi)
+    print*, '  vmax',vmax
     if (maxval(grad_max)/2/(4*pi)>=nfb) then
-      print*, 'particle dsp > buffer'
+      print*, '  particle dsp > buffer'
       print*, maxval(grad_max)/2/(4*pi),nfb
       stop
     endif
+    nlayer=2*ceiling(grad_max(3)/8/pi/ncell)+1
+    print*,'  Thread save nlayer =',nlayer
   endif
   sync all
 
@@ -463,6 +485,7 @@ program initial_conditions
   ! create particles (no communication) ----------------------------
   if (head) print*,''
   if (head) print*, 'Create particles'
+  call system_clock(t1,t_rate)
   open(11,file=ic_name('xp'),status='replace',access='stream')
   open(12,file=ic_name('vp'),status='replace',access='stream')
   open(13,file=ic_name('np'),status='replace',access='stream')
@@ -483,103 +506,95 @@ program initial_conditions
     rholocal=0
 
     print*,'loop 1'
-    do k=1-npb,npt+npb ! calculate coarse mesh density
-    do j=1-npb,npt+npb
-    do i=1-npb,npt+npb
-    do imove=0,merge(1,0,body_centered_cubic)
-      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove*(ncell/np_nc/2)
-      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove*(ncell/np_nc/2)
-      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove*(ncell/np_nc/2)
-      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove*(ncell/np_nc/2))/ncell ! Lagrangian position q, in coarse grid
-      gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
-      gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
-      gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
-      g=ceiling(xq-gradphi/(8*pi*ncell))
-      rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1
-      vreal=-gradphi/(8*pi)*vf
-      vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal ! record vfield according to real particles
-    enddo
-    enddo
-    enddo
-    enddo
-
+    do ilayer=0,nlayer-1
+      !$omp paralleldo &
+      !$omp& default(shared) &
+      !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,vreal)
+      do k=1-npb+ilayer,npt+npb,nlayer
+      do j=1-npb,npt+npb
+      do i=1-npb,npt+npb
+      do imove=0,merge(1,0,body_centered_cubic)
+        kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove*(ncell/np_nc/2)
+        jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove*(ncell/np_nc/2)
+        ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove*(ncell/np_nc/2)
+        xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove*(ncell/np_nc/2))/ncell ! Lagrangian position q, in coarse grid
+        gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
+        gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
+        gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
+        g=ceiling(xq-gradphi/(8*pi*ncell))
+        rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1
+        vreal=-gradphi/(8*pi)*vf
+        vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal ! record vfield according to real particles
+      enddo ! imove
+      enddo
+      enddo
+      enddo !k
+      !$omp endparalleldo
+    enddo ! ilayer
     vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
     vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
     vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
     !cume=cumsum3(rhoce)
     !cume2=spine3(rhoce)
+    print*,'spine_tile'
     call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
     !print*,sum(rhoce)
 
     print*,'loop 2'
     if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
-    do k=1-npb,npt+npb ! create particles in extended mesh
-    do j=1-npb,npt+npb
-    do i=1-npb,npt+npb
-    do imove=0,merge(1,0,body_centered_cubic)
-      kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove*(ncell/np_nc/2)
-      jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove*(ncell/np_nc/2)
-      ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove*(ncell/np_nc/2)
-      xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove*(ncell/np_nc/2))/ncell
-      gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
-      gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
-      gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
-      g=ceiling(xq-gradphi/(8*pi*ncell))
-      rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
-!      idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-!print*,idx
-      !idx=cume2(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-      !print*, idx,idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-      !if(idx/=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3)))stop
-      idx=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-!print*,idx
-      xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
-      vreal=-gradphi/(8*pi)*vf
-      vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
-      vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sim%sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
-#     ifdef PID
-        iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
-        iq = modulo(iq,nf_global)
-        pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
-#     endif
-    enddo
-    enddo
-    enddo
-    enddo
-
+    do ilayer=0,nlayer-1
+      !$omp paralleldo&
+      !$omp& default(shared) &
+      !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,idx,vreal,iq)
+      do k=1-npb+ilayer,npt+npb,nlayer
+      do j=1-npb,npt+npb
+      do i=1-npb,npt+npb
+      do imove=0,merge(1,0,body_centered_cubic)
+        kk=nft*(itz-1)+(ncell/np_nc)*(k-1)+1+imove*(ncell/np_nc/2)
+        jj=nft*(ity-1)+(ncell/np_nc)*(j-1)+1+imove*(ncell/np_nc/2)
+        ii=nft*(itx-1)+(ncell/np_nc)*(i-1)+1+imove*(ncell/np_nc/2)
+        xq=((/i,j,k/)-1d0)/np_nc + (0.5d0+imove*(ncell/np_nc/2))/ncell
+        gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
+        gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
+        gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
+        g=ceiling(xq-gradphi/(8*pi*ncell))
+        rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
+  !      idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
+  !print*,idx
+        !idx=cume2(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
+        !print*, idx,idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
+        !if(idx/=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3)))stop
+        idx=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
+  !print*,idx
+        xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
+        vreal=-gradphi/(8*pi)*vf
+        vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
+        vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sim%sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+#       ifdef PID
+          iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
+          iq = modulo(iq,nf_global)
+          pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
+#       endif
+      enddo ! imove
+      enddo
+      enddo
+      enddo ! k
+      !$omp endparalleldo
+    enddo ! ilayer
     print*,'loop 3'
+    !!$omp paralleldo &
+    !!$omp& default(shared) &
+    !!$omp& private(k,j)
     do k=1,nt ! delete buffer particles
     do j=1,nt
-      !ileft=iright+1
-
-      !nlast=cume(nt,j,k)
-      !print*,nlast
-      !nlast=cume2(j,k)-sum(rhoce(nt+1:,j,k))
-      !if(cume2(j,k)/=idx_ex_r(j,k))stop
-      !nlast=idx_ex_r(j,k)-sum(rhoce(nt+1:,j,k))
-      !print*,nlast
-
-      !nlen=nlast-cume(0,j,k)
-      !print*,nlen
-      !nlen=sum(rhoce(1:nt,j,k))
-      !print*,nlen
-
-      !iright=ileft+nlen-1
-
-
-      !print*,ileft,iright,nlast-nlen+1,nlast
-      !print*,pp_l(j,k),pp_r(j,k),ppe_l(j,k),ppe_r(j,k)
-
-      !xp(:,ileft:iright)=xp(:,nlast-nlen+1:nlast)
-      !vp(:,ileft:iright)=vp(:,nlast-nlen+1:nlast)
       xp(:,pp_l(j,k):pp_r(j,k))=xp(:,ppe_l(j,k):ppe_r(j,k))
       vp(:,pp_l(j,k):pp_r(j,k))=vp(:,ppe_l(j,k):ppe_r(j,k))
 #     ifdef PID
-        !pid(ileft:iright)=pid(nlast-nlen+1:nlast)
         pid(pp_l(j,k):pp_r(j,k))=pid(ppe_l(j,k):ppe_r(j,k))
 #     endif
     enddo
     enddo
+    !!$omp endparalleldo
     !np_prev=np_prev+pp_r(nt,nt)
     ! velocity analysis
     ip=0
@@ -618,6 +633,8 @@ program initial_conditions
 # ifdef PID
     close(15)
 # endif
+  call system_clock(t2,t_rate)
+  if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
 
   if (head) then
     print*,''
@@ -651,6 +668,9 @@ program initial_conditions
   write(10) sim
   close(10)
   sync all
+
+  call system_clock(ttt2,t_rate)
+  if (head) print*, 'total elapsed time =',real(ttt2-ttt1)/t_rate,'secs';
   if (head) print*, 'initial condition done'
 
   contains

@@ -22,6 +22,8 @@ convert.x: parameters.o convert_zip_to_xv.o
 qspace.x: parameters.o xva_qspace.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 
+variables.o: parameters.o
+
 parameters.o: ../main/parameters.f90
 	$(FC) $(OFLAG) $(OPTIONS) $<
 variables.o: ../main/variables.f90
