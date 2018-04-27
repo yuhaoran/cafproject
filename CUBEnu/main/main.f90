@@ -43,8 +43,6 @@ program main
     call particle_mesh
     call buffer_v
 #   ifdef FORCETEST
-
-
       stop
 #   endif
     if (checkpoint_step .or. halofind_step) then

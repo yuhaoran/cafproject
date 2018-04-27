@@ -41,22 +41,28 @@ subroutine buffer_np(rhoc)
     print*,'sum of rhoc =',sum(rhoc)
 # endif
   !x
+  !$omp workshare
   rhoc(:0,:,:,1,:,:)=rhoc(nt-ncb+1:nt,:,:,nnt,:,:)[image1d(inx,icy,icz)]
   rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
   rhoc(nt+1:,:,:,nnt,:,:)=rhoc(1:ncb,:,:,1,:,:)[image1d(ipx,icy,icz)]
   rhoc(nt+1:,:,:,:nnt-1,:,:)=rhoc(1:ncb,:,:,2:,:,:)
+  !$omp endworkshare
   sync all
   !y
+  !$omp workshare
   rhoc(:,:0,:,:,1,:)=rhoc(:,nt-ncb+1:nt,:,:,nnt,:)[image1d(icx,iny,icz)]
   rhoc(:,:0,:,:,2:,:)=rhoc(:,nt-ncb+1:nt,:,:,1:nnt-1,:)
   rhoc(:,nt+1:,:,:,nnt,:)=rhoc(:,1:ncb,:,:,1,:)[image1d(icx,ipy,icz)]
   rhoc(:,nt+1:,:,:,:nnt-1,:)=rhoc(:,1:ncb,:,1:,2:,:)
+  !$omp endworkshare
   sync all
   !z
+  !$omp workshare
   rhoc(:,:,:0,:,:,1)=rhoc(:,:,nt-ncb+1:nt,:,:,nnt)[image1d(icx,icy,inz)]
   rhoc(:,:,:0,:,:,2:)=rhoc(:,:,nt-ncb+1:nt,:,:,:nnt-1)
   rhoc(:,:,nt+1:,:,:,nnt)=rhoc(:,:,1:ncb,:,:,1)[image1d(icx,icy,ipz)]
   rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
+  !$omp endworkshare
 # ifdef FORCETEST
     print*,'sum of rhoc =',sum(rhoc)
 # endif
@@ -153,119 +159,50 @@ subroutine redistribute_cdm()
   ! shift to right
   checkxp0=sum(xp*int(1,kind=8))
   nshift=np_image_max-sim%nplocal
-  !!$omp parallelsections default(shared)
-  !!$omp section
+  !$omp parallelsections default(shared)
+  !$omp section
     xp(:,nshift+1:np_image_max)=xp(:,1:sim%nplocal)
     xp(:,1:nshift)=0
-  !!$omp section
+  !$omp section
     vp(:,nshift+1:np_image_max)=vp(:,1:sim%nplocal)
     vp(:,1:nshift)=0
 # ifdef PID
-    !!$omp section
+    !$omp section
     pid(nshift+1:np_image_max)=pid(1:sim%nplocal)
     pid(1:nshift)=0
 # endif
-  !!$omp endparallelsections
+  !$omp endparallelsections
   checkxp1=sum(xp*int(1,kind=8))
-print*, '   np_image_max,sim%nplocal,nshift'
-print*, '  ',np_image_max,sim%nplocal,nshift
 
   if (checkxp0/=checkxp1) then
     print*, '  error in shifting right',image,checkxp0,checkxp1
     stop
   endif
   ! shift back
-  !cum=cumsum6(rhoc)
-  !cum5=spine6(rhoc)
   call spine_image(rhoc,idx_b_l,idx_b_r,ppl0,pplr,pprl,ppr0,ppl,ppr)
 
-  !print*,sum(rhoc),cum(nt+ncb,nt+ncb,nt+ncb,nnt,nnt,nnt),cum5(nt+ncb,nt+ncb,nnt,nnt,nnt)
-
-!  ifrom=nshift
-  !!$omp parallelsections default(shared) &
-  !!$omp& private(itz,ity,itx,iz,iy,nlast,nlen,ifrom)
-  !! firstprivate(ifrom) causes rhoc=0
-  !!$omp section
-!    ifrom=nshift
-    do itz=1,nnt
-    do ity=1,nnt
-    do itx=1,nnt ! loop over tiles
-      do iz=1,nt ! loop over z slab
-      do iy=1,nt ! loog over y slot
-        !nlast=cum(nt,iy,iz,itx,ity,itz) ! nlast is the last particle's index
-        !nlen=nlast-cum(0,iy,iz,itx,ity,itz) ! nlen is the number of particle in this x-slot
-        !print*,nlast,nlen
-!        nlast=cum5(iy,iz,itx,ity,itz)-sum(rhoc(nt+1:,iy,iz,itx,ity,itz))
-!        nlen=sum(rhoc(1:nt,iy,iz,itx,ity,itz))
-        !print*,nlast,nlen
-        !stop
-
-        !print*, nlast-nlen+1,nlast
-        !print*, ppl0(iy,iz,itx,ity,itz)+1,ppr0(iy,iz,itx,ity,itz)
-        !print*,ifrom+1,ifrom+nlen
-        !print*,nshift+ppl(iy,iz,itx,ity,itz)+1,nshift+ppr(iy,iz,itx,ity,itz)
-
-        !xp(:,nlast-nlen+1:nlast)=xp(:,ifrom+1:ifrom+nlen)
-        xp(:,ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=xp(:,nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
-        vp(:,ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=vp(:,nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
+  do itz=1,nnt
+  do ity=1,nnt
+  do itx=1,nnt
+    do iz=1,nt
+    do iy=1,nt
+      xp(:,ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=xp(:,nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
+      vp(:,ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=vp(:,nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
 #       ifdef PID
-          pid(ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=pid(nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
+        pid(ppl0(iy,iz,itx,ity,itz)+1:ppr0(iy,iz,itx,ity,itz))=pid(nshift+ppl(iy,iz,itx,ity,itz)+1:nshift+ppr(iy,iz,itx,ity,itz))
 #       endif
-!        xp(:,ifrom+1:ifrom+nlen)=0
-!        ifrom=ifrom+nlen
-      enddo
-      enddo
     enddo
     enddo
-    enddo
-    !xp(:,idx_b_r(nt+ncb,nt+ncb,nnt,nnt,nnt):)=0
-  !!$omp section
-!    ifrom=nshift
-    do itz=1,0
-    do ity=1,nnt
-    do itx=1,nnt
-      do iz=1,nt
-      do iy=1,nt
-        !nlast=cum(nt,iy,iz,itx,ity,itz)
-        !nlen=nlast-cum(0,iy,iz,itx,ity,itz)
-        !nlast=cum5(iy,iz,itx,ity,itz)-sum(rhoc(nt+1:,iy,iz,itx,ity,itz))
-        !nlen=sum(rhoc(1:nt,iy,iz,itx,ity,itz))
-        !vp(:,nlast-nlen+1:nlast)=vp(:,ifrom+1:ifrom+nlen)
-        !vp(:,ifrom+1:ifrom+nlen)=0
-        !ifrom=ifrom+nlen
-      enddo
-      enddo
-    enddo
-    enddo
-    enddo
-# ifdef PID
-  !!$omp section
-    ifrom=nshift
-    do itz=1,0
-    do ity=1,nnt
-    do itx=1,nnt
-      do iz=1,nt
-      do iy=1,nt
-        !nlast=cum(nt,iy,iz,itx,ity,itz)
-        !nlen=nlast-cum(0,iy,iz,itx,ity,itz)
-        !nlast=cum5(iy,iz,itx,ity,itz)-sum(rhoc(nt+1:,iy,iz,itx,ity,itz))
-        nlen=sum(rhoc(1:nt,iy,iz,itx,ity,itz))
-        pid(nlast-nlen+1:nlast)=pid(ifrom+1:ifrom+nlen)
-        pid(ifrom+1:ifrom+nlen)=0
-        ifrom=ifrom+nlen
-      enddo
-      enddo
-    enddo
-    enddo
-    enddo
-# endif
-  !!$omp endparallelsections
+  enddo
+  enddo
+  enddo
+  !xp(:,idx_b_r(nt+ncb,nt+ncb,nnt,nnt,nnt):)=0
 
-  checkxp1=sum(xp*int(1,kind=8))
-  if (checkxp0/=checkxp1) then
-    print*, '  error in shifting back',image,checkxp0,checkxp1
+  !checkxp1=sum(xp*int(1,kind=8))
+  !if (checkxp0/=checkxp1) then
+    !print*, '  error in shifting back',image,checkxp0,checkxp1
     !stop
-  endif
+  !endif
   if (head) then
     call system_clock(t2,t_rate)
     print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'

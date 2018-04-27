@@ -17,7 +17,7 @@ program initial_conditions
   logical,parameter :: write_potential=.true.
 
   integer(8),parameter :: nk=132 ! ???
-  integer(8) i,j,k,ip,l
+  integer(8) i,j,k,ip,l,nzero
   integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,g(3),iq(3)
   integer(4) seedsize,t1,t2,tt1,tt2,ttt1,ttt2,t_rate,ilayer,nlayer
   real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
@@ -259,6 +259,9 @@ program initial_conditions
 
   ! Box-Muller transform ----------------------------------------------
   if (head) print*,'  Box-Muller transform'
+  !$omp paralleldo&
+  !$omp& default(shared) &
+  !$omp& private(k,j,i,temp_theta,temp_r)
   do k=1,nf
   do j=1,nf
   do i=1,nf,2
@@ -269,6 +272,7 @@ program initial_conditions
   enddo
   enddo
   enddo
+  !$omp endparalleldo
   sync all
   call system_clock(t2,t_rate)
   if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
@@ -280,6 +284,9 @@ program initial_conditions
   if (head) print*, '  ftran'
   call pencil_fft_forward
   if (head) print*, '  Wiener filter'
+  !$omp paralleldo&
+  !$omp& default(shared) &
+  !$omp& private(k,j,i,kg,jg,ig,kz,ky,kx,kr,pow)
   do k=1,npen
   do j=1,nf
   do i=1,nyquest+1
@@ -297,6 +304,7 @@ program initial_conditions
   enddo
   enddo
   enddo
+  !$omp endparalleldo
   if (head) cxyz(1,1,1)=0 ! DC frequency
   sync all
   delta_k=cxyz ! backup k-space delta_L
@@ -319,6 +327,9 @@ program initial_conditions
   if (head) print*, ''
   if (head) print*, 'Potential field'
   call system_clock(t1,t_rate)
+  !$omp paralleldo&
+  !$omp& default(shared) &
+  !$omp& private(k,j,i,kg,jg,ig,kz,ky,kx,kr)
   do k=1,npen
   do j=1,nf
   do i=1,nyquest+1
@@ -337,6 +348,7 @@ program initial_conditions
   enddo
   enddo
   enddo
+  !$omp endparalleldo
   if (head) cxyz(1,1,1)=0 ! DC frequency
   sync all
 
@@ -361,6 +373,9 @@ program initial_conditions
     if (head) print*,'  phi8 =',phi8
     sync all
     if (head) print*, '  construct Ewald potential kernel in real space'
+    !$omp paralleldo&
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,kg,jg,ig,kx,ky,kz,kr)
     do k=1,nf
     do j=1,nf
     do i=1,nf
@@ -381,6 +396,7 @@ program initial_conditions
     enddo
     enddo
     enddo
+    !$omp endparalleldo
     sync all
     call pencil_fft_forward
   endif
@@ -444,11 +460,14 @@ program initial_conditions
     grad_max=max(grad_max,grad_max(:)[i])
   enddo
   vmax=grad_max/2/(4*pi)*vf
+
   sim%dt_vmax=vbuf*20./maxval(abs(vmax))
+  sim%vz_max=vmax(3)
   if (head) then
     print*, '  grad_max',grad_max
     print*, '  max dsp',grad_max/2/(4*pi)
     print*, '  vmax',vmax
+    print*, '  vz_max',sim%vz_max
     if (maxval(grad_max)/2/(4*pi)>=nfb) then
       print*, '  particle dsp > buffer'
       print*, maxval(grad_max)/2/(4*pi),nfb
@@ -501,14 +520,11 @@ program initial_conditions
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    !iright=0
     rhoce=0
     rholocal=0
 
-    print*,'loop 1'
     do ilayer=0,nlayer-1
-      !$omp paralleldo &
-      !$omp& default(shared) &
+      !$omp paralleldo default(shared) &
       !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,vreal)
       do k=1-npb+ilayer,npt+npb,nlayer
       do j=1-npb,npt+npb
@@ -534,17 +550,11 @@ program initial_conditions
     vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
     vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
     vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
-    !cume=cumsum3(rhoce)
-    !cume2=spine3(rhoce)
-    print*,'spine_tile'
     call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
-    !print*,sum(rhoce)
 
-    print*,'loop 2'
     if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
     do ilayer=0,nlayer-1
-      !$omp paralleldo&
-      !$omp& default(shared) &
+      !$omp paralleldo default(shared) &
       !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,idx,vreal,iq)
       do k=1-npb+ilayer,npt+npb,nlayer
       do j=1-npb,npt+npb
@@ -559,13 +569,7 @@ program initial_conditions
         gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
         g=ceiling(xq-gradphi/(8*pi*ncell))
         rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
-  !      idx=cume(g(1),g(2),g(3))-rhoce(g(1),g(2),g(3))+rholocal(g(1),g(2),g(3))
-  !print*,idx
-        !idx=cume2(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-        !print*, idx,idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-        !if(idx/=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3)))stop
         idx=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-  !print*,idx
         xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
         vreal=-gradphi/(8*pi)*vf
         vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
@@ -581,10 +585,7 @@ program initial_conditions
       enddo ! k
       !$omp endparalleldo
     enddo ! ilayer
-    print*,'loop 3'
-    !!$omp paralleldo &
-    !!$omp& default(shared) &
-    !!$omp& private(k,j)
+
     do k=1,nt ! delete buffer particles
     do j=1,nt
       xp(:,pp_l(j,k):pp_r(j,k))=xp(:,ppe_l(j,k):ppe_r(j,k))
@@ -594,16 +595,19 @@ program initial_conditions
 #     endif
     enddo
     enddo
-    !!$omp endparalleldo
-    !np_prev=np_prev+pp_r(nt,nt)
+
     ! velocity analysis
-    ip=0
+    !$omp paralleldo&
+    !$omp& default(shared) &
+    !$omp& private(k,j,i,nzero,l,ip,vreal)&
+    !$omp& reduction(+:std_vsim_c,std_vsim_res,std_vsim)
     do k=1,nt
     do j=1,nt
     do i=1,nt
+      nzero=pp_r(j,k)-sum(rhoce(i:nt,j,k))
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
       do l=1,rhoce(i,j,k)
-        ip=ip+1
+        ip=nzero+l
         vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sim%sigma_vi*vrel_boost))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k)
@@ -612,6 +616,7 @@ program initial_conditions
     enddo
     enddo
     enddo
+    !$omp endparalleldo
 
     write(11) xp(:,1:pp_r(nt,nt))
     write(12) vp(:,1:pp_r(nt,nt))
@@ -621,7 +626,6 @@ program initial_conditions
       write(15) pid(1:pp_r(nt,nt))
 #   endif
     sim%nplocal=sim%nplocal+pp_r(nt,nt)
-    !print*,iright,pp_r(nt,nt)
   enddo
   enddo
   enddo ! end of tile loop
@@ -674,36 +678,6 @@ program initial_conditions
   if (head) print*, 'initial condition done'
 
   contains
-
-  !pure function cumsum3(input)
-  !  implicit none
-  !  integer(4), intent(in) :: input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) nsum,igx,igy,igz
-  !  nsum=0
-  !  do igz=1-2*ncb,nt+2*ncb
-  !  do igy=1-2*ncb,nt+2*ncb
-  !  do igx=1-2*ncb,nt+2*ncb
-  !    nsum=nsum+input(igx,igy,igz)
-  !    cumsum3(igx,igy,igz)=nsum
-  !  enddo
-  !  enddo
-  !  enddo
-  !endfunction
-
-  !pure function spine3(rho) ! cumulative sum record at the yz-plane
-  !  implicit none
-  !  integer(4),intent(in) :: rho(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) spine3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) nsum,igy,igz
-  !  nsum=0
-  !  do igz=1-2*ncb,nt+2*ncb
-  !  do igy=1-2*ncb,nt+2*ncb
-  !    nsum=nsum+sum(rho(:,igy,igz))
-  !    spine3(igy,igz)=nsum
-  !  enddo
-  !  enddo
-  !endfunction
 
   real function interp_sigmav(aa,rr)
     implicit none

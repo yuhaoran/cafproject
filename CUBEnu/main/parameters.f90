@@ -2,7 +2,7 @@ module parameters
   implicit none
   save
   ! output directory
-  character(*),parameter :: opath='../output/universe1/'
+  character(*),parameter :: opath='../output/universe2/'
 
   ! simulation parameters
   integer(8),parameter :: izipx=2 ! size to store xp as
@@ -26,7 +26,7 @@ module parameters
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=32 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -157,6 +157,7 @@ module parameters
     real sigma_vi
     real sigma_vi_nu
     real z_i,z_i_nu
+    real vz_max
   endtype
 
   type(sim_header) sim[*]
@@ -196,6 +197,7 @@ module parameters
       print*,'| sigma_vi_nu     =',s%sigma_vi_nu,'(simulation unit)'
       print*,'| z_i             =',s%z_i
       print*,'| z_i_nu          =',s%z_i_nu
+      print*,'| vz_max          =',s%vz_max
       print*,'------------------------------------------------------------------------------'
       endif
       sync all

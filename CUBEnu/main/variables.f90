@@ -31,7 +31,7 @@ module variables
 
   ! FFT plans
   integer(8) plan_fft_fine,plan_ifft_fine
-  real vmax,vmax_nu,overhead_tile[*],overhead_image[*]
+  real vmax(3),vmax_nu(3),overhead_tile[*],overhead_image[*]
   real sigma_vi,sigma_vi_new,sigma_vi_nu,sigma_vi_new_nu
   !real vdisp(506,2),sigma_vi_old,sigma_vi
   real(4) svz(500,2),svr(100,2)
@@ -82,42 +82,13 @@ module variables
   integer(8) npairs,itest1,nlast
   real(8) xvec1(3),xvec2(3),xvec21(3),rmag,force_pp(3),rcut,pcut,f_tot(3)
   integer(4) ivec1(3),np,ii,jj,kk,np1,np2,l1,l2
-  integer igx,igy,igz,lp,ip1,ip2
-  integer t1,t2,tt1,tt2,ttt1,ttt2,t_rate
+  integer(4) igx,igy,igz,lp,ip1,ip2
+  integer(4) t1,t2,tt1,tt2,ttt1,ttt2,t_rate
 
 contains
 
-  !function cumsum3(rho_input)
-  !  implicit none
-  !  integer(4) rho_input(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) cumsum3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) nsum,igx,igy,igz
-  !  nsum=0
-  !  do igz=1-2*ncb,nt+2*ncb
-  !  do igy=1-2*ncb,nt+2*ncb
-  !  do igx=1-2*ncb,nt+2*ncb
-  !    nsum=nsum+rho_input(igx,igy,igz)
-  !    cumsum3(igx,igy,igz)=nsum
-  !  enddo
-  !  enddo
-  !  enddo
-  !endfunction cumsum3
-
-  !pure function spine3(rho) ! cumulative sum record at the yz-plane
-  !  implicit none
-  !  integer(4),intent(in) :: rho(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) spine3(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !  integer(8) nsum,igz,igy
-  !  nsum=0
-  !  do igz=1-2*ncb,nt+2*ncb
-  !  do igy=1-2*ncb,nt+2*ncb
-  !    nsum=nsum+sum(rho(:,igy,igz))
-  !    spine3(igy,igz)=nsum
-  !  enddo
-  !  enddo
-  !endfunction
-
-  pure subroutine spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
+  subroutine spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
+    use omp_lib
     implicit none
     integer(4),intent(in) :: rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
     integer(8),dimension(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb),intent(out) :: idx_ex_r
@@ -132,11 +103,13 @@ contains
       idx_ex_r(igy,igz)=nsum ! right index
     enddo
     enddo
+    !$omp paralleldo default(shared) private(igz,igy)
     do igz=1,nt
     do igy=1,nt
       ppe_r(igy,igz)=idx_ex_r(igy,igz)-sum(rhoce(nt+1:,igy,igz))
     enddo
     enddo
+    !$omp endparalleldo
     nsum=0
     do igz=1,nt
     do igy=1,nt
@@ -149,7 +122,7 @@ contains
     enddo
   endsubroutine
 
-  pure subroutine spine_image(rhoc,idx_b_l,idx_b_r,ppe_l0,ppe_lr,ppe_rl,ppe_r0,ppl,ppr)
+  subroutine spine_image(rhoc,idx_b_l,idx_b_r,ppe_l0,ppe_lr,ppe_rl,ppe_r0,ppl,ppr)
     implicit none
     integer(4),intent(in) :: rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
     integer(8),dimension(1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt),intent(out) :: idx_b_l,idx_b_r
@@ -167,6 +140,7 @@ contains
     enddo
     enddo
     enddo
+    !$omp paralleldo default(shared) private(ihz,ihy,ihx,nsum,igz,igy)
     do ihz=1,nnt ! calculate extended spine cumulative index on both sides
     do ihy=1,nnt
     do ihx=1,nnt
@@ -181,6 +155,8 @@ contains
     enddo
     enddo
     enddo
+    !$omp endparalleldo
+    !$omp paralleldo default(shared) private(ihz,ihy,ihx,nsum_p,igz,igy,np_phy)
     do ihz=1,nnt ! calculate physical spine
     do ihy=1,nnt
     do ihx=1,nnt
@@ -202,51 +178,8 @@ contains
     enddo
     enddo
     enddo
+    !$omp endparalleldo
   endsubroutine
-
-#ifdef OLD
-  function cumsum6(rho_input)
-    implicit none
-    integer(4) rho_input(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-    integer(8) cumsum6(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-    integer(8) nsum,ihx,ihy,ihz,igx,igy,igz
-    nsum=0
-    do ihz=1,nnt
-    do ihy=1,nnt
-    do ihx=1,nnt
-    do igz=1-ncb,nt+ncb
-    do igy=1-ncb,nt+ncb
-    do igx=1-ncb,nt+ncb
-      nsum=nsum+rho_input(igx,igy,igz,ihx,ihy,ihz)
-      cumsum6(igx,igy,igz,ihx,ihy,ihz)=nsum
-    enddo
-    enddo
-    enddo
-    enddo
-    enddo
-    enddo
-  endfunction
-
-  pure function spine6(rho) ! cumulative sum record at the (yz,itx,ity,itz)-plane
-    implicit none
-    integer(4),intent(in) :: rho(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-    integer(8) spine6(1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
-    integer(8) nsum,ihz,ihy,ihx,igz,igy
-    nsum=0
-    do ihz=1,nnt
-    do ihy=1,nnt
-    do ihx=1,nnt
-      do igz=1-ncb,nt+ncb
-      do igy=1-ncb,nt+ncb
-        nsum=nsum+sum(rho(:,igy,igz,ihx,ihy,ihz))
-        spine6(igy,igz,ihx,ihy,ihz)=nsum
-      enddo
-      enddo
-    enddo
-    enddo
-    enddo
-  endfunction
-#endif
 
   real function interp_sigmav(aa,rr)
     implicit none

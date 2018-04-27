@@ -20,7 +20,7 @@ subroutine geometry
   sync all
 endsubroutine
 
-pure integer(8) function image1d(cx,cy,cz)
+pure elemental integer(8) function image1d(cx,cy,cz)
   integer(8), intent(in) :: cx,cy,cz
   image1d=cx+nn*(cy-1)+nn**2*(cz-1)
 endfunction

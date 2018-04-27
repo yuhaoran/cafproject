@@ -71,8 +71,8 @@ subroutine ext_pp_force
 
     !$omp paralleldo &
     !$omp& default(shared) &
-    !$omp& private(igz,igy,igx,ip1,xvec1,vreal,f_tot,kk,jj,ii,ip2) &
-    !$omp& private(xvec2,xvec21,rmag,rcut,pcut,force_pp,ntest) &
+    !$omp& private(igz,igy,igx,ipll1,ip1,xvec1,vreal,f_tot,ntest,kk,jj,ii) &
+    !$omp& private(ipll2,ip2,xvec2,xvec21,rmag,rcut,pcut,force_pp) &
     !$omp& reduction(+:itest1,npairs) &
     !$omp& reduction(max:f2_max_pp)
     do igz=1,nft
