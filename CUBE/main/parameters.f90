@@ -64,8 +64,8 @@ module parameters
   real,parameter :: z_i_nu=z_i ! initial redshift for neutrinos
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
 
-  real,parameter :: box=100.0*nn  ! simulation scale /dim, in unit of Mpc/h
-  real,parameter :: h0=67.74    ! Hubble constant
+  real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: h0=67    ! Hubble constant
   real,parameter :: s8=0.8276   ! \sigma_8
   real,parameter :: ratio_nudm_dim=2 ! ratio of number of particles for neutrino/CDM, /dim
   real,parameter :: m_neu=0.05 ! neutrino mass
@@ -80,8 +80,8 @@ module parameters
   !!real,parameter :: omega_l=0.73
   !!real,parameter :: omega_m=1-omega_l
 
-  real,parameter :: omega_c=0.2588964265232328
-  real,parameter :: omega_b=0.048597561544344206
+  real,parameter :: omega_c=0.27
+  real,parameter :: omega_b=0.05
   real,parameter :: omega_m=omega_c+omega_b !+omega_nu
   real,parameter :: omega_l=1-omega_m
 
@@ -92,7 +92,7 @@ module parameters
 
   real,parameter :: f_nl=0
   real,parameter :: g_nl=0
-  real,parameter :: n_s=0.96
+  real,parameter :: n_s=0.9619
   real,parameter :: scalar_amp=2.142e-9
 
   integer(8),parameter :: istep_max=1000 ! maximum number of timesteps

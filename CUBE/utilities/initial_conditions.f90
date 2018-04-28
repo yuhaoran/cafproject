@@ -7,6 +7,7 @@
 !#define READ_DELTA_L
 
 program initial_conditions
+  use omp_lib
   use pencil_fft
   !use powerspectrum
   use iso_fortran_env, only : int64
@@ -172,8 +173,7 @@ program initial_conditions
     if (tf(1,k)>kmax) exit
     v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
   enddo
-
-!  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest ;stop
+  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest
   tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
 !  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
   sync all
@@ -185,10 +185,6 @@ program initial_conditions
   !close(11)
   !stop
 
-!print*, tf(1,:)
-!print*, ''
-!print*, tf(2,:)
-!stop
 
   ! noisemap -------------------------------------
   if (head) print*,'Generating random noise'

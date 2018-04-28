@@ -53,8 +53,8 @@ module parameters
 
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
-  logical,parameter :: body_centered_cubic=.true.
-  integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
+  logical,parameter :: body_centered_cubic=.false.
+  integer(8),parameter :: np_nc=ncell ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell/2 ! number of neutrinos per dim per coarse cell
 
   logical,parameter :: Extended_pp_force=.true.
@@ -68,9 +68,9 @@ module parameters
 
   ! cosmological parameters
   real,parameter :: box=200.0*nn  ! simulation scale /dim, in unit of Mpc/h
-  real,parameter :: s8=0 !not used
+  real,parameter :: s8=0.8276 ! use -Dsigma_8 in initial_conditions
 
-  real,parameter :: z_i=20.0   ! initial redshift
+  real,parameter :: z_i=49.0   ! initial redshift
   real,parameter :: a_i=1/(1+z_i) ! initial scale factor
   real,parameter :: z_i_nu=5.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
@@ -81,7 +81,7 @@ module parameters
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
 
   integer, parameter :: Nnu = 3 ! number of massive neutrinos
-  real, dimension(Nnu), parameter :: Mnu = (/ 0.05,0.05,0.05  /)
+  real, dimension(Nnu), parameter :: Mnu = (/ 0.00,0.00,0.00  /)
   real, dimension(Nnu), parameter :: Tnu = (/ Tcnb,Tcnb,Tcnb /)
   real, parameter :: Meff = sum( Mnu*(Tnu/Tcnb)**3. )
 
@@ -104,8 +104,9 @@ module parameters
   real, parameter :: f_nu=omega_nu/omega_m
   real, parameter :: f_cdm=1-f_nu
 
-  real, parameter :: omega_l = 1.-omega_m-omega_r
-  real, parameter :: wde = -1. ! de equation of state
+  !real, parameter :: omega_l = 1-omega_m-omega_r
+  real, parameter :: omega_l = 1-omega_m
+  real, parameter :: wde = -1 ! de equation of state
 
   ! initial conditions
   real,parameter :: f_nl=0

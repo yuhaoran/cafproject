@@ -1,11 +1,11 @@
+#define sigma_8
 #define READ_SEED
-!#define READ_NOISE
+#define READ_NOISE
 
 program initial_conditions
   use omp_lib
   use variables, only: spine_tile
   use pencil_fft
-  !use powerspectrum
   use iso_fortran_env, only : int64
   implicit none
   save
@@ -16,24 +16,23 @@ program initial_conditions
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
 
-  integer(8),parameter :: nk=132 ! ???
+#ifdef sigma_8
+  integer(8),parameter :: nk=1000
+  real tf(7,nk)
+#else
+  integer(8),parameter :: nk=132
+  real tf(14,nk)
+#endif
+
   integer(8) i,j,k,ip,l,nzero
   integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,g(3),iq(3)
   integer(4) seedsize,t1,t2,tt1,tt2,ttt1,ttt2,t_rate,ilayer,nlayer
-  real kmax,temp_r,temp_theta,pow,phi8,temp8[*]
+  real kr,kx,ky,kz,kmax,temp_r,temp_theta,pow,phi8,temp8[*]
   real(8) v8,norm,xq(3),gradphi(3),vreal(3),dvar[*],dvarg
   integer(int64) time64
 
-  ! power spectrum arrays
-  real, dimension(14,nk) :: tf    !CAMB ! ???
-  real, dimension(2,nc) :: pkm,pkn
-
   integer(4),allocatable :: iseed(:)
   real,allocatable :: rseed_all(:,:)
-
-
-  real kr,kx,ky,kz
-  !real xi(10,nbin)
 
   complex delta_k(nyquest+1,nf,npen)
   real phi(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
@@ -45,12 +44,8 @@ program initial_conditions
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   real(4) vfield(3,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !integer(8) cume(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
-  !integer(8) cume2(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(8) idx_ex_r(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(8),dimension(nt,nt) :: pp_l,pp_r,ppe_l,ppe_r
-
-
 
   integer(izipx) xp(3,npmax)
   integer(izipv) vp(3,npmax)
@@ -58,11 +53,9 @@ program initial_conditions
     integer(8) pid(npmax)
 #endif
   real grad_max(3)[*],vmax(3),vf
-  !real vdisp(506,2)
   real(4) svz(500,2),svr(100,2)
   real(8) sigma_vc,sigma_vf
   real(8) std_vsim_c,std_vsim_res,std_vsim
-
   character (10) :: img_s, z_s
 
   call system_clock(ttt1,t_rate)
@@ -127,12 +120,8 @@ program initial_conditions
   sim%z_i=z_i
   sim%z_i_nu=z_i_nu
   sync all
-
-  ! initvar
   phi=0
   tf=0
-  pkm=0
-  pkn=0
   sync all
 
   if (head) print*,''
@@ -144,65 +133,63 @@ program initial_conditions
   sync all
 
   ! transferfnc --------------------------------------
-  ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
   if (head) print*,''
   if (head) print*,'Transfer function'
   call system_clock(t1,t_rate)
+#ifdef sigma_8
+  open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
+  !open(11,file='../tf/nu100_onu3/nu100_onu3_transfer_out_z10.dat',form='formatted')
+  !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
+  read(11,*) tf
+  close(11)
+  ! normalization
+  ! norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1) ! for Xin
+  norm=1
+  if (head) print*, 'Normalization factor: norm =', norm
+  !Delta^2
+  !do i=2,size(tf,dim=1)
+  !  tf(i,:)=tf(i,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  !enddo
+  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
+  !dk
+  tf(4,1)=tf(1,2)/2
+  do k=2,nk-1
+    tf(4,k)=(tf(1,k+1)-tf(1,k-1))/2
+  enddo
+  tf(4,nk)=tf(1,nk)-tf(1,nk-1)
+  v8=0
+  kmax=2*pi*sqrt(3.)*nyquest/box
+  do k=1,nk
+    if (tf(1,k)>kmax) exit
+    v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
+  enddo
+  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest
+  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(sim%a)**2
+  !tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
+  !tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
+  sync all
+
+  !print*, tf(1,:)
+  !print*, ''
+  !print*, tf(2,:)
+  !stop
+#else
+  ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
   open(11,file='../tf/caf_z10_tk.dat',form='formatted')
   read(11,*) !header
   read(11,*) tf
   close(11)
-
   ! replace T_g with T_cb = f_c T_c + f_b T_b
   tf(2,:) = (omega_bar*tf(3,:)+omega_cdm*tf(4,:))/(omega_bar+omega_cdm)
-
   ! compute power spectrum @ z_tf
   tf(2,:) = A_s*(tf(1,:)/k_o)**(n_s-1.)*tf(2,:)**2
-
   ! propagate to starting redshift
   tf(2,:) = tf(2,:)*DgrowRatio(z_i,z_tf)**2
 
   sync all
-
-!!$  ! transferfnc --------------------------------------
-!!$  !open(11,file='../tf/ith2_nu0p05_z5_tk.dat',form='formatted')
-!!$  open(11,file='../tf/nu100_onu3/nu100_onu3_transfer_out_z10.dat',form='formatted')
-!!$  !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
-!!$  read(11,*) tf
-!!$  close(11)
-!!$  ! normalization
-!!$  ! norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1) ! for Xin
-!!$  norm=1
-!!$  if (head) print*, 'Normalization factor: norm =', norm
-!!$  !Delta^2
-!!$  do i=2,size(tf,dim=1)
-!!$     tf(i,:)=tf(i,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-!!$  end do
-!!$!  tf(2,:)=tf(2,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-!!$!  tf(3,:)=tf(3,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-!!$!  tf(6,:)=tf(6,:)**2.0 * tf(1,:)**(3+n_s) * norm / (2.0*pi**2)
-!!$  !dk
-!!$  tf(4,1)=tf(1,2)/2
-!!$  do k=2,nk-1
-!!$    tf(4,k)=(tf(1,k+1)-tf(1,k-1))/2
-!!$  enddo
-!!$  tf(4,nk)=tf(1,nk)-tf(1,nk-1)
-!!$  v8=0
-!!$  kmax=2*pi*sqrt(3.)*nyquest/box
-!!$  do k=1,nk
-!!$    if (tf(1,k)>kmax) exit
-!!$    v8=v8+tf(7,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
-!!$  enddo
-!!$!  if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest ;stop
-!!$!  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a)**2
-!!$  tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
-!!$!  tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
-!!$  sync all
-
-!print*, tf(1,:)
-!print*, ''
-!print*, tf(2,:)
-!stop
+#endif
 
   ! noisemap -------------------------------------
   if (head) print*,''
@@ -311,7 +298,8 @@ program initial_conditions
 
   if (head) print*,'  btran'
   call pencil_fft_backward
-  !print*,'r3',r3(1,1,1)
+
+  print*,'  delta_L',r3(1:4,1,1)
   print*,'  rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'  write delta_L into file'
@@ -419,6 +407,7 @@ program initial_conditions
 
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
+  print*,'  phi',phi(1:4,1,1)
   if (write_potential) then
     if (head) print*, '  write phi1 into file'
     open(11,file=ic_name('phi1'),status='replace',access='stream')
@@ -736,11 +725,12 @@ program initial_conditions
   function tophat(x)
     implicit none
     real :: x,tophat
-    if (x/=0) then
-      tophat=3*(sin(x)-cos(x)*x)/x**3
-    else
-      tophat=1
-    endif
+    !if (x/=0) then
+    !  tophat=3*(sin(x)-cos(x)*x)/x**3
+    !else
+    !  tophat=1
+    !endif
+    tophat=merge(1.,3*(sin(x)-cos(x)*x)/x**3,x==0)
   endfunction tophat
 
   function Dgrow(a)
