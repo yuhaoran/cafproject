@@ -1,6 +1,6 @@
 #define sigma_8
 #define READ_SEED
-#define READ_NOISE
+!#define READ_NOISE
 
 program initial_conditions
   use omp_lib

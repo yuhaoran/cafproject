@@ -34,12 +34,12 @@ subroutine halofind
   real,parameter :: halo_odc=200 ! spherical overdensity cutoff for determining halo extent
 
 
-  integer i0,j0,k0,l0,idx1(3),idx2(3),irtot,nhalo[*],nhalo_tot[*]
+  integer i0,j0,k0,l0,idx1(3),idx2(3),irtot
   integer(1) hpart_odc(np_image_max),hpart_vir(np_image_max)
-  integer(8) n_search_fail[*],ilist_odc(max_halo_np),ilist_vir(max_halo_np),i_vir,i_odc
+  integer(8) ilist_odc(max_halo_np),ilist_vir(max_halo_np),i_vir,i_odc
   integer idist(3,nlist),isortdist(nlist),idist_tmp(3,nlist),isortpeak(max_maxima)
   integer isortpos_vir(max_halo_np),isortpos_odc(max_halo_np)
-  integer n_candidate[*],n_candidate_real[*],iloc,np_vir,np_odc,np_search
+  integer iloc,np_vir,np_odc,np_search
   integer crbox(3,2),csbox(3,2),frbox(3,2),itile(3),ngrid(3)
   real d1,d2,r1,r2,w1,w2,odci,odcj,dx(3),dv(3)
   real finegrid(ngrid_max,ngrid_max,ngrid_max)
