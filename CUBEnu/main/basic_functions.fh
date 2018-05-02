@@ -83,21 +83,3 @@ function output_name_halo(zipname)
   character(:),allocatable :: output_name_halo
   output_name_halo=output_prefix_halo()//zipname//output_suffix()
 endfunction
-
-pure function ic_name(zipname)  result(filename)
-  character(*), intent(in) ::  zipname
-  character(:),allocatable :: filename
-  character(20) :: str_z,str_i
-  write(str_i,'(i6)') image
-  write(str_z,'(f7.3)') z_i
-  filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
-endfunction
-
-function ic_name_nu(zipname) result(filename)
-  character(*) ::  zipname
-  character(:),allocatable :: filename
-  character(20) :: str_z,str_i
-  write(str_i,'(i6)') image
-  write(str_z,'(f7.3)') z_i_nu
-  filename=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'//zipname//output_suffix()
-endfunction

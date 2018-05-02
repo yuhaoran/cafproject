@@ -42,8 +42,7 @@ subroutine initialize
   dt=0
   dt_old=0
   da=0
-  tau=-3/sqrt(a_i)
-  cur_checkpoint=1
+  cur_checkpoint=1 ! change for resuming checkpoints
   cur_halofind=1
   z_checkpoint=-0.5
   z_checkpoint=-0.5
@@ -67,6 +66,7 @@ subroutine initialize
   endif
   if (n_checkpoint==0) stop 'z_checkpoint.txt empty'
   if (n_halofind==0) stop 'z_halofind.txt empty'
+  tau=-3/sqrt(1./(1+z_checkpoint(cur_checkpoint)))
   sync all
   n_checkpoint=n_checkpoint[1]
   z_checkpoint(:)=z_checkpoint(:)[1]
@@ -79,14 +79,12 @@ subroutine initialize
   if (head) then
     print*, ''
     print*, 'runtime halofind information'
-    print*, '  ',z_i,'< CDM initial conditions'
+    print*, '  ',z_checkpoint(1),'< CDM initial conditions'
     do i=1,n_halofind
       print*, '  ',z_halofind(i)
     enddo
   endif
   sync all
-
-
 # endif
 
   n_checkpoint_neu=0
@@ -140,8 +138,8 @@ subroutine initialize
   if (head) then
     print*, ''
     print*, 'checkpoint information'
-    print*, '  ',z_i,'< CDM initial conditions'
-    do i=1,n_checkpoint
+    print*, '  ',z_checkpoint(1),'< CDM initial conditions'
+    do i=2,n_checkpoint
       print*, '  ',z_checkpoint(i),merge('< adding neutrinos','                  ',i==n_checkpoint_neu)
     enddo
   endif

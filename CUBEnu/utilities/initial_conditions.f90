@@ -27,7 +27,7 @@ program initial_conditions
   integer(8) i,j,k,ip,l,nzero
   integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,g(3),iq(3)
   integer(4) seedsize,t1,t2,tt1,tt2,ttt1,ttt2,t_rate,ilayer,nlayer
-  real kr,kx,ky,kz,kmax,temp_r,temp_theta,pow,phi8,temp8[*]
+  real a_i,kr,kx,ky,kz,kmax,temp_r,temp_theta,pow,phi8,temp8[*]
   real(8) v8,norm,xq(3),gradphi(3),vreal(3),dvar[*],dvarg
   integer(int64) time64
 
@@ -63,11 +63,17 @@ program initial_conditions
   call geometry
   call system('mkdir -p '//opath//'image'//image2str(image))
 
+  cur_checkpoint=1
+  open(16,file='../main/z_checkpoint.txt',status='old')
+    read(16,fmt='(f8.4)') z_checkpoint(cur_checkpoint)
+  close(16)
+
   if (head) then
     print*, ''
     print*, 'CUBE Initial Conditions'
     print*, 'on',nn**3,' images'
     print*, 'Resolution', ng*nn
+    print*, 'at redshift=',z_checkpoint(cur_checkpoint)
     if (body_centered_cubic) then
       print*, 'To genterate npglobal = 2 x', int(np_nc*nc*nn,2),'^3'
     else
@@ -83,11 +89,12 @@ program initial_conditions
     call system('cp ../main/*.f90 '//opath//'code/')
     call system('cp ../main/z_*.txt '//opath//'code/')
   endif
+
   sync all
 
   sim%nplocal=0
   sim%nplocal_nu=0
-  sim%a=1./(1+z_i)
+  sim%a=1./(1+z_checkpoint(cur_checkpoint))
   sim%t=0
   sim%tau=0
 
@@ -117,7 +124,7 @@ program initial_conditions
   sim%omega_l=omega_l
   sim%s8=s8
   sim%vsim2phys=(150./sim%a)*box*h0*sqrt(omega_m)/nf_global
-  sim%z_i=z_i
+  sim%z_i=z_checkpoint(cur_checkpoint)
   sim%z_i_nu=z_i_nu
   sync all
   phi=0
@@ -410,7 +417,7 @@ program initial_conditions
   print*,'  phi',phi(1:4,1,1)
   if (write_potential) then
     if (head) print*, '  write phi1 into file'
-    open(11,file=ic_name('phi1'),status='replace',access='stream')
+    open(11,file=output_name('phi1'),status='replace',access='stream')
     write(11) r3
     close(11)
   endif
@@ -494,13 +501,13 @@ program initial_conditions
   if (head) print*,''
   if (head) print*, 'Create particles'
   call system_clock(t1,t_rate)
-  open(11,file=ic_name('xp'),status='replace',access='stream')
-  open(12,file=ic_name('vp'),status='replace',access='stream')
-  open(13,file=ic_name('np'),status='replace',access='stream')
-  open(14,file=ic_name('vc'),status='replace',access='stream')
+  open(11,file=output_name('xp'),status='replace',access='stream')
+  open(12,file=output_name('vp'),status='replace',access='stream')
+  open(13,file=output_name('np'),status='replace',access='stream')
+  open(14,file=output_name('vc'),status='replace',access='stream')
 #ifdef PID
   if (head) print*, '  also create PID'
-  open(15,file=ic_name('id'),status='replace',access='stream')
+  open(15,file=output_name('id'),status='replace',access='stream')
 #endif
 
 
@@ -657,7 +664,7 @@ program initial_conditions
   call print_header(sim)
 
   sync all
-  open(10,file=ic_name('info'),status='replace',access='stream')
+  open(10,file=output_name('info'),status='replace',access='stream')
   write(10) sim
   close(10)
   sync all

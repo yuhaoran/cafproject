@@ -11,22 +11,22 @@ subroutine particle_initialization
     print*, 'particle_initialization'
     call system_clock(t1,t_rate)
   endif
-  fn10=ic_name('info')
-  fn11=ic_name('xp')
-  fn12=ic_name('vp')
-  fn13=ic_name('np')
-  fn14=ic_name('vc')
-  fn15=ic_name('id')
-  fn21=ic_name_nu('xp_nu')
-  fn22=ic_name_nu('vp_nu')
-  fn23=ic_name_nu('np_nu')
-  fn24=ic_name_nu('vc_nu')
-  fn25=ic_name_nu('id_nu')
+  fn10=output_name('info')
+  fn11=output_name('xp')
+  fn12=output_name('vp')
+  fn13=output_name('np')
+  fn14=output_name('vc')
+  fn15=output_name('id')
+  fn21=output_name('xp_nu')
+  fn22=output_name('vp_nu')
+  fn23=output_name('np_nu')
+  fn24=output_name('vc_nu')
+  fn25=output_name('id_nu')
 
   open(10,file=fn10,status='old',access='stream')
   read(10) sim
   close(10)
-  a=a_i
+  a=1./(1+z_checkpoint(cur_checkpoint))
   sigma_vi=sim%sigma_vi
   sigma_vi_nu=sim%sigma_vi_nu
 
@@ -45,14 +45,14 @@ subroutine particle_initialization
     open(13,file=fn13,status='old',access='stream'); read(13) rhoc(1:nt,1:nt,1:nt,:,:,:); close(13)
   !$omp section
     open(14,file=fn14,status='old',access='stream'); read(14) vfield(:,1:nt,1:nt,1:nt,:,:,:); close(14)
-#ifdef PID
+# ifdef PID
   !$omp section
     open(15,file=fn15,status='old',access='stream'); read(15) pid(:sim%nplocal); close(15)
     print*, 'check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
-#endif
+# endif
   print*,'  from image',this_image(),'read',sim%nplocal,' CDM particles'
 
-#ifdef NEUTRINOS
+# ifdef NEUTRINOS
   !$omp section
     open(21,file=fn21,status='old',access='stream'); read(21) xp_nu(:,:sim%nplocal_nu); close(21)
   !$omp section
@@ -65,8 +65,8 @@ subroutine particle_initialization
   !$omp section
     open(25,file=fn25,status='old',access='stream'); read(25) pid_nu(:sim%nplocal_nu); close(25)
 # endif
-  print*,'  from image',this_image(),'read',sim%nplocal_nu,' neutrino particles'
-#endif
+    print*,'  from image',this_image(),'read',sim%nplocal_nu,' neutrino particles'
+# endif
   !$omp endparallelsections
   sync all
 
@@ -95,6 +95,8 @@ subroutine particle_initialization
     print*,'  sigma_vi    =',sigma_vi,'(simulation unit)'
     print*,'  sigma_vi_nu =',sigma_vi_nu,'(simulation unit)'
   endif
+  cur_checkpoint=cur_checkpoint+1
+  cur_halofind=cur_checkpoint+1
   if (head) then
     call system_clock(t2,t_rate)
     print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
