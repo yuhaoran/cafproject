@@ -84,9 +84,6 @@ subroutine checkpoint
     sim%mass_p_cdm=real((nf*nn)**3*f_cdm)/sim%npglobal
     sim%mass_p_nu=real((nf*nn)**3*f_nu)/sim%npglobal_nu
   endif
-
-  cur_checkpoint=cur_checkpoint+1
-  checkpoint_step=.false.
   !npglobal=0
   !do i=1,nn**3
   !  npglobal=npglobal+sim%nplocal[i]

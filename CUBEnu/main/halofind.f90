@@ -372,10 +372,6 @@ subroutine halofind
   write(11) nhalo_tot,nhalo
   close(11)
   close(12)
-
-  cur_halofind=cur_halofind+1
-  halofind_step=.false.
-
   sync all
 
 endsubroutine

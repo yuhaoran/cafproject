@@ -20,6 +20,8 @@ program main
   call buffer_grid
   call buffer_x
   call buffer_v
+  cur_checkpoint=cur_checkpoint+1
+  cur_halofind=cur_checkpoint+1
   if (head) open(77,file=output_dir()//'vinfo'//output_suffix(),access='stream',status='replace')
 
   if (head) print*, '---------- starting main loop ----------'
@@ -48,12 +50,17 @@ program main
     if (checkpoint_step .or. halofind_step) then
       dt_old=0
       call update_x
-      if (checkpoint_step) call checkpoint
+      if (checkpoint_step) then
+        call checkpoint
+        cur_checkpoint=cur_checkpoint+1
+      endif
       call buffer_grid
       call buffer_x
       call buffer_v
-      if (halofind_step) call halofind
-      !call projection
+      if (halofind_step) then
+        call halofind
+        cur_halofind=cur_halofind+1
+      endif
       call print_header(sim)
       if (final_step) exit
 

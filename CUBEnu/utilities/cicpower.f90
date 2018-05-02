@@ -55,6 +55,8 @@ program cicpower
   do cur_checkpoint= 1,n_checkpoint
     if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
 
+    !call particle_initialization
+
     open(11,file=output_name('info'),status='old',action='read',access='stream')
     read(11) sim
     close(11)
@@ -81,6 +83,7 @@ program cicpower
     open(11,file=output_name('np'),status='old',action='read',access='stream')
     read(11) rhoc
     close(11)
+
     rho_grid=0
     nlast=0
     do itz=1,nnt

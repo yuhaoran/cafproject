@@ -1,5 +1,5 @@
 subroutine particle_initialization
-  use variables
+  use variables, only: xp,vp,rhoc,vfield,a,neutrino_flag,sigma_vi,sigma_vi_nu,t1,t2,t_rate
   use neutrinos
 
   implicit none
@@ -8,7 +8,9 @@ subroutine particle_initialization
   character(100) fn10,fn11,fn12,fn13,fn14,fn15,fn21,fn22,fn23,fn24,fn25
 
   if (head) then
+    print*, ''
     print*, 'particle_initialization'
+    print*, '  at redshift',z_checkpoint(cur_checkpoint)
     call system_clock(t1,t_rate)
   endif
   fn10=output_name('info')
@@ -95,8 +97,7 @@ subroutine particle_initialization
     print*,'  sigma_vi    =',sigma_vi,'(simulation unit)'
     print*,'  sigma_vi_nu =',sigma_vi_nu,'(simulation unit)'
   endif
-  cur_checkpoint=cur_checkpoint+1
-  cur_halofind=cur_checkpoint+1
+
   if (head) then
     call system_clock(t2,t_rate)
     print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
