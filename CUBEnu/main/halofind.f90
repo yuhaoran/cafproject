@@ -27,7 +27,7 @@ subroutine halofind
   logical,parameter :: NGP = .true. ! NGP mass assignment by default
   ! set .true. to limit initial halo mass calculation to exiting after only
   ! completing an entire radial shell
-  logical, parameter      :: complete_shell = .true.
+  logical, parameter      :: complete_shell = .false.
   logical physical_halo
   real,parameter :: den_peak_cutoff=100 ! lower density peak threshold for determining which peaks should be inspected as halos
   integer,parameter :: min_halo_particles=100 ! lower mass cutoff for cataloging a halo, in particles
@@ -44,6 +44,7 @@ subroutine halofind
   real d1,d2,r1,r2,w1,w2,odci,odcj,dx(3),dv(3)
   real finegrid(ngrid_max,ngrid_max,ngrid_max)
   real xv_vir(6,max_halo_np),xv_odc(6,max_halo_np),r_vir(max_halo_np),r_odc(max_halo_np)
+  integer(4) oct(max_halo_np)
   real dx1(3),dx2(3),pos1(3),rr,rdist(nlist),halo_vir,xflat,den_peak(max_maxima),ipeak(3,max_maxima),amtot,denmax
   real hpos(3),mass_proxy,dgrid,rrefine,rsearch,dr(3)
   real rhof(1-nfb:nft+nfb,1-nfb:nft+nfb,1-nfb:nft+nfb),halo_mesh_mass(max_maxima)
@@ -85,9 +86,11 @@ subroutine halofind
   ! Determine which candidates are to be considered halos and write their properties to file.
   ! Determine Delta_vir using equation (6) of Bryan et al. (1997) for a flat universe
   print*, 'scale_factor =',1./(1+z_halofind(cur_halofind))
+  a=1./(1+z_halofind(cur_halofind))
   xflat=(omega_m/a**3)/(omega_m/a**3+omega_l)-1.
   halo_vir=18.*pi**2+82.*xflat-39.*xflat**2 ! <178
   if (head) print*, '  scale_factor,xflat,halo_vir =',a,xflat,halo_vir
+
   sync all
   if (halo_vir>halo_odc) stop 'Warning: halo_vir > halo_odc'
 
@@ -108,9 +111,9 @@ subroutine halofind
   hpart_vir=0
   write(11) nhalo_tot,nhalo,halo_vir,halo_odc
 
-  do itz=1,nnt
-  do ity=1,nnt
-  do itx=1,nnt
+  do itz=nnt,1,-1
+  do ity=nnt,1,-1
+  do itx=nnt,1,-1
     print*, '  on tile',int(itx,1),int(ity,1),int(itz,1)
     print*, '  fine mass assignment'
     !call find_halo_candidates(tile, n_candidate)
@@ -151,7 +154,8 @@ subroutine halofind
     !$omp endparalleldo
 
     ! find maxima
-    print*, '  find_halo_candidates'
+    print*,''
+    print*,'  find_halo_candidates'
     do k0=1-ncell,nft+ncell  ! 1 more coarse cell layer
     do j0=1-ncell,nft+ncell
     do i0=1-ncell,nft+ncell
@@ -168,7 +172,7 @@ subroutine halofind
           ! skip the outerest layer, due to CIC mass assignment
           amtot=amtot+rhof(ix,iy,iz)
           if (complete_shell .and. rdist(ii+1)==rdist(ii)) cycle
-          if (ii==19 .and. amtot/ii<halo_odc) exit ! upto sqrt(2)
+          if (ii>=19 .and. amtot/ii<halo_odc) exit ! upto sqrt(2)
         enddo
         ! Consider this a halo candidate if the fine mesh mass is large enough
         if (amtot>sim%mass_p_cdm*min_halo_particles/2.) then
@@ -199,6 +203,12 @@ subroutine halofind
     ipeak(:,:n_candidate)=ipeak(:,isortpeak(:n_candidate))
     halo_mesh_mass(:n_candidate)=halo_mesh_mass(isortpeak(:n_candidate))
 
+    !print*, n_candidate
+    !print*, 'mass_proxy'
+    !print*,halo_mesh_mass(1:n_candidate);
+    !print*, 'denmax'
+    !print*,den_peak(1:n_candidate); stop
+
     do iloc=n_candidate,1,-1
       ! determine searching regions
       mass_proxy=halo_mesh_mass(iloc)
@@ -217,6 +227,13 @@ subroutine halofind
       !print*,rrefine,rsearch
       !print*, nft
       itile=[itx,ity,itz]
+#ifdef analysis
+      print*, 'den_peak =',den_peak(iloc)
+      print*, 'mass_proxy =',mass_proxy
+      print*, 'rsearch =',rsearch
+      print*, 'rho max at:', hpos+(itile-1)*nft
+#endif
+      !print*, halo_vir,rrefine,rsearch;stop
       crbox(:,1)=floor((hpos-rrefine)/ncell)+1
       crbox(:,2)=floor((hpos+rrefine)/ncell)+1
       csbox(:,1)=floor((hpos-rsearch)/ncell)+1
@@ -232,25 +249,22 @@ subroutine halofind
       np_vir=0; np_odc=0
       finegrid=0
       xv_vir=0; xv_odc=0
-      !open(13,file='ilist_vir.dat')
-      !print*,'search particle'
+#ifdef analysis
+  open(13,file='xv_vir.dat',access='stream',status='replace')
+  write(13) halo_info%hpos*0, halo_info%x_mean*0, halo_info%radius_vir*0, halo_info%radius_odc*0
+  write(13) hpos+(itile-1)*nft
+#endif
       do k0=csbox(3,1),csbox(3,2)
       do j0=csbox(2,1),csbox(2,2)
       do i0=csbox(1,1),csbox(1,2)
-        !nlast=cum(i0-1,j0,k0,itile(1),itile(2),itile(3))
-        np=rhoc(i0,j0,k0,itile(1),itile(2),itile(3))
+        np=rhoc(i0,j0,k0,itx,ity,itz)
         nzero=idx_b_r(j0,k0,itx,ity,itz)-sum(rhoc(i0:,j0,k0,itx,ity,itz))
         do l0=1,np
-          !ip=nlast+l0
-          !if(ip/=nzero+l0) then
-          !   print*,'1',nzero,nlast
-          !   stop
-          !endif
           ip=nzero+l0
           pos1=ncell*([i0,j0,k0]-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
           dr=pos1-hpos
           rr=norm2(dr)
-          if (rr<rsearch) then
+          if (rr < rsearch) then
             if (hpart_vir(ip)==0) then
               np_vir=np_vir+1
               xv_vir(1:3,np_vir)=pos1
@@ -279,12 +293,34 @@ subroutine halofind
       hpos=frbox(:,1)+dgrid*(maxloc(finegrid)-0.5) ! Find refined mesh density maximum, wrt tile
       physical_halo=(minval(hpos)>0 .and. maxval(hpos)<nft)
       ! sort by radius -------------------------------------------------------
-      r_vir(1:np_vir)=norm2(xv_vir(1:3,1:np_vir)-spread(hpos,2,np_vir),1)
+      r_vir(:np_vir)=norm2(xv_vir(:3,:np_vir)-spread(hpos,2,np_vir),1)
+      oct(:np_vir)=1+sum(spread([1,2,4],2,np_vir)*merge(0,1,xv_vir(:3,:np_vir)-spread(hpos,2,np_vir)>0),1)
       isortpos_vir(:np_vir)=[(i0,i0=1,np_vir)]
       call indexedsort(np_vir,r_vir,isortpos_vir)
-      r_odc(1:np_odc)=norm2(xv_odc(1:3,1:np_odc)-spread(hpos,2,np_odc),1)
+      xv_vir(:,:np_vir)=xv_vir(:,isortpos_vir(:np_vir))
+      ilist_vir(:np_vir)=ilist_vir(isortpos_vir(:np_vir))
+      oct(:np_vir)=oct(isortpos_vir(:np_vir))
+
+      r_odc(1:np_odc)=norm2(xv_odc(:3,:np_odc)-spread(hpos,2,np_odc),1)
       isortpos_odc(:np_odc)=[(i0,i0=1,np_odc)]
       call indexedsort(np_odc,r_odc,isortpos_odc)
+      xv_odc(:,:np_odc)=xv_odc(:,isortpos_odc(:np_odc))
+      ilist_odc(:np_odc)=ilist_odc(isortpos_odc(:np_odc))
+#ifdef analysis
+  xv_vir(:3,:np_vir)=xv_vir(:3,:np_vir)+spread((itile-1)*nft, dim=2, ncopies=np_vir)
+  write(13) xv_vir(:,:np_vir)
+  xv_vir(:3,:np_vir)=xv_vir(:3,:np_vir)-spread((itile-1)*nft, dim=2, ncopies=np_vir)
+  !close(23)
+  open(23,file='r_vir.dat',access='stream',status='replace')
+  write(23) r_vir(:np_vir)
+  close(23)
+#ifdef analysis
+  print*, 'wrote',np_vir
+#endif
+  open(23,file='oct_vir.dat',access='stream',status='replace')
+  write(23) int(oct(:np_vir),1)
+  close(23)
+#endif
       ! calculate halo radius ------------------------------------------------
       i_vir=0; i_odc=0
       do ii=2,np_vir
@@ -331,14 +367,15 @@ subroutine halofind
         hpart_vir(ilist_vir(1:i_vir))=1
         hpart_odc(ilist_odc(1:i_odc))=1
         if (physical_halo) then  ! if the maximum is in physical regions
+          !print*,'it is a physical halo'
           nhalo=nhalo+1
           halo_info%hpos=hpos+(itile-1)*nft
           halo_info%mass_vir=sim%mass_p_cdm*i_vir
           halo_info%mass_odc=sim%mass_p_cdm*i_odc
-          halo_info%x_mean=sum(xv_vir(1:3,isortpos_vir(1:i_vir)),2)/i_vir
-          halo_info%var_x=sum((xv_vir(1:3,isortpos_vir(1:i_vir))-spread(halo_info%x_mean,2,i_vir))**2,2)/(i_vir-1)
-          halo_info%v_mean=sum(xv_vir(4:6,isortpos_vir(1:i_vir)),2)/i_vir
-          halo_info%v_disp=sqrt(sum((xv_vir(4:6,isortpos_vir(1:i_vir))-spread(halo_info%v_mean,2,i_vir))**2)/(i_vir-1))
+          halo_info%x_mean=sum(xv_vir(1:3,:i_vir),2)/i_vir+(itile-1)*nft
+          halo_info%var_x=sum((xv_vir(1:3,:i_vir)-spread(halo_info%x_mean,2,i_vir))**2,2)/(i_vir-1)
+          halo_info%v_mean=sum(xv_vir(4:6,:i_vir),2)/i_vir
+          halo_info%v_disp=sqrt(sum((xv_vir(4:6,:i_vir)-spread(halo_info%v_mean,2,i_vir))**2)/(i_vir-1))
           halo_info%ang_mom=0
           do ii=1,i_vir
             dx=xv_vir(1:3,ii)-halo_info%hpos
@@ -348,8 +385,21 @@ subroutine halofind
             halo_info%ang_mom(3)=halo_info%ang_mom(3)+dx(1)*dv(2)-dx(2)*dv(1)
           enddo
           write(11) halo_info ! if the maximum is in physical regions
+        else
+          !print*,'it is a buffer halo'
         endif ! physical_halo
+      else
+        !print*,'not a halo'
       endif
+
+#ifdef analysis
+  rewind(13)
+  write(13) halo_info%hpos, halo_info%x_mean, halo_info%radius_vir, halo_info%radius_odc
+  close(13)
+  pause 'pause'
+#endif
+
+
     enddo ! iloc
     print*,'  found nhalo =',nhalo
   enddo

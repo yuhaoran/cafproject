@@ -57,8 +57,6 @@ module variables
 
   integer(4) rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
   real(4) vfield(3,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt) ! cannot have >7 dims
-  !integer(8) cum(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
-  !integer(8) cum5(1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)[*]
 
   integer(8),dimension(1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt),codimension[*] :: idx_b_l,idx_b_r
   integer(8),dimension(nt,nt,nnt,nnt,nnt),codimension[*] :: ppl0,pplr,pprl,ppr0,ppl,ppr

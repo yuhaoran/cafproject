@@ -26,7 +26,7 @@ program halofinder
   z_checkpoint=z_halofind
   sync all
 
-  do cur_halofind= 1,n_halofind
+  do cur_halofind= n_halofind,n_halofind
     cur_checkpoint=cur_halofind
     xp=0; vp=0; rhoc=0; vfield=0
     call particle_initialization
