@@ -1,10 +1,11 @@
 OPTIONS=-DFFTFINE
 OPTIONS+=-Dsigma8
+#OPTIONS+=-Danalysis
 #OPTIONS+=-Wall
 #OPTIONS+=-DPID
 #OPTIONS+=-DRECONSTRUCTION
 
-all: ic.x cicpower.x #dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x cicpower.x halofinder.x #dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 ic.x: parameters.o variables.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -31,7 +32,9 @@ parameters.o: ../main/parameters.f90
 	$(FC) $(OFLAG) $(OPTIONS) $<
 variables.o: ../main/variables.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
-particle_initialization.o: ../main/particle_initialization.f90
+neutrinos.o: ../main/neutrinos.f90 variables.o
+	$(FC) $(OFLAG) $(OPTIONS) $<
+particle_initialization.o: ../main/particle_initialization.f90 variables.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 pencil_fft.o: ../main/pencil_fft.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
@@ -49,9 +52,9 @@ correlation_qspace.o: correlation_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 cicpower.o: cicpower.f90 parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-halofinder.o: halofinder.f90 parameters.o variables.o halofind.o buffer_grid.o buffer_particle.o particle_initialization.o
+halofinder.o: halofinder.f90 parameters.o variables.o neutrinos.o halofind.o buffer_grid.o buffer_particle.o particle_initialization.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
-halofind.o: ../main/halofind.f90 variables.o indexedsort.o
+halofind.o: ../main/halofind.f90 variables.o neutrinos.o indexedsort.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 indexedsort.o: ../main/indexedsort.f90
 	$(FC) $(OFLAG) $(OPTIONS) $<
