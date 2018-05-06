@@ -50,7 +50,6 @@ subroutine particle_mesh
         nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
         do l=1,np ! loop over cdm particles
           ip=nzero+l
-          if(ip/=nzero+l) stop
           tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
           idx1 = floor(tempx) + 1
           idx2 = idx1 + 1
@@ -123,7 +122,6 @@ subroutine particle_mesh
       nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
       do l=1,np ! loop over cdm particles
         ip=nzero+l
-        if(ip/=nzero+l) stop
         tempx=ncell*((/i,j,k/)-1)+ncell*(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution !-0.5
         idx1 = floor(tempx) + 1
         idx2 = idx1 + 1
@@ -207,7 +205,6 @@ subroutine particle_mesh
         nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
         do l=1,np ! loop over particle
           ip=nzero+l
-          if(ip/=nzero+l) stop
           tempx=((/i,j,k/)-1)+(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
           idx1(:)=floor(tempx(:))+1
           idx2(:)=idx1(:)+1
@@ -311,7 +308,6 @@ subroutine particle_mesh
       nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
       do l=1,np ! loop over cdm particles
         ip=nzero+l
-        if(ip/=nzero+l) stop
         tempx=((/itx,ity,itz/)-1)*nt+((/i,j,k/)-1)+(int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution-0.5
         idx1(:)=floor(tempx(:))+1
         idx2(:)=idx1(:)+1

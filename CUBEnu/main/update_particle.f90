@@ -39,7 +39,7 @@ subroutine update_xp()
   do itz=1,nnt ! loop over tile
   do ity=1,nnt
   do itx=1,nnt
-  !if (head) print*,'  tile',int(itx,1),int(ity,1),int(itz,1)
+    !if (head) print*,'  tile',int(itx,1),int(ity,1),int(itz,1)
     rhoce=0
     rholocal=0
     ! for empty coarse cells, use previous-step vfield
@@ -147,7 +147,6 @@ subroutine update_xp()
   enddo
   enddo
   enddo ! end looping over tiles
-
   sim%nplocal=np_prev
   xp(:,sim%nplocal+1:)=0
   vp(:,sim%nplocal+1:)=0
@@ -163,12 +162,12 @@ subroutine update_xp()
   !cum=cumsum6(rhoc)
   call spine_image(rhoc,idx_b_l,idx_b_r,ppl0,pplr,pprl,ppr0,ppl,ppr)
   std_vsim=0; std_vsim_c=0; std_vsim_res=0
-  !$omp paralleldo default(shared) &
-  !$omp& private(itz,ity,itx,k,j,i,np,nzero,l,ip,vreal) &
-  !$omp& reduction(+:std_vsim_c,std_vsim,std_vsim_res)
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
+    !!$omp paralleldo default(shared) &
+    !!$omp& private(k,j,i,np,nzero,l,ip,vreal) &
+    !!$omp& reduction(+:std_vsim_c,std_vsim_res,std_vsim)
     do k=1,nt
     do j=1,nt
     do i=1,nt
@@ -185,10 +184,10 @@ subroutine update_xp()
     enddo
     enddo
     enddo
+    !!$omp endparalleldo
   enddo
   enddo
   enddo
-  !$omp endparalleldo
   sync all
 
   ! co_sum
@@ -200,7 +199,6 @@ subroutine update_xp()
     enddo
   endif
   sync all
-
   ! broadcast
   std_vsim_c=std_vsim_c[1]
   std_vsim_res=std_vsim_res[1]

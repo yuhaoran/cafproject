@@ -41,28 +41,28 @@ subroutine buffer_np(rhoc)
     print*,'sum of rhoc =',sum(rhoc)
 # endif
   !x
-  !$omp workshare
+  !!$omp workshare
   rhoc(:0,:,:,1,:,:)=rhoc(nt-ncb+1:nt,:,:,nnt,:,:)[image1d(inx,icy,icz)]
   rhoc(:0,:,:,2:,:,:)=rhoc(nt-ncb+1:nt,:,:,:nnt-1,:,:)
   rhoc(nt+1:,:,:,nnt,:,:)=rhoc(1:ncb,:,:,1,:,:)[image1d(ipx,icy,icz)]
   rhoc(nt+1:,:,:,:nnt-1,:,:)=rhoc(1:ncb,:,:,2:,:,:)
-  !$omp endworkshare
+  !!$omp endworkshare
   sync all
   !y
-  !$omp workshare
+  !!$omp workshare
   rhoc(:,:0,:,:,1,:)=rhoc(:,nt-ncb+1:nt,:,:,nnt,:)[image1d(icx,iny,icz)]
   rhoc(:,:0,:,:,2:,:)=rhoc(:,nt-ncb+1:nt,:,:,1:nnt-1,:)
   rhoc(:,nt+1:,:,:,nnt,:)=rhoc(:,1:ncb,:,:,1,:)[image1d(icx,ipy,icz)]
   rhoc(:,nt+1:,:,:,:nnt-1,:)=rhoc(:,1:ncb,:,1:,2:,:)
-  !$omp endworkshare
+  !!$omp endworkshare
   sync all
   !z
-  !$omp workshare
+  !!$omp workshare
   rhoc(:,:,:0,:,:,1)=rhoc(:,:,nt-ncb+1:nt,:,:,nnt)[image1d(icx,icy,inz)]
   rhoc(:,:,:0,:,:,2:)=rhoc(:,:,nt-ncb+1:nt,:,:,:nnt-1)
   rhoc(:,:,nt+1:,:,:,nnt)=rhoc(:,:,1:ncb,:,:,1)[image1d(icx,icy,ipz)]
   rhoc(:,:,nt+1:,:,:,:nnt-1)=rhoc(:,:,1:ncb,:,:,2:)
-  !$omp endworkshare
+  !!$omp endworkshare
 # ifdef FORCETEST
     print*,'sum of rhoc =',sum(rhoc)
 # endif
@@ -77,9 +77,6 @@ subroutine buffer_vc(vfield1)
   real(4) vfield1(3,1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
   ! the following variables are introduced because
   ! gcc only allows <= 7 ranks in arrays
-  !real(4) vtransx(3,ncb,nt+2*ncb,nt+2*ncb,nnt,nnt)[*]
-  !real(4) vtransy(3,nt+2*ncb,ncb,nt+2*ncb,nnt,nnt)[*]
-  !real(4) vtransz(3,nt+2*ncb,nt+2*ncb,ncb,nnt,nnt)[*]
   if (head) print*, 'buffer_vc'
   !x
   vtransx=vfield1(:,nt-ncb+1:nt,:,:,nnt,:,:)

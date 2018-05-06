@@ -48,7 +48,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,1 ! do only tile_x=1
-    !$omp paralleldo default(shared) private(iz,iy)
+    !!$omp paralleldo default(shared) private(iz,iy)
     do iz=1,nt
     do iy=1,nt
       if (dox) &
@@ -59,7 +59,7 @@ subroutine buffer_xvp(dox,dov)
       vp(:,myzl(iy,iz,ity,itz)+1:myzr(iy,iz,ity,itz))[image1d(inx,icy,icz)]
     enddo
     enddo
-    !$omp endparalleldo
+    !!$omp endparalleldo
   enddo
   enddo
   enddo
@@ -92,7 +92,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=1,nnt
   do itx=nnt,nnt ! do only tile_x=nnt
-    !$omp paralleldo default(shared) private(iz,iy)
+    !!$omp paralleldo default(shared) private(iz,iy)
     do iz=1,nt
     do iy=1,nt
       if (dox) &
@@ -103,7 +103,7 @@ subroutine buffer_xvp(dox,dov)
       vp(:,myzl(iy,iz,ity,itz)+1:myzr(iy,iz,ity,itz))[image1d(ipx,icy,icz)]
     enddo
     enddo
-    !$omp endparalleldo
+    !!$omp endparalleldo
   enddo
   enddo
   enddo
@@ -137,7 +137,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=1,1 ! do only ity=1
   do itx=1,nnt
-    !$omp paralleldo default(shared) private(iz)
+    !!$omp paralleldo default(shared) private(iz)
     do iz=1,nt
       if (dox) &
       xp(:,idx_b_l(1-ncb,iz,itx,ity,itz)+1:idx_b_r(0,iz,itx,ity,itz))=&
@@ -146,7 +146,7 @@ subroutine buffer_xvp(dox,dov)
       vp(:,idx_b_l(1-ncb,iz,itx,ity,itz)+1:idx_b_r(0,iz,itx,ity,itz))=&
       vp(:,mzl(iz,itx,itz)+1:mzr(iz,itx,itz))[image1d(icx,iny,icz)]
     enddo
-    !$omp endparalleldo
+    !!$omp endparalleldo
   enddo
   enddo
   enddo
@@ -177,16 +177,16 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=nnt,nnt ! do only ity=nnt
   do itx=1,nnt
-    !$omp paralleldo default(shared) private(iz)
+    !!$omp paralleldo default(shared) private(iz)
     do iz=1,nt
       if (dox) &
       xp(:,idx_b_l(nt+1,iz,itx,ity,itz)+1:idx_b_r(nt+ncb,iz,itx,ity,itz))=&
-      xp(:,mzl(iz,itx,itz)+1:mzr(iz,itx,itz))
+      xp(:,mzl(iz,itx,itz)+1:mzr(iz,itx,itz))[image1d(icx,ipy,icz)]
       if (dov) &
       vp(:,idx_b_l(nt+1,iz,itx,ity,itz)+1:idx_b_r(nt+ncb,iz,itx,ity,itz))=&
-      vp(:,mzl(iz,itx,itz)+1:mzr(iz,itx,itz))
+      vp(:,mzl(iz,itx,itz)+1:mzr(iz,itx,itz))[image1d(icx,ipy,icz)]
     enddo
-    !$omp endparalleldo
+    !!$omp endparalleldo
   enddo
   enddo
   enddo
@@ -216,18 +216,18 @@ subroutine buffer_xvp(dox,dov)
   ml=idx_b_l(1-ncb,nt-ncb+1,:,:,nnt)[image1d(icx,icy,inz)]
   mr=idx_b_r(nt+ncb,nt,:,:,nnt)[image1d(icx,icy,inz)]
   do itz=1,1 ! do only itz=1
-  !$omp paralleldo default(shared) private(ity,itx)
+  !!$omp paralleldo default(shared) private(ity,itx)
   do ity=1,nnt
   do itx=1,nnt
     if (dox) &
     xp(:,idx_b_l(1-ncb,1-ncb,itx,ity,itz)+1:idx_b_r(nt+ncb,0,itx,ity,itz))=&
-    xp(:,ml(itx,ity)+1:mr(itx,ity))
+    xp(:,ml(itx,ity)+1:mr(itx,ity))[image1d(icx,icy,inz)]
     if (dov) &
     vp(:,idx_b_l(1-ncb,1-ncb,itx,ity,itz)+1:idx_b_r(nt+ncb,0,itx,ity,itz))=&
-    vp(:,ml(itx,ity)+1:mr(itx,ity))
+    vp(:,ml(itx,ity)+1:mr(itx,ity))[image1d(icx,icy,inz)]
   enddo
   enddo
-  !$omp endparalleldo
+  !!$omp endparalleldo
   enddo
   sync all
 
@@ -252,18 +252,18 @@ subroutine buffer_xvp(dox,dov)
   ml=idx_b_l(1-ncb,1,:,:,1)[image1d(icx,icy,ipz)]
   mr=idx_b_r(nt+ncb,ncb,:,:,1)[image1d(icx,icy,ipz)]
   do itz=nnt,nnt ! do only itz=nnt
-  !$omp paralleldo default(shared) private(ity,itx)
+  !!$omp paralleldo default(shared) private(ity,itx)
   do ity=1,nnt
   do itx=1,nnt
     if (dox) &
     xp(:,idx_b_l(1-ncb,nt+1,itx,ity,itz)+1:idx_b_r(nt+ncb,nt+ncb,itx,ity,itz))=&
-    xp(:,ml(itx,ity)+1:mr(itx,ity))
+    xp(:,ml(itx,ity)+1:mr(itx,ity))[image1d(icx,icy,ipz)]
     if (dov) &
     vp(:,idx_b_l(1-ncb,nt+1,itx,ity,itz)+1:idx_b_r(nt+ncb,nt+ncb,itx,ity,itz))=&
-    vp(:,ml(itx,ity)+1:mr(itx,ity))
+    vp(:,ml(itx,ity)+1:mr(itx,ity))[image1d(icx,icy,ipz)]
   enddo
   enddo
-  !$omp endparalleldo
+  !!$omp endparalleldo
   enddo
   sync all
 
