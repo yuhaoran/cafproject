@@ -7,6 +7,7 @@ program halofinder
   implicit none
 
   call geometry
+  call omp_set_num_threads(ncore)
   if (head) then
     print*, 'halofinder at:'
     open(16,file='../main/z_checkpoint.txt',status='old')

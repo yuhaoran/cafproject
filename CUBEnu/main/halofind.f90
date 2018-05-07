@@ -223,7 +223,7 @@ subroutine halofind
       ! This will be the radius within which the refined density peak will be found
       rrefine=(0.75/pi/halo_vir*mass_proxy)**(1./3.)
       ! This (larger) radius will be used to store particle positions determine which are part of the halo
-      rsearch = search_ratio * rrefine
+      rsearch = min(search_ratio*rrefine,real(ncb-1)*ncell)
       !print*,rrefine,rsearch
       !print*, nft
       itile=[itx,ity,itz]
@@ -252,6 +252,7 @@ subroutine halofind
 #ifdef analysis
   open(13,file='xv_vir.dat',access='stream',status='replace')
   write(13) halo_info%hpos*0, halo_info%x_mean*0, halo_info%radius_vir*0, halo_info%radius_odc*0
+  write(13) halo_info%mass_vir*0, halo_info%mass_odc*0
   write(13) hpos+(itile-1)*nft
 #endif
       do k0=csbox(3,1),csbox(3,2)
@@ -288,7 +289,6 @@ subroutine halofind
       enddo
       enddo
       enddo
-
       if(np_odc>max_halo_np) stop 'np_search>max_halo_np'
       hpos=frbox(:,1)+dgrid*(maxloc(finegrid)-0.5) ! Find refined mesh density maximum, wrt tile
       physical_halo=(minval(hpos)>0 .and. maxval(hpos)<nft)
@@ -367,7 +367,9 @@ subroutine halofind
         hpart_vir(ilist_vir(1:i_vir))=1
         hpart_odc(ilist_odc(1:i_odc))=1
         if (physical_halo) then  ! if the maximum is in physical regions
-          !print*,'it is a physical halo'
+#ifdef analysis
+          print*,'  it is a physical halo'
+#endif
           nhalo=nhalo+1
           halo_info%hpos=hpos+(itile-1)*nft
           halo_info%mass_vir=sim%mass_p_cdm*i_vir
@@ -386,17 +388,23 @@ subroutine halofind
           enddo
           write(11) halo_info ! if the maximum is in physical regions
         else
-          !print*,'it is a buffer halo'
+#ifdef analysis
+          print*,'  it is a halo in buffer region'
+#endif
         endif ! physical_halo
       else
-        !print*,'not a halo'
+#ifdef analysis
+        print*,'  it is not a main halo'
+#endif
       endif
 
 #ifdef analysis
   rewind(13)
   write(13) halo_info%hpos, halo_info%x_mean, halo_info%radius_vir, halo_info%radius_odc
+  write(13) halo_info%mass_vir, halo_info%mass_odc
   close(13)
-  pause 'pause'
+  print*,'  enter anything to continue'
+  read(*,*)
 #endif
 
 
