@@ -1,6 +1,6 @@
 OPTIONS=-DFFTFINE
 OPTIONS+=-Dsigma8
-#OPTIONS+=-Danalysis
+OPTIONS+=-Danalysis
 #OPTIONS+=-Wall
 #OPTIONS+=-DPID
 #OPTIONS+=-DRECONSTRUCTION
@@ -34,7 +34,7 @@ variables.o: ../main/variables.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 neutrinos.o: ../main/neutrinos.f90 variables.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
-particle_initialization.o: ../main/particle_initialization.f90 variables.o
+particle_initialization.o: ../main/particle_initialization.f90 variables.o neutrinos.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 pencil_fft.o: ../main/pencil_fft.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)

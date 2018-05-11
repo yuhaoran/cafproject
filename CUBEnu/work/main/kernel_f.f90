@@ -5,7 +5,7 @@ subroutine kernel_f
   save
   include 'fftw3.f'
 
-  character(*),parameter :: dir_kern='../kernels/'
+  character(*),parameter :: dir_kern='../../kernels/'
   integer(8) itemp(3),mfactor(3)
   real fk_table(nf_cutoff,nf_cutoff,nf_cutoff,3)
 

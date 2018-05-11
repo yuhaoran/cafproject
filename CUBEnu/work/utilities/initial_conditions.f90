@@ -144,7 +144,7 @@ program initial_conditions
   if (head) print*,'Transfer function'
   call system_clock(t1,t_rate)
 #ifdef sigma_8
-  open(11,file='../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
+  open(11,file='../../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
   !open(11,file='../tf/nu100_onu3/nu100_onu3_transfer_out_z10.dat',form='formatted')
   !open(11,file='../configs/mmh_transfer/simtransfer_bao.dat',form='formatted') ! for Xin
   read(11,*) tf
@@ -184,7 +184,7 @@ program initial_conditions
   !stop
 #else
   ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
-  open(11,file='../tf/caf_z10_tk.dat',form='formatted')
+  open(11,file='../../tf/caf_z10_tk.dat',form='formatted')
   read(11,*) !header
   read(11,*) tf
   close(11)
@@ -208,7 +208,7 @@ program initial_conditions
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
     if (head) print*, '  Copy and read seeds from ../confings/'
-    call system('cp ../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image))
+    call system('cp ../../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image))
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
     read(11) iseed
     close(11)
@@ -474,10 +474,10 @@ program initial_conditions
   endif
   sync all
 
-  open(11,file='../velocity_conversion/sigmav_z.bin',access='stream')
+  open(11,file='../../velocity_conversion/sigmav_z.bin',access='stream')
   read(11) svz
   close(11)
-  open(11,file='../velocity_conversion/sigmav_r.bin',access='stream')
+  open(11,file='../../velocity_conversion/sigmav_r.bin',access='stream')
   read(11) svr
   close(11)
 
