@@ -2,10 +2,10 @@ OPTIONS=-DFFTFINE
 OPTIONS+=-Dsigma8
 OPTIONS+=-Danalysis
 #OPTIONS+=-Wall
-#OPTIONS+=-DPID
-#OPTIONS+=-DRECONSTRUCTION
+OPTIONS+=-DPID
+OPTIONS+=-DEmode -DdspE
 
-all: ic.x cicpower.x halofinder.x #dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x cicpower.x halofinder.x dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 ic.x: parameters.o variables.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)

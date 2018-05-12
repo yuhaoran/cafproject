@@ -1,5 +1,11 @@
 subroutine particle_initialization
+
+#ifdef PID
+  use variables, only: xp,vp,pid,rhoc,vfield,a,neutrino_flag,sigma_vi,sigma_vi_nu,t1,t2,t_rate
+#else
   use variables, only: xp,vp,rhoc,vfield,a,neutrino_flag,sigma_vi,sigma_vi_nu,t1,t2,t_rate
+#endif
+
   use neutrinos
 
   implicit none
