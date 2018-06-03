@@ -1,28 +1,30 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2016.5.22)  7 DEC 2017 16:45
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.3.4)  3 JUN 2018 15:22
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **ms_caf.tex
 (./ms_caf.tex
-LaTeX2e <2016/03/31>
-Babel <3.9r> and hyphenation patterns for 83 language(s) loaded.
-(/usr/local/texlive/2016/texmf-dist/tex/latex/emulateapj/emulateapj.cls
+LaTeX2e <2017-04-15>
+Babel <3.10> and hyphenation patterns for 84 language(s) loaded.
+(/usr/local/texlive/2017/texmf-dist/tex/latex/emulateapj/emulateapj.cls
 Document Class: emulateapj 
 \bibbaselineskip=\skip41
-(/usr/local/texlive/2016/texmf-dist/tex/latex/revtex/revtex4-1.cls
-Document Class: revtex4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ for documentation)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/revtex/revtex4-1.cls
+Document Class: revtex4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revt
+ex4/ for documentation)
  Copyright (c) 2009 The American Physical Society.
  mailto:revtex@aps.org
  Licensed under the LPPL:
 http://www.ctan.org/tex-archive/macros/latex/base/lppl.txt
  Arthur Ogawa <arthur_ogawa at sbcglobal dot net>
  Based on work by David Carlisle <david at dcarlisle.demon.co.uk>.
-ltxutil[2010/07/25/20:33:00 4.1r utilities package (portions licensed from W. E. Baxter web at superscript.com)]
+ltxutil[2010/07/25/20:33:00 4.1r utilities package (portions licensed from W. E
+. Baxter web at superscript.com)]
 LaTeX Info: Redefining \@centercr on input line 308.
 Class revtex4-1 Info: Repairing broken LaTeX eqnarray on input line 358.
 \eqncolsep=\skip42
-Class revtex4-1 Info: Repairing hyperref-unfriendly LaTeX definition of \mpfootnote on input line 433.
+Class revtex4-1 Info: Repairing hyperref-unfriendly LaTeX definition of \mpfoot
+note on input line 433.
 Class revtex4-1 Info: Repairing broken LateX \@sect on input line 755.
 \intertabularlinepenalty=\count79
 \@tbpen=\count80
@@ -33,7 +35,8 @@ ltxfront[2010/07/25/20:33:00 4.1r frontmatter package (AO,DPC)]
 \c@affil=\count81
 \c@collab=\count82
 \absbox=\box27
-ltxgrid[2010/07/25/20:33:00 4.1r page grid package (portions licensed from W. E. Baxter web at superscript.com)]
+ltxgrid[2010/07/25/20:33:00 4.1r page grid package (portions licensed from W. E
+. Baxter web at superscript.com)]
 \c@linecount=\count83
 \output@latex=\toks14
 \box@size@1=\box28
@@ -46,7 +49,8 @@ ltxgrid[2010/07/25/20:33:00 4.1r page grid package (portions licensed from W. E.
 \pagesofar=\box34
 \footsofar=\box35
 \pagegrid@col=\count84
-Class revtex4-1 Info: Overriding \@vspace, \@vspacer, \@no@pgbk, \@newline, and \\  on input line 5578.
+Class revtex4-1 Info: Overriding \@vspace, \@vspacer, \@no@pgbk, \@newline, and
+ \\  on input line 5578.
 \c@part=\count85
 \c@section=\count86
 \c@subsection=\count87
@@ -67,8 +71,9 @@ Class revtex4-1 Info: Overriding \@vspace, \@vspacer, \@no@pgbk, \@newline, and 
 
 Class revtex4-1 Warning: No Society specified, using default society aps.
 
-(/usr/local/texlive/2016/texmf-dist/tex/latex/revtex/aps4-1.rtx
-File: aps4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ for documentation)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/revtex/aps4-1.rtx
+File: aps4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ for docu
+mentation)
 Class revtex4-1 Info: RevTeX society APS selected on input line 31.
 )
 
@@ -78,15 +83,19 @@ Class revtex4-1 Info: APS journal PRA selected on input line 7545.
 
 Class revtex4-1 Warning: No type size specified, using default 10.
 
-(/usr/local/texlive/2016/texmf-dist/tex/latex/revtex/aps10pt4-1.rtx
-File: aps10pt4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ for documentation)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/revtex/aps10pt4-1.rtx
+File: aps10pt4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ for 
+documentation)
 Class revtex4-1 Info: RevTeX pointsize 10pt selected on input line 30.
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/textcase/textcase.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/textcase/textcase.sty
 Package: textcase 2004/10/07 v0.07 Text only upper/lower case changing (DPC)
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/url/url.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip10
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/natbib/natbib.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/natbib/natbib.sty
 Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibhang=\skip45
 \bibsep=\skip46
@@ -94,41 +103,54 @@ LaTeX Info: Redefining \cite on input line 694.
 \c@NAT@ctr=\count94
 )
 Class revtex4-1 Info: Repairing natbib's \BibitemShut on input line 7549.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/revtex/revsymb4-1.sty
-Package: revsymb4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ for documentation)
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/revtex/revsymb4-1.sty
+Package: revsymb4-1 2010/07/25/20:33:00 4.1r (http://publish.aps.org/revtex4/ f
+or documentation)
 LaTeX Info: Redefining \REV@mathfrak on input line 119.
-)) (/usr/local/texlive/2016/texmf-dist/tex/latex/base/latexsym.sty
+))
+(/usr/local/texlive/2017/texmf-dist/tex/latex/base/latexsym.sty
 Package: latexsym 1998/08/17 v2.2e Standard LaTeX package (lasy symbols)
 \symlasy=\mathgroup4
 LaTeX Font Info:    Overwriting symbol font `lasy' in version `bold'
 (Font)                  U/lasy/m/n --> U/lasy/b/n on input line 52.
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphicx.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics/graphicx.sty
 Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
- (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/keyval.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics/keyval.sty
 Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
 \KV@toks@=\toks16
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/graphics.sty
-Package: graphics 2016/05/09 v1.0r Standard LaTeX Graphics (DPC,SPQR)
- (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/trig.sty
-Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
-File: graphics.cfg 2016/01/02 v1.10 sample graphics configuration
 )
-Package graphics Info: Driver file: pdftex.def on input line 96.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/pdftex-def/pdftex.def
-File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
- (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2017/04/14 v1.1b Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 99.
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics-def/pdftex.def
+File: pdftex.def 2017/01/12 v0.06k Graphics/color for pdfTeX
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/infwarerr.sty
 Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
-) (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
 Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
 )
 \Gread@gobject=\count95
 ))
 \Gin@req@height=\dimen102
 \Gin@req@width=\dimen103
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsfonts/amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
- (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsfonts/amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \@emptytoks=\toks17
 \symAMSa=\mathgroup5
@@ -137,7 +159,8 @@ LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 LaTeX Info: Redefining \frak on input line 111.
 LaTeX Info: Redefining \Bbb on input line 113.
-)) (/usr/local/texlive/2016/texmf-dist/tex/latex/tools/longtable.sty
+))
+(/usr/local/texlive/2017/texmf-dist/tex/latex/tools/longtable.sty
 Package: longtable 2014/10/28 v4.11 Multi-page Table package (DPC)
 \LTleft=\skip47
 \LTright=\skip48
@@ -154,7 +177,8 @@ Package: longtable 2014/10/28 v4.11 Multi-page Table package (DPC)
 \c@LT@tables=\count99
 \c@LT@chunks=\count100
 \LT@p@ftn=\toks18
-) (/usr/local/texlive/2016/texmf-dist/tex/generic/epsf/epsf.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/generic/epsf/epsf.sty
 This is `epsf.tex' v2.7.4 <14 February 2011>
 \epsffilein=\read1
 \epsfframemargin=\dimen105
@@ -186,52 +210,58 @@ This is `epsf.tex' v2.7.4 <14 February 2011>
 \DT@p@ftn=\toks21
 \pt@column=\count107
 \pt@ncol=\count108
-) (/usr/local/texlive/2016/texmf-dist/tex/generic/babel/babel.sty
-Package: babel 2016/04/23 3.9r The Babel package
- (/usr/local/texlive/2016/texmf-dist/tex/generic/babel-english/english.ldf
-Language: english 2012/08/20 v3.3p English support from the babel system
- (/usr/local/texlive/2016/texmf-dist/tex/generic/babel/babel.def
-File: babel.def 2016/04/23 3.9r Babel common definitions
+) (/usr/local/texlive/2017/texmf-dist/tex/generic/babel/babel.sty
+Package: babel 2017/05/19 3.10 The Babel package
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/babel-english/english.ldf
+Language: english 2017/01/24 v3.3q English support from the babel system
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/babel/babel.def
+File: babel.def 2017/05/19 3.10 Babel common definitions
 \babel@savecnt=\count109
 \U@D=\dimen115
 )
 \l@canadian = a dialect from \language\l@american 
 \l@australian = a dialect from \language\l@british 
 \l@newzealand = a dialect from \language\l@british 
-)) (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
-Package: amsmath 2016/03/10 v2.15b AMS math features
+))
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2016/11/05 v2.16a AMS math features
 \@mathmargin=\skip58
 
 For additional information on amsmath, use the `?' option.
-(/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amstext.sty
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsmath/amstext.sty
 Package: amstext 2000/06/29 v2.01 AMS text
- (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsgen.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks22
 \ex@=\dimen116
 )
 LaTeX Info: Redefining \text on input line 28.
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsbsy.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen117
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/amsmath/amsopn.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 2016/03/08 v2.02 operator names
 )
 \inf@bad=\count110
-LaTeX Info: Redefining \frac on input line 199.
+LaTeX Info: Redefining \frac on input line 213.
 \uproot@=\count111
 \leftroot@=\count112
-LaTeX Info: Redefining \overline on input line 297.
+LaTeX Info: Redefining \overline on input line 375.
 \classnum@=\count113
 \DOTSCASE@=\count114
-LaTeX Info: Redefining \ldots on input line 394.
-LaTeX Info: Redefining \dots on input line 397.
-LaTeX Info: Redefining \cdots on input line 518.
+LaTeX Info: Redefining \ldots on input line 472.
+LaTeX Info: Redefining \dots on input line 475.
+LaTeX Info: Redefining \cdots on input line 596.
 \Mathstrutbox@=\box45
 \strutbox@=\box46
 \big@size=\dimen118
-LaTeX Font Info:    Redeclaring font encoding OML on input line 634.
-LaTeX Font Info:    Redeclaring font encoding OMS on input line 635.
+LaTeX Font Info:    Redeclaring font encoding OML on input line 712.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 713.
 \macc@depth=\count115
 \c@MaxMatrixCols=\count116
 \dotsspace@=\muskip11
@@ -252,18 +282,34 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 635.
 \multlinegap=\skip59
 \multlinetaggap=\skip60
 \mathdisplay@stack=\toks26
-LaTeX Info: Redefining \[ on input line 2739.
-LaTeX Info: Redefining \] on input line 2740.
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics/color.sty
-Package: color 2016/05/09 v1.1c Standard LaTeX Color (DPC)
- (/usr/local/texlive/2016/texmf-dist/tex/latex/graphics-cfg/color.cfg
+LaTeX Info: Redefining \[ on input line 2817.
+LaTeX Info: Redefining \] on input line 2818.
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2016/07/10 v1.1e Standard LaTeX Color (DPC)
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/graphics-cfg/color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
-Package color Info: Driver file: pdftex.def on input line 144.
-) (./aas_macros.sty)
+Package color Info: Driver file: pdftex.def on input line 147.
+)
+(./aas_macros.sty)
+(/usr/local/texlive/2017/texmf-dist/tex/generic/ulem/ulem.sty
+\UL@box=\box47
+\UL@hyphenbox=\box48
+\UL@skip=\skip61
+\UL@hook=\toks27
+\UL@height=\dimen125
+\UL@pe=\count122
+\UL@pixel=\dimen126
+\ULC@box=\box49
+Package: ulem 2012/05/18
+\ULdepth=\dimen127
+)
 Class revtex4-1 Info: Patching LaTeX tabular. on input line 19.
 Class revtex4-1 Info: Patching longtable package on input line 19.
 Class revtex4-1 Info: Robustifying \LaTeX's \boldmath command on input line 19.
+
 Class revtex4-1 Info: cite was not loaded (OK!) on input line 19.
 Class revtex4-1 Info: mcite was not loaded (OK!) on input line 19.
 Class revtex4-1 Info: multicol was not loaded (OK!) on input line 19.
@@ -287,382 +333,277 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
 LaTeX Font Info:    ... okay on input line 19.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
 LaTeX Font Info:    ... okay on input line 19.
- (/usr/local/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+
+(/usr/local/texlive/2017/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count122
-\scratchdimen=\dimen125
-\scratchbox=\box47
-\nofMPsegments=\count123
-\nofMParguments=\count124
-\everyMPshowfont=\toks27
-\MPscratchCnt=\count125
-\MPscratchDim=\dimen126
-\MPnumerator=\count126
-\makeMPintoPDFobject=\count127
-\everyMPtoPDFconversion=\toks28
-) (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
-Package: pdftexcmds 2016/05/10 v0.21 Utility functions of pdfTeX for LuaTeX (HO)
- (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ifluatex.sty
+\scratchcounter=\count123
+\scratchdimen=\dimen128
+\scratchbox=\box50
+\nofMPsegments=\count124
+\nofMParguments=\count125
+\everyMPshowfont=\toks28
+\MPscratchCnt=\count126
+\MPscratchDim=\dimen129
+\MPnumerator=\count127
+\makeMPintoPDFobject=\count128
+\everyMPtoPDFconversion=\toks29
+) (/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
+Package: pdftexcmds 2017/03/19 v0.25 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/ifluatex.sty
 Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
 Package ifluatex Info: LuaTeX not detected.
-) (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/ifpdf.sty
-Package: ifpdf 2016/05/14 v3.1 Provides the ifpdf switch
+)
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/ifpdf.sty
+Package: ifpdf 2017/03/15 v3.2 Provides the ifpdf switch
 )
 Package pdftexcmds Info: LuaTeX not detected.
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
 Package pdftexcmds Info: \pdfdraftmode found.
-) (/usr/local/texlive/2016/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+)
+(/usr/local/texlive/2017/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
 Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
- (/usr/local/texlive/2016/texmf-dist/tex/latex/oberdiek/grfext.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/oberdiek/grfext.sty
 Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
- (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
 Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
-)) (/usr/local/texlive/2016/texmf-dist/tex/latex/oberdiek/kvoptions.sty
+))
+(/usr/local/texlive/2017/texmf-dist/tex/latex/oberdiek/kvoptions.sty
 Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
- (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
 Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
- (/usr/local/texlive/2016/texmf-dist/tex/generic/oberdiek/etexcmds.sty
+
+(/usr/local/texlive/2017/texmf-dist/tex/generic/oberdiek/etexcmds.sty
 Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
 Package etexcmds Info: Could not find \expanded.
 (etexcmds)             That can mean that you are not using pdfTeX 1.50 or
 (etexcmds)             that some package has redefined \expanded.
 (etexcmds)             In the latter case, load this package earlier.
 )))
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+38.
 Package grfext Info: Graphics extension search list:
-(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPEG,.JBIG2,.JB2,.eps]
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
 (grfext)             \AppendGraphicsExtensions on input line 456.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
 ))
 \openout3 = `ms_cafNotes.bib'.
 
 LaTeX Font Info:    Try loading font information for U+lasy on input line 39.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/base/ulasy.fd
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/base/ulasy.fd
 File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
 )
 LaTeX Font Info:    Try loading font information for U+msa on input line 39.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 LaTeX Font Info:    Try loading font information for U+msb on input line 39.
- (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-)
-
-Package natbib Warning: Citation `1988csup.book.....H' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `1985ApJ...292..371D' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2005MNRAS.360L..82R' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2011ApJ...726....7T' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2005ApJ...633..560E' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2009ApJ...700..479T' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2003ApJ...592..699V' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2009A&A...499...31H' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2009ApJ...701..945S' on page 1 undefined on input line 49.
-
-
-Package natbib Warning: Citation `2001NewA....6...79S' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2005MNRAS.364.1105S' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2005Natur.435..629S' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2012MNRAS.426.2046A' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `1995ApJS...98..355X' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2004NewA....9..111D' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `1995ApJ...452..797C' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2010ascl.soft11007T' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `1991ApJ...368L..23C' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `1995ApJS..100..269P' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `1988csup.book.....H' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `Frigo05thedesign' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2005NewA...10..393M' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2013MNRAS.436..540H' on page 1 undefined on input line 51.
-
-
-Package natbib Warning: Citation `2017NatAs...1E.143Y' on page 1 undefined on input line 53.
-
-
-Package natbib Warning: Citation `2017RAA....17...85E' on page 1 undefined on input line 53.
-
+) [1{/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    Try loading font information for OMS+cmr on input line 57.
-(/usr/local/texlive/2016/texmf-dist/tex/latex/base/omscmr.fd
+
+(/usr/local/texlive/2017/texmf-dist/tex/latex/base/omscmr.fd
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 57.
- [1{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-
-Package natbib Warning: Citation `2013MNRAS.436..540H' on page 2 undefined on input line 60.
-
 
 Underfull \hbox (badness 1348) in paragraph at lines 65--66
-[]\OT1/cmr/m/n/10 In a sim-u-la-tion with vol-ume $\OML/cmm/m/it/10 L[]$ \OT1/cmr/m/n/10 and $\OML/cmm/m/it/10 N[]$ \OT1/cmr/m/n/10 coarse
+[]\OT1/cmr/m/n/10 In a sim-u-la-tion with vol-ume $\OML/cmm/m/it/10 L[]$ \OT1/c
+mr/m/n/10 and $\OML/cmm/m/it/10 N[]$ \OT1/cmr/m/n/10 coarse
  []
 
 
-Overfull \hbox (13.26868pt too wide) detected at line 76
-\OML/cmm/m/it/10 x[] \OT1/cmr/m/n/10 = (0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 001953125\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 2\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 998046875\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 2\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 501953125\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 3\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 736328125)\OML/cmm/m/it/10 :
+Overfull \hbox (13.26868pt too wide) detected at line 77
+\OML/cmm/m/it/10 x[] \OT1/cmr/m/n/10 = (0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 0019
+53125\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 2\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 9980
+46875\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 2\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5019
+53125\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 3\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 7363
+28125)\OML/cmm/m/it/10 :
  []
 
-<vdisp.pdf, id=20, 400.24733pt x 365.3434pt>
-File: vdisp.pdf Graphic file (type pdf)
- <use vdisp.pdf>
-Package pdftex.def Info: vdisp.pdf used on input line 80.
-(pdftex.def)             Requested size: 215.83574pt x 197.01491pt.
- [2 <./vdisp.pdf>] <fig_tile.pdf, id=42, 430.18146pt x 408.76494pt>
-File: fig_tile.pdf Graphic file (type pdf)
- <use fig_tile.pdf>
-Package pdftex.def Info: fig_tile.pdf used on input line 106.
+<f1.pdf, id=19, 364.89844pt x 344.57823pt>
+File: f1.pdf Graphic file (type pdf)
+ <use f1.pdf>
+Package pdftex.def Info: f1.pdf used on input line 81.
+(pdftex.def)             Requested size: 245.26653pt x 231.60756pt.
+ [2]
+
+LaTeX Warning: A float is stuck (cannot be placed) on input line 95.
+
+
+LaTeX Warning: A float is stuck (cannot be placed) on input line 95.
+
+
+Class revtex4-1 Warning: Deferred float stuck during \clearpage processing.
+
+<f2.pdf, id=27, 430.18146pt x 408.76494pt>
+File: f2.pdf Graphic file (type pdf)
+ <use f2.pdf>
+Package pdftex.def Info: f2.pdf used on input line 107.
 (pdftex.def)             Requested size: 220.73837pt x 209.75223pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 128--129
-[]\OT1/cmr/m/n/10 According to this spa-tial de-com-po-si-tion, and
- []
-
-
-Underfull \hbox (badness 2376) in paragraph at lines 128--129
-\OT1/cmr/m/n/10 as dis-cussed in the last two sub-sec-tions, we de-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 128--129
-\OT1/cmr/m/n/10 clare $\OMS/cmsy/m/n/10 f\OML/cmm/m/it/10 ^^Z[]; ^^_[]; v[]; ^^W[]\OMS/cmsy/m/n/10 g$\OT1/cmr/m/n/10 , or in vari-able ex-pres-sion
- []
-
-[3 <./fig_tile.pdf>]
+ [3 <./f1.pdf> <./f2.pdf>]
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <7> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 179.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 129.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <5> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 179.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 129.
 
-
-Package natbib Warning: Citation `1970A&A.....5...84Z' on page 4 undefined on input line 181.
-
-
-Underfull \hbox (badness 1845) in paragraph at lines 183--184
-[]\OT1/cmr/m/n/10 After work-ing on all tiles, we sum up the to-
+Underfull \hbox (badness 1867) in paragraph at lines 143--144
+[]\OT1/cmr/m/n/10 According to this spa-tial de-com-po-si-tion, and as
  []
 
 
-Underfull \hbox (badness 1953) in paragraph at lines 183--184
-\OT1/cmr/m/n/10 tal par-ti-cle num-ber on this im-age, \OT1/cmtt/m/n/10 nplocal\OT1/cmr/m/n/10 , and
+Underfull \hbox (badness 2334) in paragraph at lines 143--144
+\OT1/cmr/m/n/10 dis-cussed in the last two sub-sec-tions, we de-clare
+ []
+
+LaTeX Font Info:    Font shape `U/lasy/b/n' in size <8> not available
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 160.
+LaTeX Font Info:    Font shape `U/lasy/b/n' in size <6> not available
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 160.
+
+Underfull \hbox (badness 10000) in paragraph at lines 157--181
+
+ []
+
+
+Underfull \hbox (badness 1152) in paragraph at lines 190--194
+\OT1/cmr/m/n/10 them by Zel'dovich ap-prox-i-ma-tion (ZA) (Zel'dovich
  []
 
 
 LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 186.
+               Default added (so using `tbp') on input line 199.
 
 [4]
 
-LaTeX Warning: A float is stuck (cannot be placed) on input line 222.
+LaTeX Warning: A float is stuck (cannot be placed) on input line 242.
 
 
-LaTeX Warning: A float is stuck (cannot be placed) on input line 222.
+LaTeX Warning: A float is stuck (cannot be placed) on input line 242.
 
 
 Class revtex4-1 Warning: Deferred float stuck during \clearpage processing.
 
 
-LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 228.
+Underfull \hbox (badness 10000) in paragraph at lines 244--266
 
-
-Underfull \hbox (badness 1365) in paragraph at lines 264--265
-\OT1/cmr/m/n/10 an up-dated den-sity and ve-loc-ity field on the tile,
  []
 
 
-Overfull \hbox (8.30426pt too wide) in paragraph at lines 264--265
-\OMS/cmsy/m/n/10 f[]\OML/cmm/m/it/10 ; []; []; []; []\OT1/cmr/m/n/10 ([])\OMS/cmsy/m/n/10 g$\OT1/cmr/m/n/10 ,
+Underfull \hbox (badness 1005) in paragraph at lines 276--279
+[]\OT1/cmtt/m/n/10 update[]vp \OT1/cmr/m/n/10 -- the PM or particle-particle pa
+rticle-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 264--265
-\OT1/cmr/m/n/10 con-vert-ing buffer state to dis-joint state,
+Underfull \hbox (badness 10000) in paragraph at lines 281--296
+
  []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 264--265
-\OT1/cmr/m/n/10 and it re-places cor-re-spond-ing part of
- []
-
-
-Underfull \hbox (badness 2126) in paragraph at lines 264--265
-\OMS/cmsy/m/n/10 f[]\OML/cmm/m/it/10 ; []; []; []; []\OT1/cmr/m/n/10 ([])\OMS/cmsy/m/n/10 g$\OT1/cmr/m/n/10 . When all tiles
- []
-
-
-Package natbib Warning: Citation `2005NewA...10..393M' on page 5 undefined on input line 268.
-
-
-Package natbib Warning: Citation `2013MNRAS.436..540H' on page 5 undefined on input line 268.
-
-
-LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 270.
 
 [5]
 
-LaTeX Warning: A float is stuck (cannot be placed) on input line 299.
-
-
-LaTeX Warning: A float is stuck (cannot be placed) on input line 299.
-
-
-Class revtex4-1 Warning: Deferred float stuck during \clearpage processing.
+LaTeX Warning: No positions in optional float specifier.
+               Default added (so using `tbp') on input line 358.
 
 
 LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 334.
+               Default added (so using `tbp') on input line 393.
 
-
-LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 369.
-
-<overplotparticles.pdf, id=84, 563.9424pt x 564.86552pt>
-File: overplotparticles.pdf Graphic file (type pdf)
- <use overplotparticles.pdf>
-Package pdftex.def Info: overplotparticles.pdf used on input line 371.
+<f7.pdf, id=112, 563.9424pt x 564.86552pt>
+File: f7.pdf Graphic file (type pdf)
+ <use f7.pdf>
+Package pdftex.def Info: f7.pdf used on input line 395.
 (pdftex.def)             Requested size: 384.83807pt x 385.46529pt.
-
-
-Package natbib Warning: Citation `2017NatAs...1E.143Y' on page 6 undefined on input line 377.
-
-[6]
+ [6]
 
 LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 386.
+               Default added (so using `tbp') on input line 410.
 
 
-Overfull \hbox (17.64052pt too wide) in paragraph at lines 390--406
- []$[]$ 
- []
+LaTeX Warning: No positions in optional float specifier.
+               Default added (so using `tbp') on input line 432.
 
-[7 <./overplotparticles.pdf>]
+<f8.pdf, id=116, 446.49976pt x 401.22627pt>
+File: f8.pdf Graphic file (type pdf)
+ <use f8.pdf>
+Package pdftex.def Info: f8.pdf used on input line 434.
+(pdftex.def)             Requested size: 242.8152pt x 218.19563pt.
+ [7 <./f7.pdf>]
 
-LaTeX Warning: A float is stuck (cannot be placed) on input line 410.
+LaTeX Warning: A float is stuck (cannot be placed) on input line 445.
 
 
-LaTeX Warning: A float is stuck (cannot be placed) on input line 410.
+LaTeX Warning: A float is stuck (cannot be placed) on input line 445.
 
 
 Class revtex4-1 Warning: Deferred float stuck during \clearpage processing.
 
-
-Package natbib Warning: Citation `2017NatAs...1E.143Y' on page 8 undefined on input line 413.
-
-
-Package natbib Warning: Citation `2017RAA....17...85E' on page 8 undefined on input line 413.
-
-
-Package natbib Warning: Citation `2017PhRvD..95d3501Y' on page 8 undefined on input line 418.
-
-
-LaTeX Warning: No positions in optional float specifier.
-               Default added (so using `tbp') on input line 426.
-
-<ddsp_pcdf_256_box80.pdf, id=102, 446.49976pt x 401.22627pt>
-File: ddsp_pcdf_256_box80.pdf Graphic file (type pdf)
- <use ddsp_pcdf_256_box80.pdf>
-Package pdftex.def Info: ddsp_pcdf_256_box80.pdf used on input line 428.
-(pdftex.def)             Requested size: 242.8152pt x 218.19563pt.
-LaTeX Font Info:    Font shape `U/lasy/b/n' in size <8> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 429.
-LaTeX Font Info:    Font shape `U/lasy/b/n' in size <6> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 429.
- <ccc.pdf, id=103, 605.93797pt x 621.22862pt>
-File: ccc.pdf Graphic file (type pdf)
- <use ccc.pdf>
-Package pdftex.def Info: ccc.pdf used on input line 436.
-(pdftex.def)             Requested size: 513.11743pt x 526.11307pt.
+<f9.pdf, id=130, 610.50233pt x 356.7321pt>
+File: f9.pdf Graphic file (type pdf)
+ <use f9.pdf>
+Package pdftex.def Info: f9.pdf used on input line 448.
+(pdftex.def)             Requested size: 513.11743pt x 299.82709pt.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 437.
-
-
-Package natbib Warning: Citation `2005ApJ...633..560E' on page 8 undefined on input line 442.
-
-
-Package natbib Warning: Citation `2007ApJ...664..675E' on page 8 undefined on input line 442.
-
-
-Package natbib Warning: Citation `2017ApJ...841L..29W' on page 8 undefined on input line 442.
-
-[8 <./ddsp_pcdf_256_box80.pdf>] [9 <./ccc.pdf>]
-
-Package natbib Warning: Citation `2011JCAP...07..034B' on page 10 undefined on input line 454.
-
-
-Package natbib Warning: Citation `2017PhRvD..95d3501Y' on page 10 undefined on input line 464.
-
-
-Package natbib Warning: Citation `2017ApJ...841L..29W' on page 10 undefined on input line 464.
-
-
-Package natbib Warning: Citation `2017MNRAS.469.1968P' on page 10 undefined on input line 464.
-
-
-Underfull \hbox (badness 3375) in paragraph at lines 472--473
-[]\OT1/cmr/m/n/10 Traditional $\OML/cmm/m/it/10 N$\OT1/cmr/m/n/10 -body codes con-sumes con-sid-er-able
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 449.
+ [8 <./f8.pdf>] [9 <./f9.pdf>]
+Underfull \hbox (badness 3375) in paragraph at lines 494--495
+[]\OT1/cmr/m/n/10 Traditional $\OML/cmm/m/it/10 N$\OT1/cmr/m/n/10 -body codes c
+on-sumes con-sid-er-able
  []
 
-No file ms_caf.bbl.
-
-Package natbib Warning: There were undefined citations.
-
-[10] (./ms_caf.aux) ) 
+(./ms_caf.bbl) [10] (./ms_caf.aux) ) 
 Here is how much of TeX's memory you used:
- 5498 strings out of 493014
- 72059 string characters out of 6133351
- 188991 words of memory out of 5000000
- 8920 multiletter control sequences out of 15000+600000
+ 5747 strings out of 492995
+ 76639 string characters out of 6132705
+ 180091 words of memory out of 5000000
+ 9172 multiletter control sequences out of 15000+600000
  17817 words of font info for 72 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 39i,11n,28p,1706b,385s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on ms_caf.pdf (10 pages, 5630134 bytes).
+ 40i,11n,28p,1567b,342s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2017/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2017/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmbx8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type
+1/public/amsfonts/cm/cmcsc10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type
+1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmmi6.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmmi8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmmib10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/a
+msfonts/cmextra/cmmib8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmr10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmr5.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmr6.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr7.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmr8.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmr9.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+sy10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cms
+y6.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7
+.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.p
+fb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pf
+b></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmti8.pfb>
+</usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb></
+usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></u
+sr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
+Output written on ms_caf.pdf (10 pages, 5401692 bytes).
 PDF statistics:
- 224 PDF objects out of 1000 (max. 8388607)
- 161 compressed objects within 2 object streams
+ 248 PDF objects out of 1000 (max. 8388607)
+ 179 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  26 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -10,3 +10,5 @@ export FFTFLAG='-I/usr/local/include/ -L/usr/local/lib/ -lfftw3f -lm -ldl'
 export OMP_STACKSIZE=1000M
 export OMP_NUM_THREADS=4
 #export OMP_THREAD_LIMIT=4
+ulimit -s 61000
+ulimit

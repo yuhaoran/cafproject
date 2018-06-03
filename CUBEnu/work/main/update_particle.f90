@@ -218,7 +218,7 @@ subroutine update_xp()
     print*,'  std_vsim_res',std_vsim_res*sim%vsim2phys,'km/s'
     print*,'  sigma_vi    ',sigma_vi,'(simulation unit)'
     print*,'  sigma_vi_new',sigma_vi_new,'(simulation unit)'
-    write(77) a-da,real((/std_vsim,std_vsim_c,std_vsim_res/))
+    write(77) a-da,real([std_vsim,std_vsim_c,std_vsim_res])*sim%vsim2phys
   endif
   sync all
 

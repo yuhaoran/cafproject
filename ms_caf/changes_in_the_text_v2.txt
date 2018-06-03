@@ -1,0 +1,37 @@
+1. Introduction:
+2nd paragraph: added citation Dehnen 2014; Potter & Stadel 2016.
+
+2. Method
+1st paragraph: "truncation error" -> "round-off error"
+2.2
+Equation (4) rewritten.
+revised text after eq (4): $W(k,R)$ is the Fourier transform of real space top-hat window function with smoothing scale $r$. In Figure 1 we plot $\sigma_v(a,r)$ as a function of $a$ for a few smoothing scale $r$. $\Delta v$ in equation (3)...
+last paragraph: "The coarse grid density field v_c" -> "The coarse grid velocity field v_c"
+Corrected the scale of fig.1.
+2.3.1
+"We define the extended" -- added "the"
+"V_e=V_p+V_b" -> "V_e=V_p\cup V_b"
+replaced previous eq (8,9) with
+(1) if the short fine-mesh force ${\bs F}_f$ has a cut-off $N_b$ ${\bs F}_f(r>N_b)=0$, and is computed on $V_e$, then ${\bs F}_f$ in $V_p$ is guaranteed to be correct. 
+(2) $V_e$ is able to collect all particles that are able to travel to $V_p$.
+2.3.2
+3rd paragraph: deleted last sentence talking about previous eq (9), and deleted eq (10)
+2.3.3
+timestep:
+"Runge-Kutta 2"->"The second order Runge-Kutta method"
+update_xp:
+deleted last sentence talking about eq (9)
+update_vp:
+deleted second last sentence talking about eq (8)
+last 3rd paragraph: "So far..."->"After the updating of \nu_d in V_p..."
+2.4.4
+1st paragraph: added reference to Table 2. "TianNu's particle number (shown in Table 2)"
+
+3.
+3.2
+3rd paragraph: "truncation error" -> "round-off error"
+2nd last paragraph: to emphasize the decorrelation (i.e. $1-\xi(k)$) by different integer formats -- added "(i.e. $1-\xi(k)$)"
+Fig.9. caption: "decorrelation" -> "the cross-correlations $\xi(k)$ (lower axes) with respect to x2v2"
+
+Acknowledgement
+added "We thank the anonymous referee for many helpful suggestions which improve the paper."

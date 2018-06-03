@@ -27,6 +27,9 @@
 {Davis}, M., {Efstathiou}, G., {Frenk}, C.~S., \& {White}, S.~D.~M. 1985, \apj,
   292, 371
 
+\bibitem[{{Dehnen}(2014)}]{2014ComAC...1....1D}
+{Dehnen}, W. 2014, Computational Astrophysics and Cosmology, 1, 1
+
 \bibitem[{{Dubinski} {et~al.}(2004){Dubinski}, {Kim}, {Park}, \&
   {Humble}}]{2004NewA....9..111D}
 {Dubinski}, J., {Kim}, J., {Park}, C., \& {Humble}, R. 2004, \na, 9, 111
@@ -78,6 +81,10 @@ Frigo, M., \& Johnson, S.~G. 2005, in PROCEEDINGS OF THE IEEE, 216--231
 
 \bibitem[{{Pen}(1995)}]{1995ApJS..100..269P}
 {Pen}, U.-L. 1995, \apjs, 100, 269
+
+\bibitem[{{Potter} \& {Stadel}(2016)}]{2016ascl.soft09016P}
+{Potter}, D., \& {Stadel}, J. 2016, {PKDGRAV3: Parallel gravity code},
+  Astrophysics Source Code Library, , , ascl:1609.016
 
 \bibitem[{{Rimes} \& {Hamilton}(2005)}]{2005MNRAS.360L..82R}
 {Rimes}, C.~D., \& {Hamilton}, A.~J.~S. 2005, \mnras, 360, L82

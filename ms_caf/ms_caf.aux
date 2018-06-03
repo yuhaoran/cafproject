@@ -4,6 +4,7 @@
 \citation{2005MNRAS.360L..82R,2011ApJ...726....7T}
 \citation{2005ApJ...633..560E,2009ApJ...700..479T}
 \citation{2003ApJ...592..699V,2009A&A...499...31H,2009ApJ...701..945S}
+\citation{1985JCoPh..60..187R,2014ComAC...1....1D,2016ascl.soft09016P}
 \citation{2001NewA....6...79S,2005MNRAS.364.1105S}
 \citation{2005Natur.435..629S,2012MNRAS.426.2046A}
 \citation{1995ApJS...98..355X}
@@ -21,75 +22,116 @@
 \@writefile{toc}{\contentsline {abstract}{Abstract}{1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{}}
 \newlabel{s.intro}{{1}{1}{}{}{}}
+\citation{haoran_yu_2018_1198909}
 \citation{2013MNRAS.436..540H}
+\citation{1985SJSSC...6...85A}
 \@writefile{toc}{\contentsline {section}{\numberline {2}Method}{2}{}}
 \newlabel{s.method}{{2}{2}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Particle position storage}{2}{}}
 \newlabel{ss.position}{{2.1}{2}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Variance of the velocity distribution given by Equation \ref  {eq.vdisp}. The $x$-axis is the scale factor characterizing the cosmic evolution and the $y$-axis shows the $\sigma _v$ in unit of km/s. The 5 curves, from top to bottom, shows the $\sigma _v(a)$ with increasing smoothing scale $r$ from 0 to 20 Mpc$/h$.}}{2}{}}
-\newlabel{fig.vdisp}{{1}{2}{}{}{}}
 \newlabel{eq.chi}{{1}{2}{}{}{}}
 \newlabel{eq.x}{{2}{2}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Particle velocity storage}{2}{}}
 \newlabel{ss.velocity}{{2.2}{2}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Spacial decomposition in {\tt  CUBE} in a 2D analogy. In this example, there are 2 images per dimension (${\tt  nn}=2$), and 2 tiles per image per dimension (${\tt  nnt}=2$). The orange boxes show the overlapped physical+buffer=extended tile regions, inside of which one physical regions is indicated with green.}}{3}{}}
-\newlabel{fig.tile}{{2}{3}{}{}{}}
+\newlabel{eq.deltav}{{3}{2}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Variance of the velocity distribution given by Equation \ref  {eq.vdisp}. The $x$-axis is the scale factor characterizing the cosmic evolution and the $y$-axis shows the $\sigma _v$ in unit of km/s. The 5 curves, from top to bottom, shows the $\sigma _v(a)$ with increasing smoothing scale $r$ from 0 to 20 Mpc$/h$.}}{3}{}}
+\newlabel{fig.vdisp}{{1}{3}{}{}{}}
 \newlabel{eq.vdisp}{{4}{3}{}{}{}}
 \newlabel{eq.vdelta}{{5}{3}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Spacial decomposition in {\tt  CUBE} in a 2D analogy. In this example, there are 2 images per dimension ($M_g=2$), and 2 tiles per image per dimension ($M_t=2$). The orange boxes show the overlapped extended($V_e$)=physical($V_p$)+buffer($V_b$) tile regions. One physical region is indicated with green.}}{3}{}}
+\newlabel{fig.tile}{{2}{3}{}{}{}}
 \newlabel{eq.nu}{{6}{3}{}{}{}}
 \newlabel{eq.v}{{7}{3}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Code overview}{3}{}}
 \newlabel{ss.overview}{{2.3}{3}{}{}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Spacial decomposition}{3}{}}
-\newlabel{sss.spatial_decomposition}{{2.3.1}{3}{}{}{}}
 \citation{1970A&A.....5...84Z}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Pseudocode for the initial condition generator.}}{4}{}}
-\newlabel{fig.ic}{{3}{4}{}{}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Spacial decomposition}{4}{}}
+\newlabel{sss.spatial_decomposition}{{2.3.1}{4}{}{}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.2}Initial conditions}{4}{}}
 \newlabel{sss.ic}{{2.3.2}{4}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Pseudocode for the initial condition generator.}}{4}{}}
+\newlabel{fig.ic}{{3}{4}{}{}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.3}Algorithm}{4}{}}
 \newlabel{sss.algorithm}{{2.3.3}{4}{}{}{}}
-\citation{2005NewA...10..393M,2013MNRAS.436..540H}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Overall structure of {\tt  CUBE}. Sections of the code are grouped into Fortran subroutines, which are described in paragraphs of Section \ref  {sss.algorithm}.}}{5}{}}
 \newlabel{fig.code}{{4}{5}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Pseudocode for subroutine {\tt  update\_xp}.}}{5}{}}
 \newlabel{fig.update_xp}{{5}{5}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Pseudocode for subroutine {\tt  update\_vp}.}}{5}{}}
+\newlabel{fig.update_vp}{{6}{5}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Memory layout}{5}{}}
+\newlabel{ss.memory}{{2.4}{5}{}{}{}}
 \citation{2017NatAs...1E.143Y}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Pseudocode for subroutine {\tt  update\_vp}.}}{6}{}}
-\newlabel{fig.update_vp}{{6}{6}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Memory layout}{6}{}}
-\newlabel{ss.memory}{{2.4}{6}{}{}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.1}Arrays of particles}{6}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Memory layout for a \leavevmode {\color  {blue}certain} configuration}}{6}{}}
-\newlabel{t.memory}{{1}{6}{}{}{}}
 \newlabel{eq.npmax}{{8}{6}{}{}{}}
 \newlabel{eq.nptile}{{9}{6}{}{}{}}
+\newlabel{eq.Mp_particle}{{10}{6}{}{}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.2}Coarse mesh arrays}{6}{}}
+\newlabel{eq.Mp_coarse}{{11}{6}{}{}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.3}Fine mesh arrays}{6}{}}
+\newlabel{eq.Mp_fine}{{12}{6}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Memory layout for a certain configuration}}{6}{}}
+\newlabel{t.memory}{{1}{6}{}{}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.4}Compare with traditional algorithms}{6}{}}
+\citation{2013MNRAS.436..540H}
+\citation{2017NatAs...1E.143Y,2017RAA....17...85E}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Offset in the particle distribution induced by integer-1 based algorithm (x1v1). In S512's subregion of volume $15.625^2\times 3.90625\ ({\rm  Mpc}/h)^3$, particles from {\tt  CUBEP3M} (bigger grey dots in the background) and {\tt  CUBE}-x1v1 (smaller red dots) are projected onto the plane of $(15.625\ {\rm  Mpc}/h)^2$. The comparing rules show 1 ${\rm  Mpc}/h$, fine grid and coarse grid respectively, and position resolution of x1v1 is 1/64 of a fine grid.}}{7}{}}
 \newlabel{fig.particles}{{7}{7}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Simulation configurations}}{7}{}}
+\newlabel{t.sim}{{2}{7}{}{}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {3}Accuracy}{7}{}}
 \newlabel{s.results}{{3}{7}{}{}{}}
-\citation{2017NatAs...1E.143Y,2017RAA....17...85E}
 \citation{2017PhRvD..95d3501Y}
 \citation{2005ApJ...633..560E}
 \citation{2007ApJ...664..675E,2017ApJ...841L..29W}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Simulation configurations}}{8}{}}
-\newlabel{t.sim}{{2}{8}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Displacement of particles}{8}{}}
-\newlabel{eq.offset}{{10}{8}{}{}{}}
+\citation{2011JCAP...07..034B}
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Statistics of the error in particle displacement $\Delta {\boldsymbol  \Psi }$ induced by integer based algorithms in {\tt  CUBE}. The PDF and CDF of $|\Delta {\boldsymbol  \Psi }|$ from S256 are shown in the upper and lower axes, as functions of fine grids. Black, red, blue and green correspond to x2v2, x1v2, x2v1 and x1v1 respectively. The grey lines, marked with ``initial'', shows the distribution of actual displacement of particles in {\tt  CUBEP3M}, $|{\boldsymbol  \Psi }_0|$, which is orders of magnitudes larger than $|\Delta {\boldsymbol  \Psi }|$. }}{8}{}}
 \newlabel{fig.dsp}{{8}{8}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Power spectrum}{8}{}}
-\newlabel{eq.cps}{{11}{8}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \leavevmode {\color  {blue}Fractional deviations $\Delta ^2(k)/\Delta ^2_0(k)-1$ in the power spectra relative to nonlinear predictions $\Delta ^2_0(k)$ (upper axes), and {\tt  CUBE}'s decorrelations $\xi (k)$ relative to {\tt  CUBEP3M} (lower axes) induced by the integer-based algorithms. The four panels show the results of two redshifts in S2048S and S2048L: $\{ z=1, z=0 \} \times \{ L=400{\rm  Mpc}/h, L=1200{\rm  Mpc}/h \}$. The four solid lines show the results from \{x2v2,x1v2,x2v1,x1v1\}. In lower panels, the dashed grey curves show the decorrelations given by the PM algorithm. The orange dashed lines show the scale $k=0.2\ k_{\rm  Nyquist}$.}}}{9}{}}
-\newlabel{fig.ccc}{{9}{9}{}{}{}}
-\citation{2011JCAP...07..034B}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Power spectrum}{8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Displacement of particles}{8}{}}
+\newlabel{eq.offset}{{13}{8}{}{}{}}
+\newlabel{eq.cps}{{14}{8}{}{}{}}
+\newlabel{eq.ccc}{{15}{8}{}{}{}}
 \citation{2017PhRvD..95d3501Y,2017ApJ...841L..29W,2017MNRAS.469.1968P}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Dimensionless power spectra $\Delta ^2(k)$ and \leavevmode {\color  {blue}the cross-correlations $\xi (k)$ (lower axes) with respect to x2v2} in simulations S2048S and S2048L. The four solid lines show the results from \{x2v2,x1v2,x2v1,x1v1\}. In lower panels, the dashed curves show the decorrelations given by the PM algorithm, measured by cross correlating different resolutions of {\tt  CUBE}-x2v2. The vertical orange dashed lines show the scale $k=0.2\tmspace  +\thinmuskip {.1667em} k_{\rm  Nyquist}$.}}{9}{}}
+\newlabel{fig.ccc}{{9}{9}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion and conclusion}{9}{}}
+\newlabel{s.discussion}{{4}{9}{}{}{}}
 \bibdata{ms_cafNotes,haoran_ref}
-\bibstyle{hapj}
-\newlabel{eq.ccc}{{12}{10}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion and conclusion}{10}{}}
-\newlabel{s.discussion}{{4}{10}{}{}{}}
+\bibcite{2012MNRAS.426.2046A}{{1}{2012}{{{Angulo} {et~al.}}}{{{Angulo}, {Springel}, {White}, {Jenkins}, {Baugh}, \& {Frenk}}}}
+\bibcite{1985SJSSC...6...85A}{{2}{1985}{{Appel}}{{}}}
+\bibcite{2011JCAP...07..034B}{{3}{2011}{{{Blas} {et~al.}}}{{{Blas}, {Lesgourgues}, \& {Tram}}}}
+\bibcite{1991ApJ...368L..23C}{{4}{1991}{{Couchman}}{{}}}
+\bibcite{1995ApJ...452..797C}{{5}{1995}{{{Couchman} {et~al.}}}{{{Couchman}, {Thomas}, \& {Pearce}}}}
+\bibcite{1985ApJ...292..371D}{{6}{1985}{{{Davis} {et~al.}}}{{{Davis}, {Efstathiou}, {Frenk}, \& {White}}}}
+\bibcite{2014ComAC...1....1D}{{7}{2014}{{Dehnen}}{{}}}
+\bibcite{2004NewA....9..111D}{{8}{2004}{{{Dubinski} {et~al.}}}{{{Dubinski}, {Kim}, {Park}, \& {Humble}}}}
+\bibcite{2007ApJ...664..675E}{{9}{2007}{{{Eisenstein} {et~al.}}}{{{Eisenstein}, {Seo}, {Sirko}, \& {Spergel}}}}
+\bibcite{2005ApJ...633..560E}{{10}{2005}{{{Eisenstein} {et~al.}}}{{{Eisenstein}, {Zehavi}, {Hogg}, {Scoccimarro}, {Blanton}, {Nichol}, {Scranton}, {Seo}, {Tegmark}, {Zheng}, {Anderson}, {Annis}, {Bahcall}, {Brinkmann}, {Burles}, {Castander}, {Connolly}, {Csabai}, {Doi}, {Fukugita}, {Frieman}, {Glazebrook}, {Gunn}, {Hendry}, {Hennessy}, {Ivezi{\'c}}, {Kent}, {Knapp}, {Lin}, {Loh}, {Lupton}, {Margon}, {McKay}, {Meiksin}, {Munn}, {Pope}, {Richmond}, {Schlegel}, {Schneider}, {Shimasaku}, {Stoughton}, {Strauss}, {SubbaRao}, {Szalay}, {Szapudi}, {Tucker}, {Yanny}, \& {York}}}}
+\bibcite{2017RAA....17...85E}{{11}{2017}{{{Emberson} {et~al.}}}{{{Emberson}, {Yu}, {Inman}, {Zhang}, {Pen}, {Harnois-D{\'e}raps}, {Yuan}, {Teng}, {Zhu}, {Chen}, \& {Xing}}}}
+\bibcite{Frigo05thedesign}{{12}{2005}{{Frigo \& Johnson}}{{}}}
+\bibcite{2013MNRAS.436..540H}{{13}{2013}{{{Harnois-D{\'e}raps} {et~al.}}}{{{Harnois-D{\'e}raps}, {Pen}, {Iliev}, {Merz}, {Emberson}, \& {Desjacques}}}}
+\bibcite{2009A&A...499...31H}{{14}{2009}{{{Hilbert} {et~al.}}}{{{Hilbert}, {Hartlap}, {White}, \& {Schneider}}}}
+\bibcite{1988csup.book.....H}{{15}{1988}{{{Hockney} \& {Eastwood}}}{{}}}
+\bibcite{2005NewA...10..393M}{{16}{2005}{{{Merz} {et~al.}}}{{{Merz}, {Pen}, \& {Trac}}}}
+\bibcite{2017MNRAS.469.1968P}{{17}{2017}{{{Pan} {et~al.}}}{{{Pan}, {Pen}, {Inman}, \& {Yu}}}}
+\bibcite{1995ApJS..100..269P}{{18}{1995}{{Pen}}{{}}}
+\bibcite{2016ascl.soft09016P}{{19}{2016}{{{Potter} \& {Stadel}}}{{}}}
+\bibcite{2005MNRAS.360L..82R}{{20}{2005}{{{Rimes} \& {Hamilton}}}{{}}}
+\bibcite{1985JCoPh..60..187R}{{21}{1985}{{Rokhlin}}{{}}}
+\bibcite{2009ApJ...701..945S}{{22}{2009}{{{Sato} {et~al.}}}{{{Sato}, {Hamana}, {Takahashi}, {Takada}, {Yoshida}, {Matsubara}, \& {Sugiyama}}}}
+\bibcite{2005MNRAS.364.1105S}{{23}{2005}{{Springel}}{{}}}
+\bibcite{2001NewA....6...79S}{{24}{2001}{{{Springel} {et~al.}}}{{{Springel}, {Yoshida}, \& {White}}}}
+\bibcite{2005Natur.435..629S}{{25}{2005}{{{Springel} {et~al.}}}{{{Springel}, {White}, {Jenkins}, {Frenk}, {Yoshida}, {Gao}, {Navarro}, {Thacker}, {Croton}, {Helly}, {Peacock}, {Cole}, {Thomas}, {Couchman}, {Evrard}, {Colberg}, \& {Pearce}}}}
+\bibcite{2009ApJ...700..479T}{{26}{2009}{{{Takahashi} {et~al.}}}{{{Takahashi}, {Yoshida}, {Takada}, {Matsubara}, {Sugiyama}, {Kayo}, {Nishizawa}, {Nishimichi}, {Saito}, \& {Taruya}}}}
+\bibcite{2011ApJ...726....7T}{{27}{2011}{{{Takahashi} {et~al.}}}{{{Takahashi}, {Yoshida}, {Takada}, {Matsubara}, {Sugiyama}, {Kayo}, {Nishimichi}, {Saito}, \& {Taruya}}}}
+\bibcite{2010ascl.soft11007T}{{28}{2010}{{Teyssier}}{{}}}
+\bibcite{2003ApJ...592..699V}{{29}{2003}{{{Vale} \& {White}}}{{}}}
+\bibcite{2017ApJ...841L..29W}{{30}{2017}{{{Wang} {et~al.}}}{{{Wang}, {Yu}, {Zhu}, {Yu}, {Pan}, \& {Pen}}}}
+\bibcite{1995ApJS...98..355X}{{31}{1995}{{Xu}}{{}}}
+\bibcite{haoran_yu_2018_1198909}{{32}{2018}{{Yu}}{{}}}
+\bibcite{2017PhRvD..95d3501Y}{{33}{2017{a}}{{{Yu} {et~al.}}}{{{Yu}, {Pen}, \& {Zhu}}}}
+\bibcite{2017NatAs...1E.143Y}{{34}{2017{b}}{{{Yu} {et~al.}}}{{{Yu}, {Emberson}, {Inman}, {Zhang}, {Pen}, {Harnois-D{\'e}raps}, {Yuan}, {Teng}, {Zhu}, {Chen}, {Xing}, {Du}, {Zhang}, {Lu}, \& {Liao}}}}
+\bibcite{1970A&A.....5...84Z}{{35}{1970}{{Zel'dovich}}{{}}}
+\bibstyle{aasjournal}
 \newlabel{LastPage}{{}{10}{}{}{}}

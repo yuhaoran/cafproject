@@ -50,7 +50,7 @@ program initial_conditions
   integer(izipx) xp(3,npmax)
   integer(izipv) vp(3,npmax)
 #ifdef PID
-    integer(8) pid(npmax)
+    integer(4) pid(npmax)
 #endif
   real grad_max(3)[*],vmax(3),vf
   real(4) svz(500,2),svr(100,2)
@@ -123,7 +123,7 @@ program initial_conditions
   sim%omega_m=omega_m
   sim%omega_l=omega_l
   sim%s8=s8
-  sim%vsim2phys=(150./sim%a)*box*h0*sqrt(omega_m)/nf_global
+  sim%vsim2phys=(150./sim%a)*box*sqrt(omega_m)/nf_global
   sim%z_i=z_checkpoint(cur_checkpoint)
   sim%z_i_nu=z_i_nu
   sync all
@@ -203,7 +203,7 @@ program initial_conditions
   if (head) print*,'Generating random noise'
   call random_seed(size=seedsize)
   if (head) print*,'  min seedsize =', seedsize
-  seedsize=max(seedsize,36)
+  seedsize=max(seedsize,12)
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
@@ -455,10 +455,12 @@ program initial_conditions
   do i=1,nn**3 ! co_max
     grad_max=max(grad_max,grad_max(:)[i])
   enddo
+  sync all
   vmax=grad_max/2/(4*pi)*vf
 
   sim%dt_vmax=vbuf*20./maxval(abs(vmax))
   sim%vz_max=vmax(3)
+  nlayer=2*ceiling(grad_max(3)/8/pi/ncell)+1
   if (head) then
     print*, '  grad_max',grad_max
     print*, '  max dsp',grad_max/2/(4*pi)
@@ -469,8 +471,8 @@ program initial_conditions
       print*, maxval(grad_max)/2/(4*pi),nfb
       stop
     endif
-    nlayer=2*ceiling(grad_max(3)/8/pi/ncell)+1
     print*,'  Thread save nlayer =',nlayer
+    print*,''
   endif
   sync all
 
@@ -634,6 +636,8 @@ program initial_conditions
     close(15)
 # endif
   call system_clock(t2,t_rate)
+  sync all
+
   if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
 
   if (head) then

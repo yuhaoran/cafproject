@@ -1,16 +1,21 @@
 OPTIONS=-DFFTFINE
 OPTIONS+=-Dsigma8
 OPTIONS+=-Danalysis
+OPTIONS+=-Ddiv3 -Dhackdsp
+
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
+OPTIONS+=-Dpositive
 OPTIONS+=-DEmode -DdspE
 
-all: ic.x cicpower.x halofinder.x dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x ic_nu.x cicpower.x halofinder.x dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
-ic.x: parameters.o variables.o pencil_fft.o initial_conditions.o
+
+ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
-ic_nu.x: parameters.o pencil_fft.o initial_conditions_nu.o
+ic_nu.x: parameters.o variables.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o
@@ -40,10 +45,12 @@ pencil_fft.o: ../main/pencil_fft.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 powerspectrum.o: powerspectrum.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-initial_conditions.o: initial_conditions.f90 parameters.o variables.o pencil_fft.o
+
+initial_conditions.o:    initial_conditions.f90    parameters.o variables.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o pencil_fft.o
+initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o variables.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
+
 displacement.o: displacement.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 xva_qspace.o: xva_qspace.f90 parameters.o
