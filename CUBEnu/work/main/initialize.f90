@@ -50,7 +50,6 @@ subroutine initialize
   halofind_step=.false.
   final_step=.false.
 
-  if (head) then
     open(16,file='z_checkpoint.txt',status='old')
     do i=1,nmax_redshift-1
       read(16,end=71,fmt='(f8.4)') z_checkpoint(i)
@@ -63,7 +62,6 @@ subroutine initialize
     enddo
     81 n_halofind=i-1
     close(16)
-  endif
   if (n_checkpoint==0) stop 'z_checkpoint.txt empty'
   if (n_halofind==0) stop 'z_halofind.txt empty'
   tau=-3/sqrt(1./(1+z_checkpoint(cur_checkpoint)))
