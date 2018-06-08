@@ -1,14 +1,14 @@
 OPTIONS=-DFFTFINE
 OPTIONS+=-Dsigma8
-OPTIONS+=-Danalysis
-OPTIONS+=-Ddiv3 -Dhackdsp
+#OPTIONS+=-Danalysis
+#OPTIONS+=-Ddiv3 -Dhackdsp
 
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
-OPTIONS+=-Dpositive
-OPTIONS+=-DEmode -DdspE
+#OPTIONS+=-Dpositive
+#OPTIONS+=-DEmode -DdspE
 
-all: ic.x ic_nu.x cicpower.x halofinder.x dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x ic_nu.x cicpower.x #halofinder.x dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 
 ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o

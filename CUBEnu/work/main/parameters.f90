@@ -53,24 +53,24 @@ module parameters
 
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
-  logical,parameter :: body_centered_cubic=.false.
-  integer(8),parameter :: np_nc=ncell ! number of particles / coarse cell / dim
+  logical,parameter :: body_centered_cubic=.true.
+  integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell/2 ! number of neutrinos per dim per coarse cell
 
   logical,parameter :: Extended_pp_force=.false.
   real,parameter :: rsoft=0.3 ! PP softening length
   integer,parameter :: pp_range=2 ! set <=4
   real,parameter :: image_buffer=1.2
-  real,parameter :: tile_buffer=3.0
+  real,parameter :: tile_buffer=1.5
   real,parameter :: vbuf=0.9
 
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=100.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=300.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0.8276 ! use -Dsigma_8 in initial_conditions
 
-  real,parameter :: z_i_nu=5.0 ! initial redshift for neutrinos
+  real,parameter :: z_i_nu=50.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
   real,parameter :: z_tf=10 ! redshift of transfer functions
 
@@ -79,7 +79,7 @@ module parameters
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
 
   integer, parameter :: Nnu = 3 ! number of massive neutrinos
-  real, dimension(Nnu), parameter :: Mnu = (/ 0.00,0.00,0.00  /)
+  real, dimension(Nnu), parameter :: Mnu = (/ 0.2,0.00,0.00  /)
   real, dimension(Nnu), parameter :: Tnu = (/ Tcnb,Tcnb,Tcnb /)
   real, parameter :: Meff = sum( Mnu*(Tnu/Tcnb)**3. )
 

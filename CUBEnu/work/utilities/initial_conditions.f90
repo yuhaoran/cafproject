@@ -512,6 +512,7 @@ program initial_conditions
   open(15,file=output_name('id'),status='replace',access='stream')
 #endif
 
+  if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
 
   vfield=0
   std_vsim_c=0; std_vsim_res=0; std_vsim=0; !np_prev=0
@@ -550,7 +551,6 @@ program initial_conditions
     vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
     call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
 
-    if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
     do ilayer=0,nlayer-1
       !$omp paralleldo default(shared) &
       !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,idx,vreal,iq)

@@ -44,7 +44,7 @@ module variables
   integer(izipx) xp(3,np_image_max)[*], xp_new(3,np_tile_max)
   integer(izipv) vp(3,np_image_max)[*], vp_new(3,np_tile_max)
 #ifdef PID
-    integer(8) pid(np_image_max)[*], pid_new(np_tile_max)
+    integer(4) pid(np_image_max)[*], pid_new(np_tile_max)
 #endif
 #ifdef AFIELD
     real(4) afield(3,np_image_max)

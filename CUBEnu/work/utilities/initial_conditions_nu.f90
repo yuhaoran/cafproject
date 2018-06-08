@@ -25,23 +25,26 @@ program initial_conditions_nu
   real tf(14,nk)
 #endif
 
-  integer(8) i,j,k,ip,l,nzero
+  integer(8) i,j,k,ip,l,nzero,n_min
   integer(8) ind,dx,dxy,kg,mg,jg,ig,ii,jj,kk,itx,ity,itz,idx,imove,g(3),iq(3)
   integer(4) seedsize,t1,t2,tt1,tt2,ttt1,ttt2,t_rate,ilayer,nlayer
-  real a_i,kr,kphys,kx,ky,kz,kmax,temp_r,temp_theta,pow,phi8,temp8[*]
+  real a_i,kr,kphys,kx,ky,kz,kmax,temp_r,temp_theta,pow,phi8,temp8[*],rnum1,rnum2,rnum3
   real(8) v8,norm,xq(3),gradphi(3),vreal(3),dvar[*],dvarg
   integer(int64) time64
 
   integer(4),allocatable :: iseed(:)
   real,allocatable :: rseed_all(:,:)
+  real,allocatable :: v_random(:,:)
+  integer(8) idx_tile
 
   complex delta_k(nyquest+1,nf,npen)
   real phi(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
   real phiv(-nfb:nf+nfb+1,-nfb:nf+nfb+1,-nfb:nf+nfb+1)[*]
 
   ! zip arrays
-  integer(8),parameter :: npt=nt*np_nc ! np / tile / dim !64
-  integer(8),parameter :: npb=ncb*np_nc !24
+  integer(8),parameter :: npt=nt*np_nc_nu ! np / tile / dim !64
+  integer(8),parameter :: npb=ncb*np_nc_nu !24
+
   integer(8),parameter :: npmax=2*(npt+2*npb)**3
   integer(4) rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
   integer(4) rholocal(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
@@ -59,10 +62,13 @@ program initial_conditions_nu
   real(8) sigma_vc,sigma_vf
   real(8) std_vsim_c,std_vsim_res,std_vsim
   character (10) :: img_s, z_s
-  real,parameter :: Vphys2sim = 1.0/(150.*sqrt(omega_m)*box*(1.+z_i_nu)/nf_global)
+  real,parameter :: Vphys2sim = 1.0/(150.*sqrt(omega_m)*box/a_i_nu/nf_global)
 
   integer,parameter :: nv=10000
   real(4) cdf(2,nv) !Col1 is v, col2 is cdf
+
+  real(4), parameter :: mfac = 180.8892437/sum(Mnu)/a_i_nu/3.0**0.5
+  real(4), parameter :: ffac = 50.2476/sum(Mnu)/a_i_nu !ckT/m =50.25
 
 
   call system_clock(ttt1,t_rate)
@@ -142,8 +148,8 @@ program initial_conditions_nu
     v8=v8+tf(2,k)*tophat(tf(1,k)*8)**2*tf(4,k)/tf(1,k)
   enddo
   if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest
-  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(1./(1+z_i_nu))**2 ! CDM
-  tf(6,:)=tf(6,:)*(s8**2/v8)*Dgrow(1./(1+z_i_nu))**2 !
+  tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a_i_nu)**2 ! CDM
+  tf(6,:)=tf(6,:)*(s8**2/v8)*Dgrow(a_i_nu)**2 !
   !tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
   !tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
   sync all
@@ -280,9 +286,9 @@ program initial_conditions_nu
   print*,'  rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 
   if (head) print*,'  write delta_L_nu into file'
-  if (head) print*,'  growth factor Dgrow(',1./(1+z_i_nu),') =',Dgrow(1./(1+z_i_nu))
+  if (head) print*,'  growth factor Dgrow(',a_i_nu,') =',Dgrow(a_i_nu)
   open(11,file=output_dir()//'delta_L_nu'//output_suffix(),status='replace',access='stream')
-  write(11) r3/Dgrow(1./(1+z_i_nu))
+  write(11) r3/Dgrow(a_i_nu)
   close(11)
   sync all
   call system_clock(t2,t_rate)
@@ -451,9 +457,12 @@ program initial_conditions_nu
   if (write_potential) then
     if (head) print*, '  write phiv1_nu into file'
     open(11,file=output_name('phiv1_nu'),status='replace',access='stream')
-    write(11) r3/vfactor(1./(1+z_i_nu))
+    write(11) r3/vfactor(a_i_nu)
     close(11)
   endif
+  phiv=0
+  phiv(1:nf,1:nf,1:nf)=r3 ! phi1
+
 !print*, vfactor(1/(1+z_i_nu))
 !print*, Vphys2sim
 !print*, interp_tf(0.1,1,2)*0.1
@@ -487,7 +496,7 @@ program initial_conditions_nu
   ! zip checkpoints ------------------------------------------------
   if (head) print*, ''
   if (head) print*, 'zip checkpoints'
-  vf=vfactor(1./(1+z_i_nu))
+  vf=vfactor(a_i_nu)
   if (head) print*, '  vf =',vf
   grad_max(1)=maxval(abs(phi(0:nf-1,1:nf,1:nf)-phi(2:nf+1,1:nf,1:nf)))
   grad_max(2)=maxval(abs(phi(1:nf,0:nf-1,1:nf)-phi(1:nf,2:nf+1,1:nf)))
@@ -521,16 +530,16 @@ program initial_conditions_nu
   !read(11) svr
   !close(11)
 
-  !sigma_vf=interp_sigmav(1./(1+z_i_nu),box/nf_global) ! sigma(v) on scale of fine grid, in km/s
-  !sigma_vc=interp_sigmav(1./(1+z_i_nu),box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
+  !sigma_vf=interp_sigmav(a_i_nu,box/nf_global) ! sigma(v) on scale of fine grid, in km/s
+  !sigma_vc=interp_sigmav(a_i_nu,box/nc_global) ! sigma(v) on scale of coarse grid, in km/s
   !sim%sigma_vres=sqrt(sigma_vf**2-sigma_vc**2) ! sigma(v) residual, in km/s
   !sim%sigma_vi=sim%sigma_vres/sim%vsim2phys/sqrt(3.) ! sigma(v_i) residual, in sim unit
   !sync all
   !if (head) then
   !  print*, ''
   !  print*, 'Read velocity dispersion prediction'
-  !  print*,'sigma_vf(a=',1./(1+z_i_nu),', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
-  !  print*,'sigma_vc(a=',1./(1+z_i_nu),', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
+  !  print*,'sigma_vf(a=',a_i_nu,', r=',box/nf_global,'Mpc/h)=',real(sigma_vf,4),'km/s'
+  !  print*,'sigma_vc(a=',a_i_nu,', r=',box/nc_global,'Mpc/h)=',real(sigma_vc,4),'km/s'
   !  print*,'sigma_vres=',real(sim%sigma_vres,4),'km/s'
   !  print*,'sigma_vi =',real(sim%sigma_vi,4),'(simulation unit)'
   !endif
@@ -539,38 +548,29 @@ program initial_conditions_nu
   open(11,file='../../tf/CDFTable.txt')
   read(11,*) cdf
   close(11)
+  sim%sigma_vi_nu=sqrt(sum(cdf(1,:)**2)/nv)*ffac*Vphys2sim/sqrt(3.)
+
+  if(head) print*,'sim%sigma_vi_nu =', sim%sigma_vi_nu
   sync all
 
-  kx=0.
-  print*,minloc(abs(cdf(2,:)-kx))
-
-  kx=0.1
-  print*,minloc(abs(cdf(2,:)-kx))
-
-  kx=0.9
-  print*,minloc(abs(cdf(2,:)-kx))
-
-  kx=0.9999
-  print*,minloc(abs(cdf(2,:)-kx))
-
-  kx=1.
-  print*,minloc(abs(cdf(2,:)-kx))
-
-  stop
+  !kx=0.; !print*,minloc(abs(cdf(2,:)-kx))
+  !kx=0.1; !print*,minloc(abs(cdf(2,:)-kx))
+  !kx=1.; print*,minloc(abs(cdf(2,:)-kx))
 
   ! create particles (no communication) ----------------------------
   if (head) print*,''
-  if (head) print*, 'Create particles'
+  if (head) print*, 'Create neutrino particles'
   call system_clock(t1,t_rate)
   open(11,file=output_name('xp_nu'),status='replace',access='stream')
   open(12,file=output_name('vp_nu'),status='replace',access='stream')
   open(13,file=output_name('np_nu'),status='replace',access='stream')
   open(14,file=output_name('vc_nu'),status='replace',access='stream')
 #ifdef PID
-  if (head) print*, '  also create PID'
+  if (head) print*, '  also create neutrino PID'
   open(15,file=output_name('id_nu'),status='replace',access='stream')
 #endif
 
+  if (body_centered_cubic .and. ncell/np_nc_nu/2==0) stop 'ncell/np_nc_nu/2 = 0, unsuitable for body centered cubic'
 
   vfield=0
   std_vsim_c=0; std_vsim_res=0; std_vsim=0; !np_prev=0
@@ -580,6 +580,11 @@ program initial_conditions_nu
     rhoce=0
     rholocal=0
 
+    ! call random_number ! for neutrino FD velocity
+    allocate(v_random(3,(npt+2*npb)**3*merge(2,1,body_centered_cubic)))
+    call random_number(v_random)
+
+    if(head) print*,'loop1'
     do ilayer=0,nlayer-1
       !$omp paralleldo default(shared) &
       !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,vreal)
@@ -596,7 +601,11 @@ program initial_conditions_nu
         gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
         g=ceiling(xq-gradphi/(8*pi*ncell))
         rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1
-        vreal=-gradphi/(8*pi)*vf
+
+        gradphi(1)=phiv(ii+1,jj,kk)-phiv(ii-1,jj,kk)
+        gradphi(2)=phiv(ii,jj+1,kk)-phiv(ii,jj-1,kk)
+        gradphi(3)=phiv(ii,jj,kk+1)-phiv(ii,jj,kk-1)
+        vreal=-gradphi/(8*pi)
         vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal ! record vfield according to real particles
       enddo ! imove
       enddo
@@ -609,10 +618,10 @@ program initial_conditions_nu
     vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
     call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
 
-    if (body_centered_cubic .and. ncell/np_nc/2==0) stop 'ncell/np_nc/2 = 0, unsuitable for body centered cubic'
+    if(head) print*,'loop2'
     do ilayer=0,nlayer-1
       !$omp paralleldo default(shared) &
-      !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,idx,vreal,iq)
+      !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,idx,vreal,idx_tile,n_min,rnum1,rnum2,rnum3,iq)
       do k=1-npb+ilayer,npt+npb,nlayer
       do j=1-npb,npt+npb
       do i=1-npb,npt+npb
@@ -628,9 +637,24 @@ program initial_conditions_nu
         rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
         idx=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
         xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
-        vreal=-gradphi/(8*pi)*vf
+
+        gradphi(1)=phiv(ii+1,jj,kk)-phiv(ii-1,jj,kk)
+        gradphi(2)=phiv(ii,jj+1,kk)-phiv(ii,jj-1,kk)
+        gradphi(3)=phiv(ii,jj,kk+1)-phiv(ii,jj,kk-1)
+        vreal=-gradphi/(8*pi)
         vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
-        vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sim%sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+
+        ! FD
+        idx_tile = 1+ merge(2,1,body_centered_cubic)* ((i+npb-1) + (j+npb-1)*(npt+2*npb) + (k+npb-1)*(npt+2*npb)**2) + imove
+        n_min= minval(minloc(abs(cdf(2,:)-v_random(1,idx_tile)))) ! row of the cdf
+        rnum1=cdf(1,n_min) * ffac ! intensity
+        rnum2=v_random(2,idx_tile)*2-1  !convert to [1,-1)
+        rnum3=v_random(3,idx_tile)*2*pi !convert to [0,2pi)
+        vreal(1)=vreal(1) + rnum1*(1.0-rnum2**2)**0.5*cos(rnum3)*Vphys2sim
+        vreal(2)=vreal(2) + rnum1*(1.0-rnum2**2)**0.5*sin(rnum3)*Vphys2sim
+        vreal(3)=vreal(3) + rnum1*rnum2*Vphys2sim
+
+        vp(:,idx)=nint(real(nvbin_nu-1)*atan(sqrt(pi/2)/(sim%sigma_vi_nu)*vreal)/pi,kind=izipv_nu)
 #       ifdef PID
           iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
           iq = modulo(iq,nf_global)
@@ -642,7 +666,9 @@ program initial_conditions_nu
       enddo ! k
       !$omp endparalleldo
     enddo ! ilayer
+    deallocate(v_random)
 
+    if(head) print*,'loop3'
     do k=1,nt ! delete buffer particles
     do j=1,nt
       xp(:,pp_l(j,k):pp_r(j,k))=xp(:,ppe_l(j,k):ppe_r(j,k))
@@ -653,6 +679,7 @@ program initial_conditions_nu
     enddo
     enddo
 
+    if(head) print*,'loop4'
     ! velocity analysis
     !$omp paralleldo&
     !$omp& default(shared) &
@@ -665,7 +692,7 @@ program initial_conditions_nu
       std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k)**2)
       do l=1,rhoce(i,j,k)
         ip=nzero+l
-        vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sim%sigma_vi*vrel_boost))
+        vreal=tan(pi*real(vp(:,ip))/real(nvbin_nu-1))/(sqrt(pi/2)/(sim%sigma_vi_nu))
         std_vsim_res=std_vsim_res+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k)
         std_vsim=std_vsim+sum(vreal**2)
@@ -682,7 +709,7 @@ program initial_conditions_nu
 #   ifdef PID
       write(15) pid(1:pp_r(nt,nt))
 #   endif
-    sim%nplocal=sim%nplocal+pp_r(nt,nt)
+    sim%nplocal_nu=sim%nplocal_nu+pp_r(nt,nt)
   enddo
   enddo
   enddo ! end of tile loop
@@ -699,27 +726,27 @@ program initial_conditions_nu
 
   if (head) then
     print*,''
-    print*,'Velocity analysis on head node'
-    std_vsim_res=sqrt(std_vsim_res/sim%nplocal)
+    print*,'Neutrino velocity analysis on head node'
+    std_vsim_res=sqrt(std_vsim_res/sim%nplocal_nu)
     std_vsim_c=sqrt(std_vsim_c/nc/nc/nc)
-    std_vsim=sqrt(std_vsim/sim%nplocal)
-    print*,'  std_vsim         ',real(std_vsim*sim%vsim2phys,4),'km/s'
-    print*,'  std_vsim_c       ',real(std_vsim_c*sim%vsim2phys,4),'km/s'
-    print*,'  std_vsim_res     ',real(std_vsim_res*sim%vsim2phys,4),'km/s'
-    print*,'  std_vi (sim unit)',real(std_vsim_res/sqrt(3.),4),'(simulation unit)'
+    std_vsim=sqrt(std_vsim/sim%nplocal_nu)
+    print*,'  std_vsim         ',real(std_vsim       /Vphys2sim,4),'km/s'
+    print*,'  std_vsim_c       ',real(std_vsim_c     /Vphys2sim,4),'km/s'
+    print*,'  std_vsim_res     ',real(std_vsim_res   /Vphys2sim,4),'km/s'
+    print*,'  std_vi (sim unit)',real(std_vsim_res   /sqrt(3.),4),'(simulation unit)'
     print*,''
   endif
   sync all
 
-  print*,'image',image,', nplocal',sim%nplocal
+  print*,'image',image,', nplocal',sim%nplocal_nu
   sync all
-  sim%npglobal=0
+  sim%npglobal_nu=0
   do i=1,nn**3
-    sim%npglobal=sim%npglobal+sim[i]%nplocal
+    sim%npglobal_nu=sim%npglobal_nu+sim[i]%nplocal_nu
   enddo
-  !sim%nplocal_nu=(np_nc_nu*nc)**3
-  !sim%npglobal_nu=(np_nc_nu*nc*nn)**3
-  if (head) print*, 'npglobal =',sim%npglobal
+  if (head) print*, 'sim%npglobal    =',sim%npglobal
+  if (head) print*, 'sim%npglobal_nu =',sim%npglobal_nu
+  sync all
   sim%mass_p_cdm=real(f_cdm*nf_global**3,kind=8)/sim%npglobal
   sim%mass_p_nu=real(f_nu*nf_global**3,kind=8)/sim%npglobal_nu
   call print_header(sim)
@@ -733,6 +760,16 @@ program initial_conditions_nu
   call system_clock(ttt2,t_rate)
   if (head) print*, 'total elapsed time =',real(ttt2-ttt1)/t_rate,'secs';
   if (head) print*, 'initial condition done'
+
+
+
+
+
+
+
+
+
+
 
   contains
 
