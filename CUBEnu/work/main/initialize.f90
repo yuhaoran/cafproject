@@ -56,20 +56,22 @@ subroutine initialize
     enddo
     71 n_checkpoint=i-1
     close(16)
+    if (n_checkpoint==0) stop 'z_checkpoint.txt empty'
+# ifdef HALOFIND
     open(16,file='z_halofind.txt',status='old')
     do i=1,nmax_redshift-1
       read(16,end=81,fmt='(f8.4)') z_halofind(i)
     enddo
     81 n_halofind=i-1
     close(16)
-  if (n_checkpoint==0) stop 'z_checkpoint.txt empty'
-  if (n_halofind==0) stop 'z_halofind.txt empty'
+    if (n_halofind==0) stop 'z_halofind.txt empty'
+    n_halofind=n_halofind[1]
+    z_halofind(:)=z_halofind(:)[1]
+# endif
   tau=-3/sqrt(1./(1+z_checkpoint(cur_checkpoint)))
   sync all
   n_checkpoint=n_checkpoint[1]
   z_checkpoint(:)=z_checkpoint(:)[1]
-  n_halofind=n_halofind[1]
-  z_halofind(:)=z_halofind(:)[1]
   ! create output directories
   call system('mkdir -p '//opath//'/image'//image2str(image))
 

@@ -15,6 +15,8 @@ subroutine ext_pp_force
   save
 
   integer(8) ntest,ip_offset,ipll1,ipll2
+  integer hoc(1-ncell:nft+ncell,1-ncell:nft+ncell,1-ncell:nft+ncell)
+  integer ll(np_pp_max)
 
   if (head) then
     print*, ''
@@ -64,6 +66,7 @@ subroutine ext_pp_force
         ipll1=ip1-ip_offset
         ll(ipll1)=hoc(ivec1(1),ivec1(2),ivec1(3))
         hoc(ivec1(1),ivec1(2),ivec1(3))=ipll1
+        !ip1=ipll1+ip_offset
       enddo
     enddo
     enddo

@@ -237,7 +237,6 @@ program initial_conditions
   deallocate(iseed)
   deallocate(rseed_all)
   sync all
-
 # ifdef READ_NOISE
     open(11,file=output_dir()//'noise'//output_suffix(),access='stream')
     read(11) r3
@@ -305,7 +304,6 @@ program initial_conditions
 
   if (head) print*,'  btran'
   call pencil_fft_backward
-
   print*,'  delta_L',r3(1:4,1,1)
   print*,'  rms of delta',sqrt(sum(r3**2*1.d0)/nf_global/nf_global/nf_global)
 

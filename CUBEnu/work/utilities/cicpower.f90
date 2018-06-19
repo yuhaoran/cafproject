@@ -237,7 +237,7 @@ program cicpower
 #ifdef NEUTRINOS
     call cross_power(xi,rho_c,rho_nu)
 #else
-  open(15,file=output_dir()//'0.000_delta_cE'//output_suffix(),status='old',access='stream')
+  open(15,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
   read(15) rho_nu
   close(15)
     call cross_power(xi,rho_c,rho_nu)

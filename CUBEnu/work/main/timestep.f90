@@ -42,13 +42,15 @@ subroutine timestep
 #   else
       z_next=z_checkpoint(cur_checkpoint)
 #   endif
-    a_next=1.0/(1+z_next) ! next checkpoint or halofind
+    a_next=1.0/(1+z_next)
     if (da>=a_next-a) then
       if (z_next==z_checkpoint(cur_checkpoint)) then
         checkpoint_step=.true.
         if (cur_checkpoint==n_checkpoint) final_step=.true.
       endif
+#   ifdef HALOFIND
       if (z_next==z_halofind(cur_halofind)) halofind_step=.true.
+#   endif
       do while (abs((a+da)/a_next-1)>=1e-6)
         dt=dt*(a_next-a)/da
         call expansion(a,dt,da_1,da_2)
@@ -82,7 +84,9 @@ subroutine timestep
   a_mid=a_mid[1]
   dt=dt[1]
   checkpoint_step=checkpoint_step[1]
+#ifdef HALOFIND
   halofind_step=halofind_step[1]
+#endif
   final_step=final_step[1]
   sync all
 endsubroutine timestep

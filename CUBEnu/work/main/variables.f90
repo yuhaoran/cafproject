@@ -76,9 +76,7 @@ module variables
   character (10) :: img_s, z_s
 
   !equivalence(rhoce,rhoce1d)
-  integer(8),parameter :: np_pp_max=np_image/nnt**3*(1+2./nt)**3*tile_buffer
-  integer hoc(1-ncell:nft+ncell,1-ncell:nft+ncell,1-ncell:nft+ncell)
-  integer ll(np_pp_max)
+  integer(8),parameter :: np_pp_max=np_tile_max ! can be optimized lower
   integer(8) npairs,itest1,nlast
   real(8) xvec1(3),xvec2(3),xvec21(3),rmag,force_pp(3),rcut,pcut,f_tot(3)
   integer(4) ivec1(3),np,ii,jj,kk,np1,np2,l1,l2
@@ -88,6 +86,16 @@ module variables
 contains
 
   subroutine spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
+    !! make a particle index (cumulative sumation) on tile
+    !! used in update_particle, initial_conditions
+    !! input:
+    !! rhoce -- particle number density on tile, with 2x buffer depth
+    !! output:
+    !! idx_ex_r -- last extended index on extended right boundary
+    !! ppe_r -- last extended index on physical right boundary
+    !! pp_l -- first physical index on physical left boundary
+    !! pp_r -- last physical index on physical right boundary
+    !! ppe_l -- first extended index on physical left boundary
     use omp_lib
     implicit none
     integer(4),intent(in) :: rhoce(1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb,1-2*ncb:nt+2*ncb)
@@ -123,6 +131,19 @@ contains
   endsubroutine
 
   subroutine spine_image(rhoc,idx_b_l,idx_b_r,ppe_l0,ppe_lr,ppe_rl,ppe_r0,ppl,ppr)
+    !! make a particle index (cumulative sumation) on image
+    !! used in buffer_grid
+    !! input:
+    !! rhoc -- particle number density on image, with 1x buffer depth
+    !! output:
+    !! idx_b_l -- zeroth extended index on extended left boundary
+    !! idx_b_r -- last extended index on extended right boundary
+    !! ppl -- zeroth physical index on physical left boundary
+    !! ppr -- last physical index on physical right boundary
+    !! ppe_r0 -- last extended index on physical right boundary
+    !! ppe_l0 -- zeroth extended index on physical left boundary
+    !! ppe_rl -- last extended index on inner right boundary
+    !! ppe_lr -- zeroth extended index on inner left boundary
     implicit none
     integer(4),intent(in) :: rhoc(1-ncb:nt+ncb,1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt)
     integer(8),dimension(1-ncb:nt+ncb,1-ncb:nt+ncb,nnt,nnt,nnt),intent(out) :: idx_b_l,idx_b_r

@@ -17,7 +17,7 @@ Clean up data files: source clean_up.sh
 Set your parameters:
 > vim main/parameters.f90
 Set checkpoints
-> vim main/redshifts.txt
+> vim main/z_checkpoint.txt
 
 Set up environments and load modules:
 > source module_load_mac.sh (on MacOS, using gcc compiler)

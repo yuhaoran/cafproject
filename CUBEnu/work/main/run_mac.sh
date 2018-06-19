@@ -14,8 +14,10 @@ make
 cd ../utilities/
 ./ic.x
 #./ic_nu.x
+
 cd ../main/
 ./main.x
+
 cd ../utilities/
 ./cicpower.x
 #source findhalos.sh
