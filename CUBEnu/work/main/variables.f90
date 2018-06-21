@@ -22,8 +22,6 @@ module variables
   real dt[*],dt_old[*],dt_mid[*],dt_e
   real a[*],da[*],a_mid[*],tau[*],t[*] ! time step
   real f2_max_fine(nnt,nnt,nnt)[*],f2_max_pp[*],f2_max_coarse[*]
-  integer nhalo[*],nhalo_tot[*],n_candidate[*],n_candidate_real[*]
-  integer(8) n_search_fail[*]
 
   integer(4) iseed(nseedmax), iseedsize, nth,ith
   integer(8) itx,ity,itz,ix,iy,iz,i_dim
