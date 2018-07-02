@@ -1,7 +1,18 @@
 module halo_output
   implicit none
 
-  type halo_type
+  type type_halo_catalog
+    integer nhalo_tot,nhalo
+    real den_odc
+  endtype
+
+  type type_header_halo_tab
+    integer(4) Ngroups,TotNgroups,Nids
+    integer(8) TotNids
+    integer(4) NFiles
+  endtype
+
+  type type_halo_info
     real hpos(3)
     real mass_odc,radius_odc,v_disp
     real x_mean(3),v_mean(3),ang_mom(3),var_x(3)
@@ -16,7 +27,9 @@ subroutine halofind
   implicit none
   save
 
-  type(halo_type) halo_info
+  type(type_halo_info) halo_info
+  type(type_header_halo_tab) header_halo_tab[*]
+
   integer,parameter :: nc_halo_max=128
   integer,parameter :: newbox_max=300
   integer,parameter :: nlist=5*(nc_halo_max+1)**3
@@ -32,7 +45,7 @@ subroutine halofind
 
   integer i0,j0,k0,l0,idx1(3),idx2(3),irtot
   integer(1) p_tag(np_image_max)
-  integer(8) ilist_odc(max_halo_np),i_odc
+  integer(4) ilist_odc(max_halo_np),i_odc,GroupOffset,temp_halo(2,200000)
   integer idist(3,nlist),isortdist(nlist),idist_tmp(3,nlist),isortpeak(n_peak_max)
   integer isortpos_odc(max_halo_np)
   integer iloc,np_odc,np_search
@@ -99,12 +112,22 @@ subroutine halofind
 
   ! open halo file
   open(11,file=output_name_halo('halo'),status='replace',access='stream')
-  open(12,file=output_name_halo('fail'),status='replace',access='stream')
+  open(12,file=output_name_halo('halo_pid'),status='replace',access='stream')
+  open(101,file=output_name_halo('group_tab'),status='replace',access='stream')
+  open(102,file=output_name_halo('group_ids'),status='replace',access='stream')
   ! Determine which candidates are to be considered halos and write their properties to file.
   nhalo=0
+  GroupOffset=0
   n_search_fail=0 ! Ticker recording how many particle searches end up empty handed
   p_tag=0 ! Initialize so that no particles are yet part of a halo
   write(11) nhalo_tot,nhalo,den_odc
+  ! write(12) ! there is no header for halo_pid
+  header_halo_tab%Ngroups=0
+  header_halo_tab%TotNgroups=0
+  header_halo_tab%Nids=0
+  header_halo_tab%TotNids=0
+  write(101) header_halo_tab
+  write(102) header_halo_tab,0
 
   do itz=nnt,1,-1
   do ity=nnt,1,-1
@@ -369,7 +392,6 @@ subroutine halofind
       !  print*,'  search fail:'
       !  print*, ipeak(:,iloc)+([itx,ity,itz]-1)*nft
       !  print*,'  r',r_proxy,rsearch
-      !  write(12) ipeak(:,iloc)+([itx,ity,itz]-1)*nft
       !  !stop
       !endif
 
@@ -382,19 +404,27 @@ subroutine halofind
           nhalo=nhalo+1
           halo_info%hpos=hpos+([itx,ity,itz]-1)*nft
           halo_info%mass_odc=sim%mass_p_cdm*i_odc
-          halo_info%x_mean=sum(xv_odc(1:3,:i_odc),2)/i_odc+([itx,ity,itz]-1)*nft
+          halo_info%x_mean=sum(xv_odc(1:3,:i_odc),2)/i_odc
           halo_info%var_x=sum((xv_odc(1:3,:i_odc)-spread(halo_info%x_mean,2,i_odc))**2,2)/(i_odc-1)
+          halo_info%x_mean=halo_info%x_mean+([itx,ity,itz]-1)*nft
           halo_info%v_mean=sum(xv_odc(4:6,:i_odc),2)/i_odc
           halo_info%v_disp=sqrt(sum((xv_odc(4:6,:i_odc)-spread(halo_info%v_mean,2,i_odc))**2)/(i_odc-1))
           halo_info%ang_mom=0
           do ii=1,i_odc
-            dx=xv_odc(1:3,ii)-halo_info%hpos
-            dv=xv_odc(4:6,ii)-halo_info%v_mean
+            dx=xv_odc(1:3,ii)-hpos
+            dv=xv_odc(4:6,ii)!-halo_info%v_mean
             halo_info%ang_mom(1)=halo_info%ang_mom(1)+dx(2)*dv(3)-dx(3)*dv(2)
             halo_info%ang_mom(2)=halo_info%ang_mom(2)+dx(3)*dv(1)-dx(1)*dv(3)
             halo_info%ang_mom(3)=halo_info%ang_mom(3)+dx(1)*dv(2)-dx(2)*dv(1)
           enddo
           write(11) halo_info ! if the maximum is in physical regions
+          write(12) i_odc,pid(ilist_odc(:i_odc)),0
+          !write(101) i_odc,GroupOffset
+          temp_halo(1,nhalo)=i_odc
+          temp_halo(2,nhalo)=GroupOffset
+          write(102) pid(ilist_odc(:i_odc))
+          GroupOffset=GroupOffset+i_odc
+          header_halo_tab%Nids=header_halo_tab%Nids+i_odc
         else
 #         ifdef analysis
             print*,'  it is a halo in buffer region'
@@ -420,18 +450,18 @@ subroutine halofind
 
     enddo ! iloc
     print*,'  found nhalo =',nhalo
+    print*,'  total particles in halo =',GroupOffset,header_halo_tab%Nids
   enddo
   enddo
   enddo ! end looping over tiles
   sync all
-  if (head) then
-    nhalo_tot=0
-    do ii=1,nn**3
-      nhalo_tot=nhalo_tot+nhalo[ii]
-    enddo
-  endif
-  sync all
-  nhalo_tot=nhalo_tot[1]
+
+  nhalo_tot=0
+  header_halo_tab%TotNids=0
+  do ii=1,nn**3
+    nhalo_tot=nhalo_tot+nhalo[ii]
+    header_halo_tab%TotNids=header_halo_tab%TotNids+header_halo_tab[ii]%Nids
+  enddo
   sync all
   if (head) then
     print*, '  found',nhalo_tot,'halos'
@@ -440,6 +470,19 @@ subroutine halofind
   write(11) nhalo_tot,nhalo
   close(11)
   close(12)
+
+  header_halo_tab%Ngroups=nhalo
+  header_halo_tab%TotNgroups=nhalo_tot
+  header_halo_tab%NFiles=nn**3
+  rewind(101)
+  write(101) header_halo_tab
+  write(101) temp_halo(1,:nhalo),temp_halo(2,:nhalo)
+  close(101)
+
+  rewind(102)
+  write(102) header_halo_tab,0
+  close(102)
+
   sync all
 
 endsubroutine

@@ -29,7 +29,7 @@ subroutine checkpoint
 
   sim%cur_checkpoint=cur_checkpoint
 
-  sim%vsim2phys=(1.5/a)*box*h0*100.*sqrt(omega_m)/nf_global
+  sim%vsim2phys=(1.5/a)*box*100.*sqrt(omega_m)/nf_global
 
   !$omp parallelsections default(shared)
   !$omp section

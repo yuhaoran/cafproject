@@ -8,7 +8,7 @@ OPTIONS+=-DPID
 #OPTIONS+=-Dpositive
 #OPTIONS+=-DEmode -DdspE
 
-all: ic.x ic_nu.x cicpower.x #halofinder.x dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x ic_nu.x cicpower.x halofinder.x ang_mom_corr.x #dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 
 ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o
@@ -21,6 +21,8 @@ dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 halofinder.x: parameters.o variables.o halofind.o indexedsort.o buffer_grid.o buffer_particle.o particle_initialization.o halofinder.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
+ang_mom_corr.x: parameters.o variables.o ang_mom_corr.o halofind.o indexedsort.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 vel.x:  parameters.o pencil_fft.o powerspectrum.o velocity_field.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -58,6 +60,8 @@ xva_qspace.o: xva_qspace.f90 parameters.o
 correlation_qspace.o: correlation_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 cicpower.o: cicpower.f90 parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o
+	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
+ang_mom_corr.o: ang_mom_corr.f90 parameters.o indexedsort.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 halofinder.o: halofinder.f90 parameters.o variables.o neutrinos.o halofind.o buffer_grid.o buffer_particle.o particle_initialization.o
 	$(FC) $(OFLAG) $(OPTIONS) $<

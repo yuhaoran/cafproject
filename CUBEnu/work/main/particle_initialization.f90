@@ -96,7 +96,7 @@ subroutine particle_initialization
     print*,'  mass_p_cdm =', sim%mass_p_cdm
     print*,'  mass_p_nu  =', sim%mass_p_nu
 
-    print*,'  vsim2phy =',sim%vsim2phys, ' (km/s)/(1.0)'
+    print*,'  vsim2phys =',sim%vsim2phys, ' (km/s)/(1.0)'
     !print*,'  std_vf(a=',a_i,', r=',box/nf_global,'Mpc/h)',sqrt(3.)*sigma_vfi*sim%vsim2phys,'km/s'
     !print*,'  std_vc(a=',a_i,', r=',box/nc_global,'Mpc/h)',sqrt(3.)*sigma_vci*sim%vsim2phys,'km/s'
     !print*,'  std_vres',sqrt(3.)*sigma_vres*sim%vsim2phys,'km/s'

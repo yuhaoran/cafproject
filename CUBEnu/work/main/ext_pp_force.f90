@@ -133,7 +133,7 @@ subroutine ext_pp_force
   !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   !dt_pp=sqrt(0.1*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
-  sim%dt_pp=5*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
+  sim%dt_pp=2*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
   sync all
   do i=1,nn**3
     sim%dt_pp=min(sim%dt_pp,sim[i]%dt_pp)
