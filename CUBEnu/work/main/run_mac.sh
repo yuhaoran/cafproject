@@ -20,6 +20,8 @@ cd ../main/
 
 cd ../utilities/
 ./cicpower.x
+./halofinder.x
+./ang_mom_corr.x
 #source findhalos.sh
 
 cd ../main/

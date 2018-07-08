@@ -35,7 +35,7 @@ subroutine ext_pp_force
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    if (head) print*, '  tile:',int(itx,1),int(ity,1),int(itz,1)
+    !! if (head) print*, '  tile:',int(itx,1),int(ity,1),int(itz,1)
     call system_clock(t1,t_rate)
     if (np_pp_max<sum(rhoc(0:nt+1,0:nt+1,0:nt+1,itx,ity,itz))) then
       print*, 'np_pp_max too small'
@@ -124,8 +124,8 @@ subroutine ext_pp_force
     enddo
     !$omp endparalleldo
     call system_clock(t2,t_rate)
-    print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
-    print*, '  itest1 =',itest1
+    !! print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    !! print*, '  itest1 =',itest1
   enddo
   enddo
   enddo !! itz
@@ -133,7 +133,7 @@ subroutine ext_pp_force
   !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   !dt_pp=sqrt(0.1*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
-  sim%dt_pp=2*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
+  sim%dt_pp=5.0*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
   sync all
   do i=1,nn**3
     sim%dt_pp=min(sim%dt_pp,sim[i]%dt_pp)

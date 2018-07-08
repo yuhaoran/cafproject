@@ -81,8 +81,8 @@ subroutine checkpoint
     print*, cur_checkpoint, n_checkpoint_neu
     print*, 'turn neutrino_flag on'
     neutrino_flag=.true.
-    sim%mass_p_cdm=real((nf*nn)**3*f_cdm)/sim%npglobal
-    sim%mass_p_nu=real((nf*nn)**3*f_nu)/sim%npglobal_nu
+    !sim%mass_p_cdm=real((nf*nn)**3*f_cdm)/sim%npglobal
+    !sim%mass_p_nu=real((nf*nn)**3*f_nu)/sim%npglobal_nu
   endif
   !npglobal=0
   !do i=1,nn**3

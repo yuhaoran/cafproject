@@ -79,9 +79,9 @@ subroutine particle_initialization
   sync all
 
 #ifdef NEUTRINOS
-  if (.not. neutrino_flag) sim%mass_p_cdm=real((nf*nn)**3)/sim%npglobal
+  !if (.not. neutrino_flag) sim%mass_p_cdm=real((nf*nn)**3)/sim%npglobal
 #else
-  sim%mass_p_cdm=real((nf*nn)**3)/sim%npglobal
+  !sim%mass_p_cdm=real((nf*nn)**3)/sim%npglobal
 #endif
   sync all
 

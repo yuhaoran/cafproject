@@ -1,6 +1,7 @@
+!#define onehalo
 #define sigma_8
 #define READ_SEED
-!#define READ_NOISE
+#define READ_NOISE
 
 program initial_conditions
   use omp_lib
@@ -22,6 +23,11 @@ program initial_conditions
 #else
   integer(8),parameter :: nk=132
   real tf(14,nk)
+#endif
+
+#ifdef onehalo
+  integer pid_halo(100000),np_halo,ipos(3),nw,iw
+  real xv(6,100000),xv_mean(6),ang_mom(3)
 #endif
 
   integer(8) i,j,k,ip,l,nzero
@@ -62,6 +68,10 @@ program initial_conditions
   call omp_set_num_threads(ncore)
   call geometry
   call system('mkdir -p '//opath//'image'//image2str(image))
+
+#ifdef onehalo
+  nw=0
+#endif
 
   cur_checkpoint=1
   open(16,file='../main/z_checkpoint.txt',status='old')
@@ -514,6 +524,98 @@ program initial_conditions
 
   vfield=0
   std_vsim_c=0; std_vsim_res=0; std_vsim=0; !np_prev=0
+
+#ifdef onehalo
+  open(16,file='../../output/universe2/image1/3.000_halo_pid_1.dat',status='old',access='stream')
+  read(16) np_halo
+  read(16) pid_halo(:np_halo)
+  close(16)
+  print*,minval(pid_halo(:np_halo)),maxval(pid_halo(:np_halo))
+  pid_halo(:np_halo)=pid_halo(:np_halo)-1
+
+  print*,'np_halo =',np_halo
+
+  ! skip until the last tile
+  rhoce=0; vfield=0;
+  do i=1,nnt**3-1
+    write(13) rhoce(1:nt,1:nt,1:nt)
+    write(14) vfield(:,1:nt,1:nt,1:nt)
+  enddo
+
+  do ip=1,np_halo
+    ipos(3)=pid_halo(ip)/nf_global**2
+    ipos(2)=(pid_halo(ip)-ipos(3)*nf_global**2)/nf_global
+    ipos(1)=modulo(pid_halo(ip),nf_global)
+    ipos=ipos+1
+    kk=ipos(3); jj=ipos(2); ii=ipos(1);
+    xq=([ii,jj,kk]-0.5)/ncell-nt ! tile coordinates in coarse grid
+    gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
+    gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
+    gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
+    g=ceiling(xq-gradphi/(8*pi*ncell))
+    rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! in tile
+    vreal=-gradphi/(8*pi)*vf
+    vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal
+  enddo
+  vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
+  vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
+  vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
+  call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
+
+  do ip=1,np_halo
+    ipos(3)=pid_halo(ip)/nf_global**2
+    ipos(2)=(pid_halo(ip)-ipos(3)*nf_global**2)/nf_global
+    ipos(1)=modulo(pid_halo(ip),nf_global)
+    ipos=ipos+1
+    kk=ipos(3); jj=ipos(2); ii=ipos(1);
+    xq=([ii,jj,kk]-0.5)/ncell-nt ! tile coordinates in coarse grid
+    gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
+    gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
+    gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
+    g=ceiling(xq-gradphi/(8*pi*ncell))
+    rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
+    idx=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
+    xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
+    vreal=-gradphi/(8*pi)*vf
+    vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
+    vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sim%sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
+    pid(idx)=pid_halo(ip)+1
+
+    nw=nw+1
+    xv(1:3,nw)=ipos-0.5!-gradphi/(8*pi)
+    !print*,pid_halo(ip)+1,ipos-0.5;stop
+    xv(4:6,nw)=-gradphi/(8*pi)/Dgrow(sim%a)
+  enddo
+  print*, 'recorded in xv', nw
+  xv_mean=sum(xv(:,:nw),2)/nw
+  print*,'xv_mean =',xv_mean
+  xv(:,:nw)=xv(:,:nw)-spread(xv_mean, 2, nw)
+  ang_mom=0
+  do iw=1,nw
+    ang_mom(1)=ang_mom(1)+xv(2,iw)*xv(6,iw)-xv(3,iw)*xv(5,iw)
+    ang_mom(2)=ang_mom(2)+xv(3,iw)*xv(4,iw)-xv(1,iw)*xv(6,iw)
+    ang_mom(3)=ang_mom(3)+xv(1,iw)*xv(5,iw)-xv(2,iw)*xv(4,iw)
+  enddo
+  print*, Dgrow(sim%a),vf
+  print*, '             q-space ang_mom=',ang_mom
+
+
+  do k=1,nt ! delete buffer particles
+  do j=1,nt
+    xp(:,pp_l(j,k):pp_r(j,k))=xp(:,ppe_l(j,k):ppe_r(j,k))
+    vp(:,pp_l(j,k):pp_r(j,k))=vp(:,ppe_l(j,k):ppe_r(j,k))
+    pid(pp_l(j,k):pp_r(j,k))=pid(ppe_l(j,k):ppe_r(j,k))
+  enddo
+  enddo
+  write(11) xp(:,1:pp_r(nt,nt))
+  write(12) vp(:,1:pp_r(nt,nt))
+  write(13) rhoce(1:nt,1:nt,1:nt)
+  write(14) vfield(:,1:nt,1:nt,1:nt)
+  write(15) pid(1:pp_r(nt,nt))
+  sim%nplocal=sim%nplocal+pp_r(nt,nt)
+#else
+! onehalo
+
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -626,6 +728,9 @@ program initial_conditions
   enddo
   enddo ! end of tile loop
 
+#endif
+! onehalo
+
   close(11)
   close(12)
   close(13)
@@ -663,6 +768,10 @@ program initial_conditions
   if (head) print*, 'npglobal =',sim%npglobal
   sim%mass_p_cdm=real(f_cdm*nf_global**3,kind=8)/sim%npglobal
   sim%mass_p_nu=real(f_nu*nf_global**3,kind=8)/sim%npglobal_nu
+
+#ifdef onehalo
+  sim%mass_p_cdm=4
+#endif
   call print_header(sim)
 
   sync all

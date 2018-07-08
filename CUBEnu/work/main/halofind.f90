@@ -212,7 +212,6 @@ subroutine halofind
     enddo
     enddo
     if (head) print*, '  real/total peaks =',n_peak_real,n_peak
-
     ! sort density maxima
     isortpeak(:n_peak) = [(i0,i0=1,n_peak)]
     call indexedsort(n_peak,den_peak(:),isortpeak(:))
@@ -317,7 +316,6 @@ subroutine halofind
       enddo
       enddo
       enddo
-
       if(np_odc>max_halo_np) stop 'np_search>max_halo_np'
       ! Find refined mesh density maximum, w.r.t. tile
       !hpos=frbox(:,1)+newgrid*(maxloc(finegrid)-0.5) !
@@ -411,13 +409,15 @@ subroutine halofind
           halo_info%v_disp=sqrt(sum((xv_odc(4:6,:i_odc)-spread(halo_info%v_mean,2,i_odc))**2)/(i_odc-1))
           halo_info%ang_mom=0
           do ii=1,i_odc
-            dx=xv_odc(1:3,ii)-hpos
-            dv=xv_odc(4:6,ii)!-halo_info%v_mean
+            dx=xv_odc(1:3,ii)-(halo_info%x_mean-([itx,ity,itz]-1)*nft)
+            dv=xv_odc(4:6,ii)
             halo_info%ang_mom(1)=halo_info%ang_mom(1)+dx(2)*dv(3)-dx(3)*dv(2)
             halo_info%ang_mom(2)=halo_info%ang_mom(2)+dx(3)*dv(1)-dx(1)*dv(3)
             halo_info%ang_mom(3)=halo_info%ang_mom(3)+dx(1)*dv(2)-dx(2)*dv(1)
           enddo
+          !print*,halo_info%ang_mom;stop
           write(11) halo_info ! if the maximum is in physical regions
+          if (minval(pid(ilist_odc(:i_odc)))<1) stop "pids are not all positive integers"
           write(12) i_odc,pid(ilist_odc(:i_odc)),0
           !write(101) i_odc,GroupOffset
           temp_halo(1,nhalo)=i_odc
