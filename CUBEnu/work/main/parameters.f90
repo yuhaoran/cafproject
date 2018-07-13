@@ -57,7 +57,7 @@ module parameters
   integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell/2 ! number of neutrinos per dim per coarse cell
 
-  logical,parameter :: Extended_pp_force=.true.
+  logical,parameter :: Extended_pp_force=.false.
   real,parameter :: rsoft=0.5 ! PP softening length
   integer,parameter :: pp_range=1 ! set <=4
   real,parameter :: image_buffer=1.2

@@ -5,6 +5,7 @@ OPTIONS+=-Dsigma8
 
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
+OPTIONS+=-DHID
 #OPTIONS+=-Dpositive
 #OPTIONS+=-DEmode -DdspE
 

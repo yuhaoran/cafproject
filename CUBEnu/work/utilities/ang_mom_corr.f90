@@ -17,7 +17,7 @@ program ang_mom_corr
   integer(4) ihalo,nhalo,ip,np,ncheck
   character(20) str_z,str_i
   integer pid(max_halo_np),ipos(3)
-  real qpos(3,max_halo_np),qpos_mean(3),spin_q(3),spin_x(3),vq(3),dx(3),vf,scale_factor
+  real qpos(3,max_halo_np),qpos_mean(3),spin_q(3),spin_x(3),vq(3),dx(3),vf,scale_factor,dx_mean(3)
   real theta(20000)
   real phi(0:nf+1,0:nf+1,0:nf+1)[*]
 
@@ -67,12 +67,13 @@ program ang_mom_corr
   phi(:,:,nf+1)=phi(:,:,1)[image1d(icx,icy,ipz)]
   sync all
 
-  do cur_checkpoint= 1,n_checkpoint
+  do cur_checkpoint= n_checkpoint,n_checkpoint
     if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
     scale_factor=1/(1+z_checkpoint(cur_checkpoint))
     print*,output_name('halo')
     open(11,file=output_name('halo'),status='old',access='stream')
     open(12,file=output_name('halo_pid'),status='old',access='stream')
+    open(13,file=output_name('halo_init_spin'),status='replace',access='stream')
     read(11) halo_catalog
 
     print*,' N_halos_global =',halo_catalog%nhalo_tot
@@ -89,14 +90,27 @@ program ang_mom_corr
       if (ncheck/=0) stop "halo_pid file error"
       if (minval(pid(:np))<1) stop "pids are not all positive numbers"
       pid(:np)=pid(:np)-1
+      dx_mean=0
       do ip=1,np
         qpos(3,ip)=pid(ip)/nf_global**2
         qpos(2,ip)=(pid(ip)-(pid(ip)/nf_global**2)*nf_global**2)/nf_global
         qpos(1,ip)=modulo(pid(ip),nf_global)
+        qpos(:,ip)=qpos(:,ip)+0.5
+        dx=qpos(:,ip)-halo_info%x_mean
+        dx=modulo(dx+nf_global/2,real(nf_global))-nf_global/2
+        dx_mean=dx_mean+dx
       enddo
-      qpos(:,:np)=qpos(:,:np)+0.5
-      qpos_mean=sum(qpos(:,:np),2)/np
+      dx_mean=dx_mean/np
+      qpos_mean=halo_info%x_mean+dx_mean
+      qpos_mean=modulo(qpos_mean,real(nf_global))
+      !if(ihalo==9) then
+      !  print*,halo_info%x_mean
+      !  print*,dx_mean
+      !  print*,halo_info%x_mean+dx_mean
+      !  print*,qpos_mean
+      !endif
       spin_q=0
+      dx_mean=0
       do ip=1,np
         ipos(3)=pid(ip)/nf_global**2
         ipos(2)=(pid(ip)-ipos(3)*nf_global**2)/nf_global
@@ -107,23 +121,38 @@ program ang_mom_corr
         vq(3)=phi(ipos(1),ipos(2),ipos(3)+1)-phi(ipos(1),ipos(2),ipos(3)-1)
         vq=-vq/(8*pi)/Dgrow(1/(1+z_checkpoint(1)))*vf
         dx=ipos-0.5-qpos_mean
+        dx=modulo(dx+nf_global/2,real(nf_global))-nf_global/2
+        dx_mean=dx_mean+dx
         spin_q(1)=spin_q(1)+dx(2)*vq(3)-dx(3)*vq(2)
         spin_q(2)=spin_q(2)+dx(3)*vq(1)-dx(1)*vq(3)
         spin_q(3)=spin_q(3)+dx(1)*vq(2)-dx(2)*vq(1)
         spin_x=halo_info%ang_mom
       enddo
+      dx_mean=dx_mean/np
+      if(maxval(abs(dx_mean))>5) then
+        stop "dx incorrect"
+      endif
+
       !print*,'mass',halo_info%mass_odc
       !print*,'q_mean',qpos_mean
       !print*,'x_mean',halo_info%x_mean
       !print*,spin_q
       !print*,spin_x
+      write(13) spin_q
       theta(ihalo)=sum(spin_q*spin_x)/sqrt(sum(spin_q**2))/sqrt(sum(spin_x**2))
       !print*,theta(ihalo)
       !read(*,*)
       !print*,vf,Dgrow(1/(1+z_checkpoint(1)))
+      if (ihalo==4) then
+        print*,spin_q
+        print*,spin_x
+
+      endif
     enddo
+    print*,theta(4)
+
     print*,'mean correlation =',sum(theta(:nhalo))/nhalo
-    close(11);close(12)
+    close(11);close(12);close(13)
     deallocate(corr_info)
   enddo
   sync all

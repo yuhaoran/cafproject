@@ -1,4 +1,4 @@
-#define write_snapshot
+!#define write_snapshot
 program halofinder
   use omp_lib
   use parameters
@@ -39,7 +39,7 @@ program halofinder
   z_checkpoint=z_halofind
   sync all
 
-  do cur_halofind=1,n_checkpoint
+  do cur_halofind=n_checkpoint,n_checkpoint
     cur_checkpoint=cur_halofind
     xp=0; vp=0; rhoc=0; vfield=0
     call particle_initialization

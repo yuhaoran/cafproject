@@ -58,6 +58,9 @@ subroutine halofind
   real hpos(3),mass_proxy,newgrid,r_proxy,rsearch,dr(3)
   real rhof(1-nfb:nft+nfb,1-nfb:nft+nfb,1-nfb:nft+nfb),halo_mesh_mass(n_peak_max)
   integer nhalo[*],nhalo_tot[*],n_peak[*],n_peak_real[*],n_search_fail[*]
+#ifdef HID
+  integer(2) hid(nf**3)
+#endif
 
   if (head) print*, ''
   if (head) print*, 'halofind'
@@ -116,6 +119,10 @@ subroutine halofind
   open(101,file=output_name_halo('group_tab'),status='replace',access='stream')
   open(102,file=output_name_halo('group_ids'),status='replace',access='stream')
   ! Determine which candidates are to be considered halos and write their properties to file.
+# ifdef HID
+    open(21,file=output_name_halo('hid'),status='replace',access='stream')
+    hid=0 !! initialize hid so that all particles do not belong to any halo
+# endif
   nhalo=0
   GroupOffset=0
   n_search_fail=0 ! Ticker recording how many particle searches end up empty handed
@@ -263,12 +270,12 @@ subroutine halofind
       ! find halo particles
       np_search=0;np_odc=0;finegrid=0;xv_odc=0
 #     ifdef analysis
-        open(13,file=output_name_halo('xvp_halo'),access='stream',status='replace')
+        open(23,file=output_name_halo('xvp_halo'),access='stream',status='replace')
 #     ifdef PID
-        open(14,file=output_name_halo('pid_halo'),access='stream',status='replace')
+        open(24,file=output_name_halo('pid_halo'),access='stream',status='replace')
 #     endif
-        write(13) halo_info%hpos*0, halo_info%x_mean*0, halo_info%radius_odc*0, halo_info%mass_odc*0, i_odc*0
-        write(13) hpos+([itx,ity,itz]-1)*nft
+        write(23) halo_info%hpos*0, halo_info%x_mean*0, halo_info%radius_odc*0, halo_info%mass_odc*0, i_odc*0
+        write(23) hpos+([itx,ity,itz]-1)*nft
 #     endif
       do k0=csbox(3,1),csbox(3,2)
       do j0=csbox(2,1),csbox(2,2)
@@ -353,18 +360,18 @@ subroutine halofind
       oct(:np_odc)=oct(isortpos_odc(:np_odc))
 #ifdef analysis
   xv_odc(:3,:np_odc)=xv_odc(:3,:np_odc)+spread(([itx,ity,itz]-1)*nft, dim=2, ncopies=np_odc)
-  write(13) xv_odc(:,:np_odc)
+  write(23) xv_odc(:,:np_odc)
   xv_odc(:3,:np_odc)=xv_odc(:3,:np_odc)-spread(([itx,ity,itz]-1)*nft, dim=2, ncopies=np_odc)
 #ifdef PID
-  write(14) pid(ilist_odc(:np_odc))
+  write(24) pid(ilist_odc(:np_odc))
 #endif
   !close(23)
-  open(23,file=output_name_halo('r_odc'),access='stream',status='replace')
-  write(23) r_odc(:np_odc)
-  close(23)
-  open(23,file=output_name_halo('oct_odc'),access='stream',status='replace')
-  write(23) int(oct(:np_odc),1)
-  close(23)
+  open(33,file=output_name_halo('r_odc'),access='stream',status='replace')
+  write(33) r_odc(:np_odc)
+  close(33)
+  open(33,file=output_name_halo('oct_odc'),access='stream',status='replace')
+  write(33) int(oct(:np_odc),1)
+  close(33)
   print*, 'wrote',np_odc,'particles into file'
 #endif
       ! calculate halo radius ------------------------------------------------
@@ -415,10 +422,21 @@ subroutine halofind
             halo_info%ang_mom(2)=halo_info%ang_mom(2)+dx(3)*dv(1)-dx(1)*dv(3)
             halo_info%ang_mom(3)=halo_info%ang_mom(3)+dx(1)*dv(2)-dx(2)*dv(1)
           enddo
+          if (nhalo==4) then
+            print*,'i_odc',i_odc
+            print*,'x_mean',halo_info%x_mean
+            print*,'v_mean',halo_info%v_mean
+            print*,'ang_mom',halo_info%ang_mom
+
+            !stop
+          endif
           !print*,halo_info%ang_mom;stop
           write(11) halo_info ! if the maximum is in physical regions
           if (minval(pid(ilist_odc(:i_odc)))<1) stop "pids are not all positive integers"
           write(12) i_odc,pid(ilist_odc(:i_odc)),0
+#         ifdef HID
+            hid(pid(ilist_odc(:i_odc)))=nhalo
+#         endif
           !write(101) i_odc,GroupOffset
           temp_halo(1,nhalo)=i_odc
           temp_halo(2,nhalo)=GroupOffset
@@ -437,11 +455,11 @@ subroutine halofind
       endif
 
 #ifdef analysis
-  rewind(13)
-  write(13) halo_info%hpos, halo_info%x_mean, halo_info%radius_odc, halo_info%mass_odc, i_odc
-  close(13)
+  rewind(23)
+  write(23) halo_info%hpos, halo_info%x_mean, halo_info%radius_odc, halo_info%mass_odc, i_odc
+  close(23)
 # ifdef PID
-    close(14)
+    close(24)
 # endif
   print*,'  enter anything to continue'
   read(*,*)
@@ -470,6 +488,11 @@ subroutine halofind
   write(11) nhalo_tot,nhalo
   close(11)
   close(12)
+#ifdef HID
+  write(21) hid
+  close(21)
+  print*,'  count(hid>0) =', count(hid>0,kind=4)
+#endif
 
   header_halo_tab%Ngroups=nhalo
   header_halo_tab%TotNgroups=nhalo_tot
