@@ -34,7 +34,7 @@ subroutine buffer_xvp(dox,dov)
   integer(8),dimension(1-ncb:nt+ncb,nnt,nnt) :: mzl,mzr
   integer(8),dimension(nnt,nnt) :: ml,mr
 
-  if (head) print*, 'buffer_xp'
+  if (head) print*, 'buffer_xvp'
 # ifdef FORCETEST
     print*,'xp =',xp(:,1:20)
 # endif

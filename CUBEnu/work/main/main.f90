@@ -11,12 +11,12 @@ program main
   use buffer_particle_subroutines
   use update_particle
   use pp_force
-# ifdef halfdrift
+# ifdef halo_spin_correlation
     use halo_output, only: type_halo_info
 # endif
   implicit none
 
-# ifdef halfdrift
+# ifdef halo_spin_correlation
     integer,parameter :: nhmax=3000
     integer(2) halo_id,hid(nf**3),ih
     integer(4) nhalo,nhalo_tot,nwrite
@@ -29,7 +29,7 @@ program main
 
   call initialize
   call particle_initialization
-# ifdef halfdrift
+# ifdef halo_spin_correlation
     open(19,file=output_dir()//'0.000_hid'//output_suffix(),access='stream',status='old')
     read(19) hid
     close(19)
@@ -43,6 +43,7 @@ program main
     open(19,file=output_dir()//'0.000_halo_init_spin'//output_suffix(),access='stream',status='old')
     read(19) spin_q(:,:nhalo)
     close(19)
+    nwrite=0
 # endif
   call buffer_grid
   call buffer_x
@@ -55,19 +56,20 @@ program main
 
 
   if (head) print*, '---------- starting main loop ----------'
-  nwrite=0
   DO istep=1,istep_max
     call system_clock(ttt1,t_rate)
 
-#   ifdef halfdrift
+!#   ifdef halo_spin_correlation
       dt_old=0
       call update_x
       call buffer_grid
       call buffer_x
       call buffer_v
+#    ifdef halo_spin_correlation
       call spin_analysis
+#    endif
       dt=0
-#   endif
+!#   endif
     call timestep
     call update_x
 #   ifdef FORCETEST
@@ -98,7 +100,9 @@ program main
       call buffer_grid
       call buffer_x
       call buffer_v
-      call spin_analysis
+#     ifdef halo_spin_correlation
+        call spin_analysis
+#     endif
       if (halofind_step) then
         call halofind
         cur_halofind=cur_halofind+1
@@ -111,7 +115,7 @@ program main
     print*, 'total elapsed time =',real(ttt2-ttt1)/t_rate,'secs';
   ENDDO
 
-#ifdef halfdrift
+#ifdef halo_spin_correlation
   open(19,file=output_dir()//'halo_spin_corr'//output_suffix(),access='stream',status='replace')
   write(19) nhalo,nwrite
   write(19) scale_fac(:nwrite),hcorr(:nhalo,:nwrite)
@@ -125,12 +129,13 @@ program main
 
 contains
 
+#ifdef halo_spin_correlation
   subroutine spin_analysis
 #   ifdef HALOFIND
-      !stop "disable HALOFIND when using halfdrift"
+      !stop "disable HALOFIND when using halo_spin_correlation"
 #   endif
 #   ifndef PID
-      stop "enable PID when using halfdrift"
+      stop "enable PID when using halo_spin_correlation"
 #   endif
     !! halo particle cross correlation
     spin_x=0; hp=0; x_mean=0; v_mean=0
@@ -218,5 +223,7 @@ contains
     print*,'at scale factor',a
     print*,'=============================='
   endsubroutine
+#endif
+
 
 endprogram

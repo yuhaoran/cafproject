@@ -29,7 +29,7 @@ subroutine timestep
     enddo
 
     dt=min(dt_e,sim%dt_fine,sim%dt_coarse,sim%dt_pp,sim%dt_vmax,merge(sim%dt_vmax_nu,1000.,neutrino_flag))
-
+!dt=dt/4
     call expansion(a,dt,da_1,da_2)
 
     da=da_1+da_2

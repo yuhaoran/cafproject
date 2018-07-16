@@ -1,10 +1,13 @@
-OPTIONS=
-OPTIONS+=-DPID -Dhalfdrift
+OPTIONS+=-DPID
 #OPTIONS+=-DNEUTRINOS
 OPTIONS+=-DHALOFIND
+
 #OPTIONS+=-Danalysis
 #OPTIONS+=-DFORCETEST
 #OPTIONS+=-Wall
+
+EXTRA=
+OPTIONS+=$(EXTRA)
 
 MODFILE:=$(wildcard *.f90)
 OBJFILE:=$(addprefix ,$(notdir $(MODFILE:.f90=.o)))

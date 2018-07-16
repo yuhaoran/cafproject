@@ -138,7 +138,8 @@ program ang_mom_corr
       !print*,'x_mean',halo_info%x_mean
       !print*,spin_q
       !print*,spin_x
-      write(13) spin_q
+      !write(13) spin_q
+      write(13) spin_x
       theta(ihalo)=sum(spin_q*spin_x)/sqrt(sum(spin_q**2))/sqrt(sum(spin_x**2))
       !print*,theta(ihalo)
       !read(*,*)
