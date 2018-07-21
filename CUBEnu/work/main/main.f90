@@ -17,12 +17,11 @@ program main
   implicit none
 
 # ifdef halo_spin_correlation
-    integer,parameter :: nhmax=3000
     integer(2) halo_id,hid(nf**3),ih
-    integer(4) nhalo,nhalo_tot,nwrite
-    real den_odc,hpos(3,nhmax),spin_q(3,nhmax),x_mean(3,nhmax),v_mean(3,nhmax),hp(nhmax)
-    real hcorr(nhmax,istep_max),scale_fac(istep_max)
-    real spin_x(3,nhmax),dx(3),dv(3)
+    integer(4) nhalo,nhalo_tot,nwrite,i0
+    integer(4),allocatable :: isort_mass(:)
+    real,allocatable :: hpos(:,:),spin_q(:,:,:),x_mean(:,:),v_mean(:,:),hp(:),hcorr(:,:,:),scale_fac(:),spin_x(:,:),halonp(:)
+    real den_odc,dx(3),dv(3)
     type(type_halo_info) halo_info
 # endif
   save
@@ -35,16 +34,20 @@ program main
     close(19)
     open(19,file=output_dir()//'0.000_halo'//output_suffix(),access='stream',status='old')
     read(19) nhalo_tot,nhalo,den_odc
+    allocate(isort_mass(nhalo),halonp(nhalo),hpos(3,nhalo),spin_q(3,3,nhalo),x_mean(3,nhalo),v_mean(3,nhalo),hp(nhalo))
+    allocate(hcorr(nhalo,istep_max,3),scale_fac(istep_max),spin_x(3,nhalo))
     do ih=1,nhalo
       read(19) halo_info
       hpos(:,ih)=halo_info%x_mean
+      halonp(ih)=halo_info%mass_odc
     enddo
     close(19)
     open(19,file=output_dir()//'0.000_halo_init_spin'//output_suffix(),access='stream',status='old')
-    read(19) spin_q(:,:nhalo)
+    read(19) spin_q
     close(19)
     nwrite=0
 # endif
+
   call buffer_grid
   call buffer_x
   call buffer_v
@@ -116,9 +119,17 @@ program main
   ENDDO
 
 #ifdef halo_spin_correlation
+  isort_mass(:nhalo)=[(i0,i0=1,nhalo)]
+  call indexedsort(nhalo,halonp,isort_mass)
+  do i0=1,istep_max
+    hcorr(:,i0,1)=hcorr(isort_mass(nhalo:1:-1),i0,1)
+    hcorr(:,i0,2)=hcorr(isort_mass(nhalo:1:-1),i0,2)
+    hcorr(:,i0,3)=hcorr(isort_mass(nhalo:1:-1),i0,3)
+  enddo
   open(19,file=output_dir()//'halo_spin_corr'//output_suffix(),access='stream',status='replace')
   write(19) nhalo,nwrite
-  write(19) scale_fac(:nwrite),hcorr(:nhalo,:nwrite)
+  write(19) scale_fac(:nwrite),halonp(nhalo:1:-1)
+  write(19) hcorr(:,:nwrite,:)
   close(19)
 #endif
 
@@ -212,14 +223,15 @@ contains
 
     scale_fac(nwrite)=a
     do ih=1,nhalo
-      hcorr(ih,nwrite)=sum(spin_q(:,ih)*spin_x(:,ih))/sqrt(sum(spin_q(:,ih)**2))/sqrt(sum(spin_x(:,ih)**2))
+      hcorr(ih,nwrite,1)=sum(spin_q(:,1,ih)*spin_x(:,ih))/sqrt(sum(spin_q(:,1,ih)**2))/sqrt(sum(spin_x(:,ih)**2))
+      hcorr(ih,nwrite,2)=sum(spin_q(:,2,ih)*spin_x(:,ih))/sqrt(sum(spin_q(:,2,ih)**2))/sqrt(sum(spin_x(:,ih)**2))
+      hcorr(ih,nwrite,3)=sum(spin_q(:,3,ih)*spin_x(:,ih))/sqrt(sum(spin_q(:,3,ih)**2))/sqrt(sum(spin_x(:,ih)**2))
+      !stop
     enddo
     print*,'=========== halo 4 ==========='
-    print*,x_mean(:,4)
-    print*,v_mean(:,4)
-    print*,spin_q(:,4)
-    print*,spin_x(:,4)
-    print*,hcorr(4,nwrite)
+    print*,hcorr(4,nwrite,1)
+    print*,hcorr(4,nwrite,2)
+    print*,hcorr(4,nwrite,3)
     print*,'at scale factor',a
     print*,'=============================='
   endsubroutine

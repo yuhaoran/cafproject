@@ -408,7 +408,7 @@ subroutine halofind
 #         endif
           nhalo=nhalo+1
           halo_info%hpos=hpos+([itx,ity,itz]-1)*nft
-          halo_info%mass_odc=sim%mass_p_cdm*i_odc
+          halo_info%mass_odc=real(i_odc)
           halo_info%x_mean=sum(xv_odc(1:3,:i_odc),2)/i_odc
           halo_info%var_x=sum((xv_odc(1:3,:i_odc)-spread(halo_info%x_mean,2,i_odc))**2,2)/(i_odc-1)
           halo_info%x_mean=halo_info%x_mean+([itx,ity,itz]-1)*nft

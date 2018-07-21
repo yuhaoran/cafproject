@@ -54,10 +54,10 @@ module parameters
   integer(8),parameter :: nfe=nft+2*nfb ! 96
 
   logical,parameter :: body_centered_cubic=.false.
-  integer(8),parameter :: np_nc=ncell/2 ! number of particles / coarse cell / dim
+  integer(8),parameter :: np_nc=ncell ! number of particles / coarse cell / dim
   integer, parameter :: np_nc_nu = ncell/2 ! number of neutrinos per dim per coarse cell
 
-  logical,parameter :: Extended_pp_force=.true.
+  logical,parameter :: Extended_pp_force=.false.
   real,parameter :: rsoft=0.6 ! PP softening length
   integer,parameter :: pp_range=1 ! set <=4
   real,parameter :: image_buffer=1.2
@@ -67,7 +67,7 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=400.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=100.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0.8276 ! use -Dsigma_8 in initial_conditions
 
   real,parameter :: z_i_nu=49.0 ! initial redshift for neutrinos

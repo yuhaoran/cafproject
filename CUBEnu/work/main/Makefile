@@ -40,10 +40,9 @@ projection.o: variables.o
 
 initialize.o: variables.o cubefft.o pencil_fft.o z_checkpoint.txt z_halofind.txt
 finalize.o: variables.o cubefft.o pencil_fft.o
-main.o: variables.o cubefft.o pencil_fft.o
 pm.o: variables.o neutrinos.o cubefft.o pencil_fft.o
 
-main.o: parameters.o variables.o initialize.o ext_pp_force.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_grid.o buffer_particle.o pm.o update_particle.o checkpoint.o projection.o halofind.o finalize.o
+main.o: parameters.o variables.o initialize.o ext_pp_force.o cubefft.o pencil_fft.o kernel_f.o kernel_c.o timestep.o particle_initialization.o buffer_grid.o buffer_particle.o pm.o update_particle.o checkpoint.o projection.o halofind.o finalize.o indexedsort.o
 
 %.o: %.f90 Makefile
 	$(FC) $(OFLAG) $(OPTIONS) $< -o $@ $(FFTFLAG)
