@@ -20,7 +20,7 @@ program ang_mom_corr
   real qpos(3,max_halo_np),qpos_mean(3),vq(3),dx(3),vf,scale_factor,dx_mean(3)
   real spin_q(3),spin_x(3),spin_t(3),spin_u(3)
   real inertia(3,3),tide(3,3),torque(3,3)
-  real force_cdm(3),force_neu(3)
+  real force_cdm(3),force_neu(3),torque_c,torque_u
   real theta_qx(3000),theta_qt(3000),theta_tx(3000),theta_cu(3000),theta_ff(3000)
   real phi(0:nf+1,0:nf+1,0:nf+1)[*]
   real phu(0:nf+1,0:nf+1,0:nf+1)[*]
@@ -135,6 +135,7 @@ program ang_mom_corr
       !endif
       spin_q=0; spin_u=0
       force_cdm=0; force_neu=0
+      torque_c=0; torque_u=0
       dx_mean=0
       inertia=0
       tide=0
@@ -209,6 +210,8 @@ program ang_mom_corr
       theta_qt(ihalo)=sum(spin_q*spin_t)/sqrt(sum(spin_q**2))/sqrt(sum(spin_t**2))
       theta_tx(ihalo)=sum(spin_t*spin_x)/sqrt(sum(spin_t**2))/sqrt(sum(spin_x**2))
       theta_cu(ihalo)=sum(spin_q*spin_u)/sqrt(sum(spin_q**2))/sqrt(sum(spin_u**2))
+      torque_c=torque_c+sqrt(sum(spin_q**2))
+      torque_u=torque_u+sqrt(sum(spin_u**2))
       theta_ff(ihalo)=sum(force_cdm*force_neu)/sqrt(sum(force_cdm**2))/sqrt(sum(force_neu**2))
     enddo
 
@@ -217,6 +220,7 @@ program ang_mom_corr
     print*,'mean tx correlation =',sum(theta_tx(:nhalo))/nhalo
     print*,'mean cu correlation =',sum(theta_cu(:nhalo))/nhalo
     print*,'mean ff correlation =',sum(theta_ff(:nhalo))/nhalo
+    print*,'torque_c/torque_u=',torque_u/torque_c
 
     close(11);close(12);close(13)
     deallocate(corr_info)

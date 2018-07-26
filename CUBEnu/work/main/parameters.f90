@@ -67,19 +67,19 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=100.0*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=600.0*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0.8276 ! use -Dsigma_8 in initial_conditions
 
-  real,parameter :: z_i_nu=49.0 ! initial redshift for neutrinos
+  real,parameter :: z_i_nu=100.0 ! initial redshift for neutrinos
   real,parameter :: a_i_nu=1./(1.+z_i_nu) ! initial scale factor for neutrinos
-  real,parameter :: z_tf=10 ! redshift of transfer functions
+  real,parameter :: z_tf=5 ! redshift of transfer functions
 
   ! neutrino parameters
   real, parameter :: Tcmb = 2.7255
   real, parameter :: Tcnb = (4./11.)**(1./3.)*Tcmb ! temperature for active neutrinos
 
   integer, parameter :: Nnu = 3 ! number of massive neutrinos
-  real, dimension(Nnu), parameter :: Mnu = (/ 0.1,0.,0. /)
+  real, dimension(Nnu), parameter :: Mnu = (/ 0.05,0.,0. /)
   real, dimension(Nnu), parameter :: Tnu = (/ Tcnb,Tcnb,Tcnb /)
   real, parameter :: Meff = sum( Mnu*(Tnu/Tcnb)**3. )
 

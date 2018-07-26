@@ -81,6 +81,14 @@ module variables
   integer(4) igx,igy,igz,lp,ip1,ip2
   integer(4) t1,t2,tt1,tt2,ttt1,ttt2,t_rate
 
+  type type_header_halo_tab
+    integer(4) Ngroups,TotNgroups,Nids
+    integer(8) TotNids
+    integer(4) NFiles
+  endtype
+  type(type_header_halo_tab) header_halo_tab[*]
+  integer nhalo[*],nhalo_tot[*],n_peak[*],n_peak_real[*],n_search_fail[*]
+
 contains
 
   subroutine spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)

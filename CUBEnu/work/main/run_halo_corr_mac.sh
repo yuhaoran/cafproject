@@ -10,6 +10,7 @@ make EXTRA=-DHID
 
 cd ../utilities/
 ./ic.x
+./ic_nu.x
 
 cd ../main/
 ./main.x # with runtime halofinder

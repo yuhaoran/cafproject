@@ -6,12 +6,6 @@ module halo_output
     real den_odc
   endtype
 
-  type type_header_halo_tab
-    integer(4) Ngroups,TotNgroups,Nids
-    integer(8) TotNids
-    integer(4) NFiles
-  endtype
-
   type type_halo_info
     real hpos(3)
     real mass_odc,radius_odc,v_disp
@@ -28,7 +22,6 @@ subroutine halofind
   save
 
   type(type_halo_info) halo_info
-  type(type_header_halo_tab) header_halo_tab[*]
 
   integer,parameter :: nc_halo_max=128
   integer,parameter :: newbox_max=300
@@ -57,7 +50,6 @@ subroutine halofind
   real dx1(3),dx2(3),pos1(3),rr,rdist(nlist),xflat,den_peak(n_peak_max),ipeak(3,n_peak_max),m_mesh,denmax
   real hpos(3),mass_proxy,newgrid,r_proxy,rsearch,dr(3)
   real rhof(1-nfb:nft+nfb,1-nfb:nft+nfb,1-nfb:nft+nfb),halo_mesh_mass(n_peak_max)
-  integer nhalo[*],nhalo_tot[*],n_peak[*],n_peak_real[*],n_search_fail[*]
 #ifdef HID
   integer(2) hid(nf**3)
 #endif
