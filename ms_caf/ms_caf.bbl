@@ -132,9 +132,10 @@ Frigo, M., \& Johnson, S.~G. 2005, in PROCEEDINGS OF THE IEEE, 216--231
 \bibitem[{{Xu}(1995)}]{1995ApJS...98..355X}
 {Xu}, G. 1995, \apjs, 98, 355
 
-\bibitem[{{Yu}(2018)}]{haoran_yu_2018_1198909}
-{Yu}, H.~R. 2018, CUBE: Cosmological N-body simulation code, v.1.0.0,  Zenodo,
-  doi:10.5281/zenodo.1198909
+\bibitem[{{Yu} {et~al.}(2018){Yu}, {Pen}, \& {Wang}}]{2018ascl.soft05018Y}
+{Yu}, H.-R., {Pen}, U.-L., \& {Wang}, X. 2018, {CUBE: Information-optimized
+  parallel cosmological N-body simulation code}, Astrophysics Source Code
+  Library, , , ascl:1805.018
 
 \bibitem[{{Yu} {et~al.}(2017{\natexlab{a}}){Yu}, {Pen}, \&
   {Zhu}}]{2017PhRvD..95d3501Y}
