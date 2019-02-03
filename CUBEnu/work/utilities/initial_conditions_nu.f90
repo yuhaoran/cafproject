@@ -3,7 +3,7 @@
 #define READ_NOISE
 #define MTF
 
-!#define only_phi
+#define only_phi
 
 program initial_conditions_nu
   use omp_lib
@@ -20,6 +20,7 @@ program initial_conditions_nu
   logical,parameter :: write_potential=.true.
 
 #ifdef only_phi
+  character(*),parameter :: string_ztf="5"
   integer(8),parameter :: nk=117
   real tf(7,nk), vtf(7,nk)
 #else
@@ -128,7 +129,7 @@ program initial_conditions_nu
   call system_clock(t1,t_rate)
 #ifdef sigma_8
 #ifdef only_phi
-  open(11,file='../../../../projects/caf/camb_transfer_out_z100.dat.txt',form='formatted')
+  open(11,file='../camb_transfer_out_z'//string_ztf//'.dat.txt',form='formatted')
   read(11,*) tf
   close(11)
   vtf=tf
@@ -198,12 +199,12 @@ program initial_conditions_nu
   if (head) print*,'Generating random noise'
   call random_seed(size=seedsize)
   if (head) print*,'  min seedsize =', seedsize
-  seedsize=max(seedsize,36)
+  seedsize=max(seedsize,12)
   allocate(iseed(seedsize))
   allocate(rseed_all(seedsize,nn**3))
 #ifdef READ_SEED
-    if (head) print*, '  Copy and read seeds from ../confings/'
-    call system('cp ../../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image))
+    !if (head) print*, '  Copy and read seeds from ../confings/'
+    !call system('cp ../../configs/seed_'//image2str(image)//'.bin '//opath//'image'//image2str(image))
     open(11,file=output_dir()//'seed'//output_suffix(),status='old',access='stream')
     read(11) iseed
     close(11)
@@ -396,18 +397,6 @@ program initial_conditions_nu
   delta_k=cxyz  ! backup phi(k)
   call pencil_fft_backward
 
-
-  ! Primordial Non-Gaussianity
-  dvar=sum((r3*1d0)**2)
-  dvarg=0
-  do i=1,nn**3 ! co_sum
-    dvarg=dvarg+dvar[i]
-  enddo
-  dvarg=dvarg/nf_global/nf_global/nf_global
-
-  r3=r3-f_nl*(r3**2-dvarg)
-
-
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
   print*,'  phi',phi(1:4,1,1)
@@ -420,6 +409,7 @@ program initial_conditions_nu
   sync all
 
 #ifdef only_phi
+  call system('mv '//icnu_name('phi1_nu')//' '//opath//'image1/5.000_tf'//string_ztf//'.000_phi1_nu_1.bin')
   stop
 #endif
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

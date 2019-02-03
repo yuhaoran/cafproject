@@ -20,14 +20,14 @@ subroutine initialize
 
   call geometry
 
-  if (head) print*, '  call create_cubefft_plan ng = ',ng
+  if (head) print*, '  call create_cubefft_plan ng = ',nfe
   call system_clock(t1,t_rate)
   call create_cubefft_plan
   call system_clock(t2,t_rate)
   print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
   sync all
 
-  if (head) print*, '  call create_penfft_plan nfe = ',nfe
+  if (head) print*, '  call create_penfft_plan nfe = ',ng
   call system_clock(t1,t_rate)
   call create_penfft_plan
   call system_clock(t2,t_rate)
@@ -37,7 +37,6 @@ subroutine initialize
   call kernel_f
   call kernel_c
 
-  istep=0
   t=0
   dt=0
   dt_old=0

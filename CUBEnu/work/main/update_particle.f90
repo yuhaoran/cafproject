@@ -53,7 +53,7 @@ subroutine update_xp()
 #   endif
     !if (head) print*,'    density loop'
     do ilayer=0,nlayer-1
-      !$omp paralleldo default(shared) &
+      !$omp paralleldo default(shared) schedule(static,2)&
       !$omp& private(k,j,i,np,nzero,l,ip,xq,vreal,deltax,ig)
       do k=1-ncb+ilayer,nt+ncb,nlayer
       !do k=1-ncb,nt+ncb
@@ -95,7 +95,7 @@ subroutine update_xp()
     ! create x_new v_new for this local tile
     !if (head) print*,'    xvnew loop'
     do ilayer=0,nlayer-1
-      !$omp paralleldo default(shared) &
+      !$omp paralleldo default(shared) schedule(static,2)&
       !$omp& private(k,j,i,np,nzero,l,ip,xq,vreal,deltax,ig,idx)
       do k=1-ncb+ilayer,nt+ncb,nlayer
       !do k=1-ncb,nt+ncb
@@ -127,7 +127,7 @@ subroutine update_xp()
     sync all
     ! delete particles
     !if (head) print*,'    delete_particle loop'
-    !$omp paralleldo default(shared) &
+    !$omp paralleldo default(shared) schedule(static,2)&
     !$omp& private(k,j)
     do k=1,nt
     do j=1,nt
@@ -153,6 +153,13 @@ subroutine update_xp()
   vp(:,sim%nplocal+1:)=0
 # ifdef PID
     pid(sim%nplocal+1:)=0
+    print*, '  check PID range:',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
+    if (minval(pid(:sim%nplocal))<1) then
+      print*, '  pid are not all positive'
+      print*, '  number of 0s =',count(pid(:sim%nplocal)==0)
+      print*, minloc(pid(:sim%nplocal))
+      !stop
+    endif
 # endif
   !sim%nplocal=sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
   !print*, iright,sum(rhoc(1:nt,1:nt,1:nt,:,:,:))
@@ -162,35 +169,37 @@ subroutine update_xp()
   ! calculate std of the velocity field
   !cum=cumsum6(rhoc)
   call spine_image(rhoc,idx_b_l,idx_b_r,ppl0,pplr,pprl,ppr0,ppl,ppr)
-  std_vsim=0; std_vsim_c=0; std_vsim_res=0
+  sum_c=0; sum_r=0; sum_s=0
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    !!$omp paralleldo default(shared) &
-    !!$omp& private(k,j,i,np,nzero,l,ip,vreal) &
-    !!$omp& reduction(+:std_vsim_c,std_vsim_res,std_vsim)
+    !$omp paralleldo default(shared) schedule(static,2)&
+    !$omp& private(k,j,i,np,nzero,l,ip,vreal) &
+    !$omp& reduction(+:sum_c,sum_r,sum_s)
     do k=1,nt
     do j=1,nt
     do i=1,nt
-      std_vsim_c=std_vsim_c+sum(vfield(:,i,j,k,itx,ity,itz)**2)
+      sum_c=sum_c+sum(vfield(:,i,j,k,itx,ity,itz)**2)
       np=rhoc(i,j,k,itx,ity,itz)
       nzero=idx_b_r(j,k,itx,ity,itz)-sum(rhoc(i:,j,k,itx,ity,itz))
       do l=1,np
         ip=nzero+l
         vreal=tan(pi*real(vp(:,ip))/real(nvbin-1))/(sqrt(pi/2)/(sigma_vi*vrel_boost))
-        std_vsim_res=std_vsim_res+sum(vreal**2)
+        sum_r=sum_r+sum(vreal**2)
         vreal=vreal+vfield(:,i,j,k,itx,ity,itz)
-        std_vsim=std_vsim+sum(vreal**2)
+        sum_s=sum_s+sum(vreal**2)
       enddo
     enddo
     enddo
     enddo
-    !!$omp endparalleldo
+    !$omp endparalleldo
   enddo
   enddo
   enddo
   sync all
-
+  std_vsim_c=sum_c
+  std_vsim_res=sum_r
+  std_vsim=sum_s
   ! co_sum
   if (head) then
     do i=2,nn**3
@@ -284,7 +293,7 @@ subroutine update_xp_nu()
 #   endif
     !if (head) print*,'    density loop'
     !$omp paralleldo &
-    !$omp& default(shared) &
+    !$omp& default(shared)&
     !$omp& private(k,j,i,nlast,np,l,ip,xq,vreal,deltax,g)
 !    !$omp& reduction(+:rhoce,vfield_new)
     do k=1-ncb,nt+ncb ! loop over coarse grid

@@ -30,12 +30,14 @@ module variables
   real(8) xq(3),deltax(3),deltav(3),vreal(3)
 
   ! FFT plans
+  integer stat
   integer(8) plan_fft_fine,plan_ifft_fine
   real vmax(3),vmax_nu(3),overhead_tile[*],overhead_image[*]
   real sigma_vi,sigma_vi_new,sigma_vi_nu,sigma_vi_new_nu
   !real vdisp(506,2),sigma_vi_old,sigma_vi
   real(4) svz(500,2),svr(100,2)
   real(8) sigma_vci,sigma_vfi,sigma_vres,sigma_vci_old,sigma_vfi_old,sigma_vres_old
+  real(8) sum_c,sum_r,sum_s
   real(8) std_vsim_c[*],std_vsim_res[*],std_vsim[*]
   real(8) std_vsim_c_nu[*],std_vsim_res_nu[*],std_vsim_nu[*]
   ! n^3

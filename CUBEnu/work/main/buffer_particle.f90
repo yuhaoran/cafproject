@@ -45,6 +45,7 @@ subroutine buffer_xvp(dox,dov)
   ! sync x- buffer with node on the left
   myzl=pprl(:,:,nnt,:,:)[image1d(inx,icy,icz)]
   myzr=ppr0(:,:,nnt,:,:)[image1d(inx,icy,icz)]
+  sync all
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,1 ! do only tile_x=1
@@ -74,7 +75,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=1,nnt
   do itx=2,nnt ! skip tile_x=1
-    !$omp paralleldo default(shared) private(iz,iy)
+    !$omp paralleldo default(shared) schedule(static,2) private(iz,iy)
     do iz=1,nt
     do iy=1,nt
       if (dox) &
@@ -99,6 +100,7 @@ subroutine buffer_xvp(dox,dov)
   ! sync x+ buffer with node on the right
   myzl=ppl0(:,:,1,:,:)[image1d(ipx,icy,icz)]
   myzr=pplr(:,:,1,:,:)[image1d(ipx,icy,icz)]
+  sync all
   do itz=1,nnt
   do ity=1,nnt
   do itx=nnt,nnt ! do only tile_x=nnt
@@ -128,7 +130,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt-1 ! skip tile_x=nnt
-    !$omp paralleldo default(shared) private(iz,iy)
+    !$omp paralleldo default(shared) schedule(static,2) private(iz,iy)
     do iz=1,nt
     do iy=1,nt
       if (dox) &
@@ -154,6 +156,7 @@ subroutine buffer_xvp(dox,dov)
   ! sync y-
   mzl=idx_b_l(nt-ncb+1,:,:,nnt,:)[image1d(icx,iny,icz)]
   mzr=idx_b_r(nt,:,:,nnt,:)[image1d(icx,iny,icz)]
+  sync all
   do itz=1,nnt
   do ity=1,1 ! do only ity=1
   do itx=1,nnt
@@ -181,7 +184,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=2,nnt ! skip ity=1
   do itx=1,nnt
-    !$omp paralleldo default(shared) private(iz)
+    !$omp paralleldo default(shared) schedule(static,2) private(iz)
     do iz=1,nt
       if (dox) &
       xp(:,idx_b_l(1-ncb,iz,itx,ity,itz)+1:idx_b_r(0,iz,itx,ity,itz))=&
@@ -204,6 +207,7 @@ subroutine buffer_xvp(dox,dov)
   ! sync y+
   mzl=idx_b_l(1,:,:,1,:)[image1d(icx,ipy,icz)]
   mzr=idx_b_r(ncb,:,:,1,:)[image1d(icx,ipy,icz)]
+  sync all
   do itz=1,nnt
   do ity=nnt,nnt ! do only ity=nnt
   do itx=1,nnt
@@ -231,7 +235,7 @@ subroutine buffer_xvp(dox,dov)
   do itz=1,nnt
   do ity=1,nnt-1 ! skip ity=nnt
   do itx=1,nnt
-    !$omp paralleldo default(shared) private(iz)
+    !$omp paralleldo default(shared) schedule(static,2) private(iz)
     do iz=1,nt
       if (dox) &
       xp(:,idx_b_l(nt+1,iz,itx,ity,itz)+1:idx_b_r(nt+ncb,iz,itx,ity,itz))=&
@@ -255,6 +259,7 @@ subroutine buffer_xvp(dox,dov)
   ! sync z-
   ml=idx_b_l(1-ncb,nt-ncb+1,:,:,nnt)[image1d(icx,icy,inz)]
   mr=idx_b_r(nt+ncb,nt,:,:,nnt)[image1d(icx,icy,inz)]
+  sync all
   do itz=1,1 ! do only itz=1
   !!$omp paralleldo default(shared) private(ity,itx)
   do ity=1,nnt
@@ -278,7 +283,7 @@ subroutine buffer_xvp(dox,dov)
 
   ! redistribute z-
   do itz=2,nnt ! skip itz=1
-  !$omp paralleldo default(shared) private(ity,itx)
+  !$omp paralleldo default(shared) schedule(static,2) private(ity,itx)
   do ity=1,nnt
   do itx=1,nnt
     if (dox) &
@@ -301,6 +306,7 @@ subroutine buffer_xvp(dox,dov)
   ! sync z+
   ml=idx_b_l(1-ncb,1,:,:,1)[image1d(icx,icy,ipz)]
   mr=idx_b_r(nt+ncb,ncb,:,:,1)[image1d(icx,icy,ipz)]
+  sync all
   do itz=nnt,nnt ! do only itz=nnt
   !!$omp paralleldo default(shared) private(ity,itx)
   do ity=1,nnt
@@ -324,7 +330,7 @@ subroutine buffer_xvp(dox,dov)
 
   ! redistribute z+
   do itz=1,nnt-1 ! skip itz=nnt
-  !$omp paralleldo default(shared) private(ity,itx)
+  !$omp paralleldo default(shared) schedule(static,2) private(ity,itx)
   do ity=1,nnt
   do itx=1,nnt
     if (dox) &

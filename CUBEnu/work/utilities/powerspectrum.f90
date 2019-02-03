@@ -27,7 +27,7 @@ subroutine cross_power(xi,cube1,cube2)
   real cube1(ng,ng,ng),cube2(ng,ng,ng)
   real xi(10,nbin)[*]
   real amp11,amp12,amp22
-  !complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
+  complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
   real,parameter :: nexp=4.0 ! CIC kernel
 
@@ -35,11 +35,11 @@ subroutine cross_power(xi,cube1,cube2)
 
   r3=cube1
   call pencil_fft_forward
-  cx1=cxyz
+  cx1=cxyz/ng_global/ng_global/ng_global
 
   r3=cube2
   call pencil_fft_forward
-  cx2=cxyz
+  cx2=cxyz/ng_global/ng_global/ng_global
 
   xi=0
   sync all
@@ -67,9 +67,9 @@ subroutine cross_power(xi,cube1,cube2)
 #   endif
     xi(1,ibin)=xi(1,ibin)+1 ! number count
     xi(2,ibin)=xi(2,ibin)+kr ! k count
-    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(ng_global**3)/(ng_global**3)/(sinc**4.0)*4*pi*kr**3
-    amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(ng_global**3)/(ng_global**3)/(sinc**4.0)*4*pi*kr**3
-    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(ng_global**3)/(ng_global**3)/(sinc**4.0)*4*pi*kr**3
+    amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(sinc**4.0)*4*pi*kr**3
+    amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(sinc**4.0)*4*pi*kr**3
+    amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(sinc**4.0)*4*pi*kr**3
 
     xi(3,ibin)=xi(3,ibin)+amp11 ! auto power 1
     xi(4,ibin)=xi(4,ibin)+amp22 ! auto power 2

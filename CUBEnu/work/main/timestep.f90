@@ -7,11 +7,12 @@ subroutine timestep
 
   dt_old=dt
   sync all
+  sim%timestep=sim%timestep+1
 
   if (head) then
     print*, ''
     print*, '-------------------------------------------------------'
-    print*, 'timestep    :',istep
+    print*, 'timestep    :',sim%timestep
 
     dt_e=dt_max
     ntry=0
@@ -29,7 +30,7 @@ subroutine timestep
     enddo
 
     dt=min(dt_e,sim%dt_fine,sim%dt_coarse,sim%dt_pp,sim%dt_vmax,merge(sim%dt_vmax_nu,1000.,neutrino_flag))
-!dt=dt/4
+!dt=dt/2
     call expansion(a,dt,da_1,da_2)
 
     da=da_1+da_2
@@ -79,7 +80,6 @@ subroutine timestep
   endif
   sync all
 
-  ! broadcast timestep variables
   a=a[1]
   a_mid=a_mid[1]
   dt=dt[1]

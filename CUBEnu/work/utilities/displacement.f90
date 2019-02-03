@@ -13,7 +13,7 @@ program displacement
   integer(8) i,j,k,l,i_dim,iq(3),pid8,itx,ity,itz,nlast,ip,np
   integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt),rhoc0(nt,nt,nt,nnt,nnt,nnt)
   integer(1) rho0(ng,ng,ng) !!!! for checking there is one and only one particle per fine grid
-  real dsp(3,ng,ng,ng),pos0(3),pos1(3),dpos(3)
+  real dsp(3,ng,ng,ng),pos0(3),pos1(3),dpos(3),pow
 
   integer(izipx),allocatable :: xp(:,:)
   integer(4),allocatable :: pid(:)
@@ -210,12 +210,8 @@ program displacement
     enddo
     deallocate(xp,pid)
 
-    print*, 'check: min,max,mean of rho0 = '
-    print*, minval(rho0),maxval(rho0),sum(rho0)/ng/ng/ng
-    if (minval(rho0)<1 .or. maxval(rho0)>1 .or. sum(rho0)/=sim%nplocal) then
-      print*, 'Warning'
-      stop
-    endif
+    print*, 'check: min,max of rho0 = '
+    print*, minval(rho0),maxval(rho0)
 
     do i_dim=1,3
       print*, 'dsp: dimension',int(i_dim,1),'min,max values ='
@@ -515,6 +511,29 @@ program displacement
       cxyz=real(cxyz)*delta_k
       delta_k=cxyz  ! backup phi(k)
       call pencil_fft_backward
+
+      ! add a 1.8 filter on phiE
+  cxyz=0
+  do k=1,npen
+  do j=1,nf
+  do i=1,nyquest+1
+    ! global grid in Fourier space for i,j,k
+    kg=(nn*(icz-1)+icy-1)*npen+k
+    jg=(icx-1)*nf+j
+    ig=i
+    kx(3)=mod(kg+nyquest-1,nf_global)-nyquest
+    kx(2)=mod(jg+nyquest-1,nf_global)-nyquest
+    kx(1)=ig-1
+    kr=sqrt(sum(kx**2))
+    kr=max(kr,1.0)
+    kr=2*pi*kr/box
+    pow=exp(-kr**2*1.8**2/2)**0.25 ! apply E-mode window function
+    cxyz(i,j,k)=delta_k(i,j,k)*pow
+  enddo
+  enddo
+  enddo
+  if (head) cxyz(1,1,1)=0 ! DC frequency
+  call pencil_fft_backward
 
 
       if (head) print*, '  write phi1 into file'

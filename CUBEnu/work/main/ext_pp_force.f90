@@ -17,6 +17,7 @@ subroutine ext_pp_force
   integer(8) ntest,ip_offset,ipll1,ipll2
   integer hoc(1-ncell:nft+ncell,1-ncell:nft+ncell,1-ncell:nft+ncell)
   integer ll(np_pp_max)
+  real ftemp
 
   if (head) then
     print*, ''
@@ -35,7 +36,7 @@ subroutine ext_pp_force
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    !! if (head) print*, '  tile:',int(itx,1),int(ity,1),int(itz,1)
+    if (head) print*, '  tile:',int(itx,1),int(ity,1),int(itz,1)
     call system_clock(t1,t_rate)
     if (np_pp_max<sum(rhoc(0:nt+1,0:nt+1,0:nt+1,itx,ity,itz))) then
       print*, 'np_pp_max too small'
@@ -48,6 +49,7 @@ subroutine ext_pp_force
     !print*,'           ',idx_b_l(0,0,itx,ity,itz)+sum(rhoc(:-1,0,0,itx,ity,itz))
     ip_offset=idx_b_l(0,0,itx,ity,itz)+sum(rhoc(:-1,0,0,itx,ity,itz))
     hoc=0; ll=0
+    print*,'    linked list'
     do igz=0,nt+1
     do igy=0,nt+1
     do igx=0,nt+1
@@ -72,12 +74,13 @@ subroutine ext_pp_force
     enddo
     enddo
 
+    print*,'    force'
     !$omp paralleldo &
-    !$omp& default(shared) &
+    !$omp& default(shared) schedule(static,2)&
     !$omp& private(igz,igy,igx,ipll1,ip1,xvec1,vreal,f_tot,ntest,kk,jj,ii) &
     !$omp& private(ipll2,ip2,xvec2,xvec21,rmag,rcut,pcut,force_pp) &
     !$omp& reduction(+:itest1,npairs) &
-    !$omp& reduction(max:f2_max_pp)
+    !$omp& reduction(max:ftemp)
     do igz=1,nft
     do igy=1,nft
     do igx=1,nft
@@ -116,15 +119,17 @@ subroutine ext_pp_force
           print*,'vfield',vfield(:,i,j,k,itx,ity,itz)
 #       endif
         vp(:,ip1)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
-        f2_max_pp=max(f2_max_pp,sum(f_tot**2))
+        !ftemp=sum(f_tot**2)
+        ftemp=max(ftemp,sum(f_tot**2))
         ipll1=ll(ipll1)
       enddo !! do while (ip1/=0)
     enddo
     enddo
     enddo
     !$omp endparalleldo
+    f2_max_pp=ftemp
     call system_clock(t2,t_rate)
-    !! print*, '  elapsed time =',real(t2-t1)/t_rate,'secs'
+    print*, '    elapsed time =',real(t2-t1)/t_rate,'secs'
     !! print*, '  itest1 =',itest1
   enddo
   enddo
@@ -133,7 +138,7 @@ subroutine ext_pp_force
   !dt_fine=sqrt( 1.0 / (sqrt(maxval(f2_max_fine))*a_mid*GG) )
   !dt_coarse=sqrt( real(ncell) / (sqrt(f2_max_coarse)*a_mid*GG) )
   !dt_pp=sqrt(0.1*rsoft) / max(sqrt(maxval(f2_max_pp))*a_mid*GG,1e-3)
-  sim%dt_pp=5.0*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
+  sim%dt_pp=1.0*sqrt(1.0) / (sqrt(f2_max_pp)*a_mid*GG)
   sync all
   do i=1,nn**3
     sim%dt_pp=min(sim%dt_pp,sim[i]%dt_pp)

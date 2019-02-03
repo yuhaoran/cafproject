@@ -17,6 +17,9 @@ subroutine particle_mesh
   !logical,parameter :: coarse_force=.true.
   !logical,parameter :: pp_force=.false.
   !logical,parameter :: ext_pp_force=.false.
+
+integer(4) t01,t02,t0rate
+
   integer(4),parameter :: nlayer=3 ! thread save for CIC integpolation
   integer(4) ilayer
   integer(8) idx1(3),idx2(3)
@@ -47,7 +50,7 @@ subroutine particle_mesh
     rho_f=0
     crho_f=0
     do ilayer=0,nlayer-1
-      !$omp paralleldo default(shared) &
+      !$omp paralleldo default(shared) schedule(static,2)&
       !$omp& private(k,j,i,np,nzero,l,ip,tempx,idx1,idx2,dx1,dx2)
       do k=2-ncb+ilayer,nt+ncb-1,nlayer
       !do k=2-ncb,nt+ncb-1
@@ -105,7 +108,10 @@ subroutine particle_mesh
     testrhof=testrhof+sum(rho_f(nfb+1:nft+nfb,nfb+1:nft+nfb,nfb+1:nft+nfb)*1d0)
     ! fine force ---------------------------------------------------------------
     !if (head) print*,'      fine_fft'
+    !call system_clock(t01,t0rate)
     call sfftw_execute(plan_fft_fine)
+    !call system_clock(t02,t0rate)
+    !print*, '  elapsed time =',real(t02-t01)/t0rate,'secs'; stop
     crho_f(:,:,:)=rho_f(:,:,:) ! back up
     do i_dim=1,3
       !if (head) print*,'      fine_ifft dim',int(i_dim,1)
@@ -120,7 +126,7 @@ subroutine particle_mesh
     f2_max_fine(itx,ity,itz)=maxval(sum(force_f(:,:,:,:)**2,1))
     ! fine velocity ------------------------------------------------------------
     !if (head) print*,'      fine velocity'
-    !$omp paralleldo default(shared) &
+    !$omp paralleldo default(shared) schedule(static,2)&
     !$omp& private(k,j,i,nzero,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal)
     do k=1,nt
     do j=1,nt
@@ -202,7 +208,7 @@ subroutine particle_mesh
   do itx=1,nnt ! loop over tile
     r3t=0
     do ilayer=0,nlayer-1
-      !$omp paralleldo default(shared) &
+      !$omp paralleldo default(shared) schedule(static,2)&
       !$omp& private(k,j,i,np,nzero,l,ip,tempx,idx1,idx2,dx1,dx2)
       do k=0+ilayer,nt+1,nlayer
       !do k=0,nt+1
@@ -316,7 +322,7 @@ subroutine particle_mesh
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
-    !$omp paralleldo default(shared) &
+    !$omp paralleldo default(shared) schedule(static,2)&
     !$omp& private(k,j,i,nlast,np,l,ip,tempx,idx1,idx2,dx1,dx2,vreal) &
     !$omp& reduction(max:vmax,vmax_nu)
     do k=1,nt
