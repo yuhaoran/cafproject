@@ -1,4 +1,6 @@
 !! add -DRECONSTRUCTION to compute delta_E from dsp
+#define Emode
+#define potential
 program displacement
   use parameters
 #ifdef Emode
@@ -8,16 +10,13 @@ program displacement
   save
   ! nc: coarse grid per node per dim
   ! nf: fine grid per node per dim
-  integer(8),parameter :: npnode=nf**3 ! only true for this project
-  real,parameter :: density_buffer=1.2
-  integer(8),parameter :: npmax=npnode*density_buffer
   integer(8) i,j,k,l,i_dim,iq(3),pid8,itx,ity,itz,nlast,ip,np
   integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt),rhoc0(nt,nt,nt,nnt,nnt,nnt)
-  integer(4) rho0(ng,ng,ng) !!!! for checking there is one and only one particle per fine grid
+  integer(1) rho0(ng,ng,ng) !!!! for checking there is one and only one particle per fine grid
   real dsp(3,ng,ng,ng),pos0(3),pos1(3),dpos(3)
 
   integer(izipx),allocatable :: xp(:,:)
-  integer(8),allocatable :: pid(:)
+  integer(4),allocatable :: pid(:)
 
 #ifdef Emode
   integer dim_1,dim_2,dim_3,ig,jg,kg
@@ -30,6 +29,12 @@ program displacement
   real(4) dx1(3),dx2(3)
   complex kpsi(ng*nn/2+1,ng,npen)
   real(4) rho_grid(0:ng+1,0:ng+1,0:ng+1)
+#endif
+
+#ifdef potential
+  real temp8[*],phi8
+  real(8) dvar[*]
+  complex delta_k(nyquest+1,nf,npen)
 #endif
 
   call geometry
@@ -118,8 +123,83 @@ program displacement
           dpos=modulo(dpos+ng*nn/2,real(ng*nn))-ng*nn/2
           dpos=dpos*real(nf)/real(ng)
 
-          dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
-          rho0(iq(1)+1,iq(2)+1,iq(3)+1)=rho0(iq(1)+1,iq(2)+1,iq(3)+1)+1
+          if (np_nc==ncell) then
+            dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
+            rho0(iq(1)+1,iq(2)+1,iq(3)+1)=rho0(iq(1)+1,iq(2)+1,iq(3)+1)+1
+          elseif (np_nc==ncell/2 .and. body_centered_cubic==.false.) then
+            dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
+            dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
+            dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
+            dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+dpos/2
+            dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+dpos/2
+            dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+dpos/2
+            dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+dpos/2
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+dpos/4
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+dpos/4
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+dpos/4
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+dpos/4
+            dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+dpos/4
+            dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+dpos/4
+            dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+dpos/4
+            dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+dpos/4
+            dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/4
+            dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/4
+            dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/4
+            dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/4
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            rho0(iq(1)+1,iq(2)+1,iq(3)+1)=rho0(iq(1)+1,iq(2)+1,iq(3)+1)+8
+            rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+4
+            rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+4
+            rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+4
+            rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+4
+            rho0(iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=rho0(iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+4
+            rho0(iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=rho0(iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+4
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+2
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+2
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+2
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+2
+            rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+2
+            rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+2
+            rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+2
+            rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+2
+            rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+2
+            rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+2
+            rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+2
+            rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+2
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+          elseif (np_nc==ncell/2 .and. body_centered_cubic==.true.) then
+            dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
+            dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
+            dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
+            dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+dpos/2
+            dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+dpos/2
+            dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+dpos/2
+            dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=dsp(:,iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+dpos/2
+            rho0(iq(1)+1,iq(2)+1,iq(3)+1)=rho0(iq(1)+1,iq(2)+1,iq(3)+1)+2
+            rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+1
+            rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)=rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,iq(3)+1)+1
+            rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)=rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,iq(3)+1)+1
+            rho0(iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)=rho0(iq(1)+1,iq(2)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)=rho0(iq(1)+1,iq(2)+1,modulo(iq(3)-1,ng)+1)+1
+          else
+            stop
+          endif
+
         enddo
         nlast=nlast+np
       enddo
@@ -130,11 +210,11 @@ program displacement
     enddo
     deallocate(xp,pid)
 
-    print*, 'check: min,max,sum of rho0 = '
-    print*, minval(rho0),maxval(rho0),sum(rho0)
+    print*, 'check: min,max,mean of rho0 = '
+    print*, minval(rho0),maxval(rho0),sum(rho0)/ng/ng/ng
     if (minval(rho0)<1 .or. maxval(rho0)>1 .or. sum(rho0)/=sim%nplocal) then
       print*, 'Warning'
-      !stop
+      stop
     endif
 
     do i_dim=1,3
@@ -167,14 +247,14 @@ program displacement
           jg=(icx-1)*ng+j
           ig=i
           kx=mod((/ig,jg,kg/)+ng/2-1,ng)-ng/2
-          kr=sqrt(kx(1)**2+kx(2)**2+kx(3)**2)
+          kr=2*pi*sqrt(kx(1)**2+kx(2)**2+kx(3)**2)/box
           ekx=exp(2*pi*(0,1)*kx/ng)
           dim_1=i_dim
           dim_2=mod(dim_1,3)+1
           dim_3=mod(dim_2,3)+1
           pdim=(ekx(dim_1)-1)*(ekx(dim_2)+1)*(ekx(dim_3)+1)/4
           !cphi(i,j,k)=cphi(i,j,k)+cxyz(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
-          cdiv(i,j,k)=cdiv(i,j,k)+cxyz(i,j,k)*pdim
+          cdiv(i,j,k)=cdiv(i,j,k)+cxyz(i,j,k)*pdim*exp(-kr**2*1.8**2/2)**0.25
         enddo
         enddo
         enddo
@@ -188,6 +268,9 @@ program displacement
 
       !! reconstructed delta
       cxyz=cdiv
+#ifdef potential
+      delta_k=-cxyz ! backup k-space delta_L
+#endif
       if (head) print*,'start backward tran'
       call pencil_fft_backward
       cube1=-r3
@@ -349,6 +432,95 @@ program displacement
       print*,'compute and write into',output_name('delta_check')
       write(16) rho_grid(1:ng,1:ng,1:ng)
       close(16)
+
+#endif
+
+#ifdef potential
+      ! Potential field ----------------------------------------------------
+      if (head) print*, ''
+      if (head) print*, 'Potential field'
+      !$omp paralleldo&
+      !$omp& default(shared) &
+      !$omp& private(k,j,i,kg,jg,ig,kx,kr)
+      do k=1,npen
+      do j=1,nf
+      do i=1,nyquest+1
+        kg=(nn*(icz-1)+icy-1)*npen+k
+        jg=(icx-1)*nf+j
+        ig=i
+        kx(3)=mod(kg+nyquest-1,nf_global)-nyquest
+        kx(2)=mod(jg+nyquest-1,nf_global)-nyquest
+        kx(1)=ig-1
+        kx(3)=2*sin(pi*kx(3)/nf_global)
+        kx(2)=2*sin(pi*kx(2)/nf_global)
+        kx(1)=2*sin(pi*kx(1)/nf_global)
+        kr=sum(kx**2)
+        kr=max(kr,1.0/nf_global**2) ! avoid kr being 0
+        cxyz(i,j,k)=-4*pi/kr
+      enddo
+      enddo
+      enddo
+      !$omp endparalleldo
+      if (head) cxyz(1,1,1)=0 ! DC frequency
+      sync all
+
+      if (head) print*, '  correct kernel'
+      call pencil_fft_backward
+      temp8=0
+      if (image==1) temp8=temp8+r3(9,1,1)+r3(1,9,1)+r3(1,1,9)
+      sync all
+      if (icx==nn .and. icy==1 .and. icz==1) temp8=temp8+r3(nf-7,1,1)
+      sync all
+      if (icx==1 .and. icy==nn .and. icz==1) temp8=temp8+r3(1,nf-7,1)
+      sync all
+      if (icx==1 .and. icy==1 .and. icz==nn) temp8=temp8+r3(1,1,nf-7)
+      sync all
+      phi8=0
+      do i=1,nn**3
+        phi8=phi8+temp8[i]
+      enddo
+      sync all
+      phi8=phi8/6
+      if (head) print*,'  phi8 =',phi8
+      sync all
+      if (head) print*, '  construct Ewald potential kernel in real space'
+      !$omp paralleldo&
+      !$omp& default(shared) &
+      !$omp& private(k,j,i,kg,jg,ig,kx,kr)
+      do k=1,nf
+      do j=1,nf
+      do i=1,nf
+        kg=k+nf*(icz-1)
+        jg=j+nf*(icy-1)
+        ig=i+nf*(icx-1)
+        kx(1)=mod(kg+nyquest-1,nf_global)-nyquest
+        kx(2)=mod(jg+nyquest-1,nf_global)-nyquest
+        kx(3)=mod(ig+nyquest-1,nf_global)-nyquest
+        kr=sum(kx**2)
+        if (kr>8) then
+          r3(i,j,k)=r3(i,j,k)-(phi8+1/8.)
+        elseif (kr>0) then
+          r3(i,j,k)=-1/kr
+        elseif (kr==0) then
+          r3(i,j,k)=-2.5
+        endif
+      enddo
+      enddo
+      enddo
+      !$omp endparalleldo
+      sync all
+      call pencil_fft_forward
+
+      ! Complex multiply delta_L with potential kernel
+      cxyz=real(cxyz)*delta_k
+      delta_k=cxyz  ! backup phi(k)
+      call pencil_fft_backward
+
+
+      if (head) print*, '  write phi1 into file'
+      open(11,file=output_name('phiE'),status='replace',access='stream')
+      write(11) r3
+      close(11)
 
 #endif
 

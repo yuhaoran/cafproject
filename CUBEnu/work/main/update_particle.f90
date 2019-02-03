@@ -30,6 +30,7 @@ subroutine update_xp()
   if (head) print*,'update_xp'
   call system_clock(t1,t_rate)
   dt_mid=(dt_old+dt)/2
+  if (head) print*,'  dt_mid =',dt_mid
   overhead_tile=0
   np_prev=0
 

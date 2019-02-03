@@ -1,3 +1,4 @@
+!#define record_Fc
 subroutine particle_mesh
   use omp_lib
   use variables
@@ -6,6 +7,10 @@ subroutine particle_mesh
   use neutrinos
   implicit none
   save
+
+#ifdef record_Fc
+  character(10) :: str_a
+#endif
 
   ! force settings
   !logical,parameter :: fine_force=.true.
@@ -22,6 +27,8 @@ subroutine particle_mesh
     print*, ''
     print*, 'particle mesh'
     print*, '  mass_p cdm/nu =',sim%mass_p_cdm,sim%mass_p_nu
+    print*, '  a_mid =',a_mid
+    print*, '  dt =',dt
     call system_clock(tt1,t_rate)
   endif
 
@@ -272,6 +279,17 @@ subroutine particle_mesh
     call pencil_fft_backward
     force_c(i_dim,1:nc,1:nc,1:nc)=r3
   enddo
+
+#ifdef record_Fc
+  write(str_a,'(f7.3)') a_mid
+  write(65,*) str_a
+  open(66,file=opath//'image1/'//trim(adjustl(str_a))//'_Fc'//output_suffix(),status='replace',access='stream')
+  write(66) force_c(1,1:nc,1:nc,1:nc)
+  write(66) force_c(2,1:nc,1:nc,1:nc)
+  write(66) force_c(3,1:nc,1:nc,1:nc)
+  close(66)
+#endif
+
   call system_clock(t2,t_rate)
   print*, '      elapsed time =',real(t2-t1)/t_rate,'secs';
   sync all

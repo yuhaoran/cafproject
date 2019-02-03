@@ -19,9 +19,10 @@ cd ../main/
 ./main.x
 
 cd ../utilities/
+./cicrsd.x
 ./cicpower.x
 ./halofinder.x
-./ang_mom_corr.x
+#./ang_mom_corr.x
 #source findhalos.sh
 
 cd ../main/

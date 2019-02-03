@@ -7,7 +7,7 @@ program halofinder
 #ifdef write_snapshot
   use variables
 #else
-  use variables, only : xp,vp,rhoc,vfield,i
+  use variables, only : xp,vp,rhoc,pid,vfield,i
 #endif
   implicit none
 

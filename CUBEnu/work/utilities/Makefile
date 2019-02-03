@@ -5,14 +5,13 @@ OPTIONS+=-Dsigma8
 
 #OPTIONS+=-Wall
 OPTIONS+=-DPID
-OPTIONS+=-DHID
 #OPTIONS+=-Dpositive
 #OPTIONS+=-DEmode -DdspE
 
-all: ic.x ic_nu.x cicpower.x halofinder.x ang_mom_corr.x #dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x ic_nu.x cicpower.x cicrsd.x halofinder.x ang_mom_corr.x #dsp.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 
-ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o
+ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o powerspectrum.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 ic_nu.x: parameters.o variables.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
@@ -21,6 +20,8 @@ dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+cicrsd.x: parameters.o variables.o particle_initialization.o cicrsd.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 halofinder.x: parameters.o variables.o halofind.o indexedsort.o buffer_grid.o buffer_particle.o particle_initialization.o halofinder.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 ang_mom_corr.x: parameters.o variables.o ang_mom_corr.o halofind.o indexedsort.o
@@ -49,7 +50,7 @@ pencil_fft.o: ../main/pencil_fft.f90 parameters.o
 powerspectrum.o: powerspectrum.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 
-initial_conditions.o:    initial_conditions.f90    parameters.o variables.o pencil_fft.o
+initial_conditions.o:    initial_conditions.f90    parameters.o variables.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o variables.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
@@ -62,6 +63,8 @@ correlation_qspace.o: correlation_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 cicpower.o: cicpower.f90 parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
+cicrsd.o: cicrsd.f90 parameters.o variables.o particle_initialization.o
+	$(FC) $(OFLAG) $(OPTIONS) $<
 ang_mom_corr.o: ang_mom_corr.f90 parameters.o indexedsort.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 halofinder.o: halofinder.f90 parameters.o variables.o neutrinos.o halofind.o buffer_grid.o buffer_particle.o particle_initialization.o

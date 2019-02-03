@@ -56,7 +56,11 @@ subroutine particle_initialization
 # ifdef PID
   !$omp section
     open(15,file=fn15,status='old',access='stream'); read(15) pid(:sim%nplocal); close(15)
-    print*, 'check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
+    print*, '  check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
+    if (minval(pid(:sim%nplocal))<1) then
+      print*, 'warning: pid are not all positive'
+      !stop
+    endif
 # endif
   print*,'  from image',this_image(),'read',sim%nplocal,' CDM particles'
 

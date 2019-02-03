@@ -2,12 +2,21 @@
 #define sigma_8
 !#define READ_SEED
 !#define READ_NOISE
+!#define filter_phi
+!#define force_power
+
+!#define ELUCID
+!#define IniC_R0
+!#define IniC_E
 
 program initial_conditions
   use omp_lib
   use variables, only: spine_tile
   use pencil_fft
   use iso_fortran_env, only : int64
+# ifdef force_power
+    use powerspectrum
+# endif
   implicit none
   save
 
@@ -28,6 +37,29 @@ program initial_conditions
 #ifdef onehalo
   integer pid_halo(100000),np_halo,ipos(3),nw,iw
   real xv(6,100000),xv_mean(6),ang_mom(3)
+#endif
+
+  complex, allocatable :: cxyz_r(:,:,:)
+#ifdef ELUCID
+# define delta_big
+  integer,parameter :: nr=500
+  character(*),parameter :: file_deltak='../../S500_5001/cxyz_251_500_500.bin'
+#endif
+
+#ifdef IniC_R0
+# define delta_big
+  integer,parameter :: nr=400
+  character(*),parameter :: file_deltak='../../IniC/cxyz_201_400_400.bin'
+#endif
+#ifdef IniC_R1
+# define delta_big
+  integer,parameter :: nr=200
+  character(*),parameter :: file_deltak='../../IniC/cxyz_101_200_200.bin'
+#endif
+#ifdef IniC_R2
+# define delta_big
+  integer,parameter :: nr=300
+  character(*),parameter :: file_deltak='../../IniC/cxyz_151_300_300.bin'
 #endif
 
   integer(8) i,j,k,ip,l,nzero
@@ -58,6 +90,9 @@ program initial_conditions
 #ifdef PID
     integer(4) pid(npmax)
 #endif
+#ifdef force_power
+  real xi(10,nbin)[*]
+#endif
   real grad_max(3)[*],vmax(3),vf
   real(4) svz(500,2),svr(100,2)
   real(8) sigma_vc,sigma_vf
@@ -75,7 +110,10 @@ program initial_conditions
 
   cur_checkpoint=1
   open(16,file='../main/z_checkpoint.txt',status='old')
-    read(16,fmt='(f8.4)') z_checkpoint(cur_checkpoint)
+  read(16,fmt='(f8.4)') z_checkpoint(cur_checkpoint)
+# ifdef force_power
+    z_checkpoint(cur_checkpoint)=5.0
+# endif
   close(16)
 
   if (head) then
@@ -87,7 +125,7 @@ program initial_conditions
     if (body_centered_cubic) then
       print*, 'To genterate npglobal = 2 x', int(np_nc*nc*nn,2),'^3'
     else
-      print*, 'To genterate npglobal =', np_nc*nc*nn,'^3'
+      print*, 'To genterate npglobal =', int(np_nc*nc*nn,2),'^3'
     endif
     print*, 'Box size', box
     print*, 'body_centered_cubic =',body_centered_cubic
@@ -108,7 +146,7 @@ program initial_conditions
   sim%t=0
   sim%tau=0
 
-  sim%istep=0
+  sim%timestep=0
 
   sim%dt_pp=1000
   sim%dt_fine=1000
@@ -184,14 +222,11 @@ program initial_conditions
   enddo
   if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest
   tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(sim%a)**2
+  !tf(2:3,:)=tf(2:3,:)*(s8**2/v8)
   !tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
   !tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
   sync all
 
-  !print*, tf(1,:)
-  !print*, ''
-  !print*, tf(2,:)
-  !stop
 #else
   ! remark: requires "CLASS" format for tf ("CAMB"="CLASS"/(-k^2) with k in 1/Mpc)
   open(11,file='../../tf/caf_z10_tk.dat',form='formatted')
@@ -302,12 +337,55 @@ program initial_conditions
     kx=ig-1
     kr=sqrt(kx**2+ky**2+kz**2)
     kr=max(kr,1.0)
-    pow=interp_tf(2*pi*kr/box,1,2)/(4*pi*kr**3)
-    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*nf_global*nf_global*nf_global)
+    !pow=interp_tf(2*pi*kr/box,1,2)/(4*pi*kr**3)
+    !cxyz(i,j,k)=cxyz(i,j,k)*sqrt(pow*nf_global*nf_global*nf_global)
+    cxyz(i,j,k)=cxyz(i,j,k)*sqrt(interp_tf(2*pi*kr/box,1,2)/(4*pi)*(nf_global/kr))*(nf_global/kr)
+    if (kr==1) then
+      print*,cxyz(i,j,k)
+    endif
   enddo
   enddo
   enddo
   !$omp endparalleldo
+
+#ifdef delta_small
+  print*, 'replace cxyz with the center part of cxyz_r'
+  allocate(cxyz_r(nr/2+1,nr,nr))
+  open(11,file=file_deltak,status='old',access='stream')
+  read(11) cxyz_r
+  cxyz(:ng/2+1,:ng/2+1,:ng/2+1)=cxyz_r(:ng/2+1,:ng/2+1,:ng/2+1)
+  cxyz(:ng/2+1,ng/2+2:,:ng/2+1)=cxyz_r(:ng/2+1,nr-ng/2+2:,:ng/2+1)
+  cxyz(:ng/2+1,:ng/2+1,ng/2+2:)=cxyz_r(:ng/2+1,:ng/2+1,nr-ng/2+2:)
+  cxyz(:ng/2+1,ng/2+2:,ng/2+2:)=cxyz_r(:ng/2+1,nr-ng/2+2:,nr-ng/2+2:)
+  close(11)
+  deallocate(cxyz_r)
+  cxyz=cxyz*ng*ng*ng*Dgrow(sim%a)
+#endif
+
+#ifdef delta_big
+  print*, 'replace the center part of cxyz with cxyz_r'
+  allocate(cxyz_r(nr/2+1,nr,nr))
+  open(11,file=file_deltak,status='old',access='stream')
+  read(11) cxyz_r
+  cxyz_r=cxyz_r*ng*ng*ng*Dgrow(sim%a)
+  cxyz(:nr/2,:nr/2,:nr/2)=cxyz_r(:nr/2,:nr/2,:nr/2)
+  cxyz(:nr/2,ng-nr/2+2:,:nr/2)=cxyz_r(:nr/2,nr/2+2:,:nr/2+1)
+  cxyz(:nr/2,:nr/2,ng-nr/2+2:)=cxyz_r(:nr/2,:nr/2+1,nr/2+2:)
+  cxyz(:nr/2,ng-nr/2+2:,ng-nr/2+2:)=cxyz_r(:nr/2,nr/2+2:,nr/2+2:)
+  close(11)
+  deallocate(cxyz_r)
+#endif
+
+#ifdef IniC_E
+  print*,'use delta_E'
+  open(11,file='/mnt/raid-cita/haoran/CUBEnu/output/universe16/image1/0.000_delta_E_1.bin',access='stream')
+  read(11) r3
+  close(11); sync all
+  r3=r3*Dgrow(sim%a)
+  call pencil_fft_forward
+#endif
+
+
   if (head) cxyz(1,1,1)=0 ! DC frequency
   sync all
   delta_k=cxyz ! backup k-space delta_L
@@ -319,10 +397,20 @@ program initial_conditions
 
   if (head) print*,'  write delta_L into file'
   if (head) print*,'  growth factor Dgrow(',sim%a,') =',Dgrow(sim%a)
+print*,r3(1:4,1,1)
+print*,Dgrow(sim%a)
+print*,r3(1:4,1,1)/Dgrow(sim%a)
   open(11,file=output_dir()//'delta_L'//output_suffix(),status='replace',access='stream')
-  write(11) r3/Dgrow(sim%a)
-  close(11)
-  sync all
+!  r3=r3/Dgrow(sim%a)
+  do i=1,ng
+    write(11) r3(:,:,i)/Dgrow(sim%a)
+  enddo
+!  write(11) r3
+  close(11); sync all
+
+  open(11,file=output_dir()//'delta_L_proj'//output_suffix(),status='replace',access='stream')
+  write(11) sum(r3,dim=3)/ng/Dgrow(sim%a)
+  close(11); sync all
   call system_clock(t2,t_rate)
   if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';
 
@@ -370,6 +458,7 @@ program initial_conditions
     phi8=0
     do i=1,nn**3
       phi8=phi8+temp8[i]
+      sync all
     enddo
     sync all
     phi8=phi8/6
@@ -409,17 +498,6 @@ program initial_conditions
   delta_k=cxyz  ! backup phi(k)
   call pencil_fft_backward
 
-
-  ! Primordial Non-Gaussianity
-  dvar=sum((r3*1d0)**2)
-  dvarg=0
-  do i=1,nn**3 ! co_sum
-    dvarg=dvarg+dvar[i]
-  enddo
-  dvarg=dvarg/nf_global/nf_global/nf_global
-
-  r3=r3-f_nl*(r3**2-dvarg)
-
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
   print*,'  phi',phi(1:4,1,1)
@@ -435,14 +513,94 @@ program initial_conditions
   ! buffer phi ---------------------------------------------------
   if (head) print*, '  buffer phi'
   phi(:0,:,:)=phi(nf-nfb:nf,:,:)[image1d(inx,icy,icz)]
+  sync all
   phi(nf+1:,:,:)=phi(1:nfb+1,:,:)[image1d(ipx,icy,icz)]
   sync all
   phi(:,:0,:)=phi(:,nf-nfb:nf,:)[image1d(icx,iny,icz)]
+  sync all
   phi(:,nf+1:,:)=phi(:,1:nfb+1,:)[image1d(icx,ipy,icz)]
   sync all
   phi(:,:,:0)=phi(:,:,nf-nfb:nf)[image1d(icx,icy,inz)]
+  sync all
   phi(:,:,nf+1:)=phi(:,:,1:nfb+1)[image1d(icx,icy,ipz)]
   sync all
+
+#ifdef filter_phi
+  cxyz=0
+  do k=1,npen
+  do j=1,nf
+  do i=1,nyquest+1
+    ! global grid in Fourier space for i,j,k
+    kg=(nn*(icz-1)+icy-1)*npen+k
+    jg=(icx-1)*nf+j
+    ig=i
+    kz=mod(kg+nyquest-1,nf_global)-nyquest
+    ky=mod(jg+nyquest-1,nf_global)-nyquest
+    kx=ig-1
+    kr=sqrt(kx**2+ky**2+kz**2)
+    kr=max(kr,1.0)
+    kr=2*pi*kr/box
+    pow=exp(-kr**2*1.8**2/2)**0.25 ! apply E-mode window function
+    cxyz(i,j,k)=delta_k(i,j,k)*pow
+  enddo
+  enddo
+  enddo
+  if (head) cxyz(1,1,1)=0 ! DC frequency
+  call pencil_fft_backward
+  if (head) print*, '  write filtered phi1 into file'
+  if (head) print*, '  ',output_name('phiE1')
+  open(11,file=output_name('phiE1'),status='replace',access='stream')
+  write(11) r3
+  close(11)
+!#   ifdef force_power
+      ! now diff and compute F_x
+!      do k=1,nf
+!      do j=1,nf
+!      do i=1,nf
+!        r3(i,j,k)=-(phi(i+1,j,k)-phi(i-1,j,k))/2
+!      enddo
+!      enddo
+!      enddo
+!      ! compute power spectrum of F_x
+!      call cross_power(xi,r3,r3)
+!      print*, 'called cross_power'
+!      sync all
+!      if (head) then
+!        open(15,file=output_name('power_Fx'),status='replace',access='stream')
+!        write(15) xi
+!        close(15)
+!      endif
+!      print*,'wrote',output_name('power_Fx')
+!      stop
+!#   endif
+
+  cxyz=0
+  do k=1,npen
+  do j=1,nf
+  do i=1,nyquest+1
+    ! global grid in Fourier space for i,j,k
+    kg=(nn*(icz-1)+icy-1)*npen+k
+    jg=(icx-1)*nf+j
+    ig=i
+    kz=mod(kg+nyquest-1,nf_global)-nyquest
+    ky=mod(jg+nyquest-1,nf_global)-nyquest
+    kx=ig-1
+    kr=sqrt(kx**2+ky**2+kz**2)
+    kr=max(kr,1.0)
+    kr=2*pi*kr/box
+    pow=exp(-kr**2*3.0**2/2)**0.25 ! apply E-mode window function
+    cxyz(i,j,k)=delta_k(i,j,k)*pow
+  enddo
+  enddo
+  enddo
+  if (head) cxyz(1,1,1)=0 ! DC frequency
+  call pencil_fft_backward
+  if (head) print*, '  write filtered phi1 into file'
+  if (head) print*, '  ',output_name('phiE2')
+  open(11,file=output_name('phiE2'),status='replace',access='stream')
+  write(11) r3
+  close(11)
+#endif
 
   if (head) print*, '  destroying FFT plans'
   call destroy_penfft_plan
@@ -456,19 +614,20 @@ program initial_conditions
   if (head) print*, 'zip checkpoints'
   vf=vfactor(sim%a)
   if (head) print*, '  vf =',vf
-  grad_max(1)=maxval(abs(phi(0:nf-1,1:nf,1:nf)-phi(2:nf+1,1:nf,1:nf)))
-  grad_max(2)=maxval(abs(phi(1:nf,0:nf-1,1:nf)-phi(1:nf,2:nf+1,1:nf)))
-  grad_max(3)=maxval(abs(phi(1:nf,1:nf,0:nf-1)-phi(1:nf,1:nf,2:nf+1)))
+  grad_max(1)=maxval(abs(phi(-nfb:nf+nfb-1,:,:)-phi(-nfb+2:nf+nfb+1,:,:)))
+  grad_max(2)=maxval(abs(phi(:,-nfb:nf+nfb-1,:)-phi(:,-nfb+2:nf+nfb+1,:)))
+  grad_max(3)=maxval(abs(phi(:,:,-nfb:nf+nfb-1)-phi(:,:,-nfb+2:nf+nfb+1)))
   sync all
   do i=1,nn**3 ! co_max
     grad_max=max(grad_max,grad_max(:)[i])
+    sync all
   enddo
   sync all
   vmax=grad_max/2/(4*pi)*vf
 
   sim%dt_vmax=vbuf*20./maxval(abs(vmax))
   sim%vz_max=vmax(3)
-  nlayer=2*ceiling(grad_max(3)/8/pi/ncell)+1
+  nlayer=2*ceiling(grad_max(3)*np_nc/8/pi/ncell)+1
   if (head) then
     print*, '  grad_max',grad_max
     print*, '  max dsp',grad_max/2/(4*pi)
@@ -525,97 +684,6 @@ program initial_conditions
   vfield=0
   std_vsim_c=0; std_vsim_res=0; std_vsim=0; !np_prev=0
 
-#ifdef onehalo
-  open(16,file='../../output/universe2/image1/3.000_halo_pid_1.dat',status='old',access='stream')
-  read(16) np_halo
-  read(16) pid_halo(:np_halo)
-  close(16)
-  print*,minval(pid_halo(:np_halo)),maxval(pid_halo(:np_halo))
-  pid_halo(:np_halo)=pid_halo(:np_halo)-1
-
-  print*,'np_halo =',np_halo
-
-  ! skip until the last tile
-  rhoce=0; vfield=0;
-  do i=1,nnt**3-1
-    write(13) rhoce(1:nt,1:nt,1:nt)
-    write(14) vfield(:,1:nt,1:nt,1:nt)
-  enddo
-
-  do ip=1,np_halo
-    ipos(3)=pid_halo(ip)/nf_global**2
-    ipos(2)=(pid_halo(ip)-ipos(3)*nf_global**2)/nf_global
-    ipos(1)=modulo(pid_halo(ip),nf_global)
-    ipos=ipos+1
-    kk=ipos(3); jj=ipos(2); ii=ipos(1);
-    xq=([ii,jj,kk]-0.5)/ncell-nt ! tile coordinates in coarse grid
-    gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
-    gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
-    gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
-    g=ceiling(xq-gradphi/(8*pi*ncell))
-    rhoce(g(1),g(2),g(3))=rhoce(g(1),g(2),g(3))+1 ! in tile
-    vreal=-gradphi/(8*pi)*vf
-    vfield(:,g(1),g(2),g(3))=vfield(:,g(1),g(2),g(3))+vreal
-  enddo
-  vfield(1,:,:,:)=vfield(1,:,:,:)/merge(1,rhoce,rhoce==0)
-  vfield(2,:,:,:)=vfield(2,:,:,:)/merge(1,rhoce,rhoce==0)
-  vfield(3,:,:,:)=vfield(3,:,:,:)/merge(1,rhoce,rhoce==0)
-  call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
-
-  do ip=1,np_halo
-    ipos(3)=pid_halo(ip)/nf_global**2
-    ipos(2)=(pid_halo(ip)-ipos(3)*nf_global**2)/nf_global
-    ipos(1)=modulo(pid_halo(ip),nf_global)
-    ipos=ipos+1
-    kk=ipos(3); jj=ipos(2); ii=ipos(1);
-    xq=([ii,jj,kk]-0.5)/ncell-nt ! tile coordinates in coarse grid
-    gradphi(1)=phi(ii+1,jj,kk)-phi(ii-1,jj,kk)
-    gradphi(2)=phi(ii,jj+1,kk)-phi(ii,jj-1,kk)
-    gradphi(3)=phi(ii,jj,kk+1)-phi(ii,jj,kk-1)
-    g=ceiling(xq-gradphi/(8*pi*ncell))
-    rholocal(g(1),g(2),g(3))=rholocal(g(1),g(2),g(3))+1
-    idx=idx_ex_r(g(2),g(3))-sum(rhoce(g(1):,g(2),g(3)))+rholocal(g(1),g(2),g(3))
-    xp(:,idx)=floor((xq-gradphi/(8*pi*ncell))/x_resolution,kind=8)
-    vreal=-gradphi/(8*pi)*vf
-    vreal=vreal-vfield(:,g(1),g(2),g(3)) ! save relative velocity
-    vp(:,idx)=nint(real(nvbin-1)*atan(sqrt(pi/2)/(sim%sigma_vi*vrel_boost)*vreal)/pi,kind=izipv)
-    pid(idx)=pid_halo(ip)+1
-
-    nw=nw+1
-    xv(1:3,nw)=ipos-0.5!-gradphi/(8*pi)
-    !print*,pid_halo(ip)+1,ipos-0.5;stop
-    xv(4:6,nw)=-gradphi/(8*pi)/Dgrow(sim%a)
-  enddo
-  print*, 'recorded in xv', nw
-  xv_mean=sum(xv(:,:nw),2)/nw
-  print*,'xv_mean =',xv_mean
-  xv(:,:nw)=xv(:,:nw)-spread(xv_mean, 2, nw)
-  ang_mom=0
-  do iw=1,nw
-    ang_mom(1)=ang_mom(1)+xv(2,iw)*xv(6,iw)-xv(3,iw)*xv(5,iw)
-    ang_mom(2)=ang_mom(2)+xv(3,iw)*xv(4,iw)-xv(1,iw)*xv(6,iw)
-    ang_mom(3)=ang_mom(3)+xv(1,iw)*xv(5,iw)-xv(2,iw)*xv(4,iw)
-  enddo
-  print*, Dgrow(sim%a),vf
-  print*, '             q-space ang_mom=',ang_mom
-
-
-  do k=1,nt ! delete buffer particles
-  do j=1,nt
-    xp(:,pp_l(j,k):pp_r(j,k))=xp(:,ppe_l(j,k):ppe_r(j,k))
-    vp(:,pp_l(j,k):pp_r(j,k))=vp(:,ppe_l(j,k):ppe_r(j,k))
-    pid(pp_l(j,k):pp_r(j,k))=pid(ppe_l(j,k):ppe_r(j,k))
-  enddo
-  enddo
-  write(11) xp(:,1:pp_r(nt,nt))
-  write(12) vp(:,1:pp_r(nt,nt))
-  write(13) rhoce(1:nt,1:nt,1:nt)
-  write(14) vfield(:,1:nt,1:nt,1:nt)
-  write(15) pid(1:pp_r(nt,nt))
-  sim%nplocal=sim%nplocal+pp_r(nt,nt)
-#else
-! onehalo
-
   do itz=1,nnt
   do ity=1,nnt
   do itx=1,nnt
@@ -623,7 +691,7 @@ program initial_conditions
     rholocal=0
 
     do ilayer=0,nlayer-1
-      !$omp paralleldo default(shared) &
+      !$omp paralleldo default(shared) schedule(static,8)&
       !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,vreal)
       do k=1-npb+ilayer,npt+npb,nlayer
       do j=1-npb,npt+npb
@@ -652,7 +720,7 @@ program initial_conditions
     call spine_tile(rhoce,idx_ex_r,pp_l,pp_r,ppe_l,ppe_r)
 
     do ilayer=0,nlayer-1
-      !$omp paralleldo default(shared) &
+      !$omp paralleldo default(shared) schedule(static,8)&
       !$omp& private(k,j,i,imove,kk,jj,ii,xq,gradphi,g,idx,vreal,iq)
       do k=1-npb+ilayer,npt+npb,nlayer
       do j=1-npb,npt+npb
@@ -676,6 +744,7 @@ program initial_conditions
           iq = ((/icx,icy,icz/)-1)*nf + ((/itx,ity,itz/)-1)*nft + (ncell/np_nc)*((/i,j,k/)-1)+imove
           iq = modulo(iq,nf_global)
           pid(idx)=iq(1)+nf_global*iq(2)+nf_global**2*iq(3)+1
+          if (pid(idx)<1) stop
 #       endif
       enddo ! imove
       enddo
@@ -690,6 +759,13 @@ program initial_conditions
       vp(:,pp_l(j,k):pp_r(j,k))=vp(:,ppe_l(j,k):ppe_r(j,k))
 #     ifdef PID
         pid(pp_l(j,k):pp_r(j,k))=pid(ppe_l(j,k):ppe_r(j,k))
+        if(minval(pid(pp_l(j,k):pp_r(j,k)))<1) then
+          print*,'there is zero',k,j
+          !print*,pp_l(j,k),pp_r(j,k)
+          !print*,ppe_l(j,k),ppe_r(j,k)
+          !print*,pid(ppe_l(j,k):ppe_r(j,k))
+          !stop
+        endif
 #     endif
     enddo
     enddo
@@ -721,15 +797,17 @@ program initial_conditions
     write(13) rhoce(1:nt,1:nt,1:nt)
     write(14) vfield(:,1:nt,1:nt,1:nt)
 #   ifdef PID
+      if (minval(pid(1:pp_r(nt,nt))) <1 ) then
+         print*, 'nonpositive PID',itx,ity,itz
+         print*, count(pid(1:pp_r(nt,nt))==0),minval(pid(1:pp_r(nt,nt)))
+         stop
+      endif
       write(15) pid(1:pp_r(nt,nt))
 #   endif
     sim%nplocal=sim%nplocal+pp_r(nt,nt)
   enddo
   enddo
   enddo ! end of tile loop
-
-#endif
-! onehalo
 
   close(11)
   close(12)
@@ -762,10 +840,16 @@ program initial_conditions
   sim%npglobal=0
   do i=1,nn**3
     sim%npglobal=sim%npglobal+sim[i]%nplocal
+    sync all
   enddo
   !sim%nplocal_nu=(np_nc_nu*nc)**3
   !sim%npglobal_nu=(np_nc_nu*nc*nn)**3
-  if (head) print*, 'npglobal =',sim%npglobal
+  if (head) then
+    print*, 'npglobal =',sim%npglobal
+    if (sim%npglobal/=merge(2,1,body_centered_cubic)*(np_nc*nc*nn)**3) then
+      print*, 'warning: incorrect npglobal'
+    endif
+  endif
   sim%mass_p_cdm=real(f_cdm*nf_global**3,kind=8)/sim%npglobal
   sim%mass_p_nu=real(f_nu*nf_global**3,kind=8)/sim%npglobal_nu
 

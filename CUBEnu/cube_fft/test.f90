@@ -3,7 +3,7 @@ program test
   use iso_fortran_env, only : int64
   implicit none
   include 'fftw3.f'
-  integer,parameter :: ng=512 ! number of grid per dimension
+  integer,parameter :: ng=304 ! number of grid per dimension
   real,parameter :: pi=3.14159
   integer(8) plan_fft,plan_ifft ! fft plans
   real den(ng+2,ng,ng) ! fft array, additional "+2" for storing Nyquist frequency

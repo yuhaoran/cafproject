@@ -25,8 +25,6 @@ subroutine checkpoint
   sim%t=t
   sim%tau=tau
 
-  sim%istep=istep
-
   sim%cur_checkpoint=cur_checkpoint
 
   sim%vsim2phys=(1.5/a)*box*100.*sqrt(omega_m)/nf_global
@@ -48,6 +46,11 @@ subroutine checkpoint
     !$omp section
     open(15,file=fn15,status='replace',access='stream'); write(15) pid(:sim%nplocal); close(15)
     print*, 'check PID range: ',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
+    print*, 'check PID range:',minval(pid(:sim%nplocal)),maxval(pid(:sim%nplocal))
+    if (minval(pid(:sim%nplocal))<1) then
+      print*, 'pid are not all positive'
+      
+    endif
 # endif
   !$omp endparallelsections
   print*,'  image',this_image(),'wrote',sim%nplocal,'CDM particles'

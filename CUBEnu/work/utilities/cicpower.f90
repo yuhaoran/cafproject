@@ -1,5 +1,8 @@
 !! add -DNEUTRINOS to compute cross_power(delta_c,delta_nu)
 !! otherwise compute cross_power(delta_L,delta_c)
+
+!#define write_xreal
+!#define analysis
 program cicpower
   use parameters
   use pencil_fft
@@ -52,7 +55,7 @@ program cicpower
 
   call create_penfft_plan
 
-  do cur_checkpoint= 1,n_checkpoint
+  do cur_checkpoint= n_checkpoint,n_checkpoint
     if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
 
     !call particle_initialization
@@ -84,6 +87,10 @@ program cicpower
     read(11) rhoc
     close(11)
 
+#ifdef write_xreal
+    open(12,file=output_name('xreal'),status='replace',access='stream')
+#endif
+
     rho_grid=0
     nlast=0
     do itz=1,nnt
@@ -96,6 +103,11 @@ program cicpower
         do l=1,np
           ip=nlast+l
           pos1=nt*((/itx,ity,itz/)-1)+ ((/i,j,k/)-1) + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
+
+#ifdef write_xreal
+    write(12) pos1*real(ng)/real(nc)
+#endif
+
           pos1=pos1*real(ng)/real(nc) - 0.5
 
           idx1=floor(pos1)+1
@@ -130,9 +142,20 @@ program cicpower
     rho_grid(:,ng,:)=rho_grid(:,ng,:)+rho_grid(:,0,:)[image1d(icx,ipy,icz)]; sync all
     rho_grid(:,:,1)=rho_grid(:,:,1)+rho_grid(:,:,ng+1)[image1d(icx,icy,inz)]
     rho_grid(:,:,ng)=rho_grid(:,:,ng)+rho_grid(:,:,0)[image1d(icx,icy,ipz)]; sync all
-    rho_c=rho_grid(1:ng,1:ng,1:ng)
-    !print*, 'check: min,max,sum of rho_grid = '
-    !print*, minval(rho_c),maxval(rho_c),sum(rho_c*1d0)
+    !rho_c=rho_grid(1:ng,1:ng,1:ng)
+    do i=1,ng
+    do j=1,ng
+    do k=1,ng
+      rho_c(k,j,i)=rho_grid(k,j,i)
+    enddo
+    enddo
+    enddo
+print*,rho_grid(1:2,1:2,1)
+print*,rho_grid(1:2,1:2,2)
+print*,rho_c(1:2,1:2,1)
+print*,rho_c(1:2,1:2,2)
+    print*, 'check: min,max,sum of rho_grid = '
+    print*, minval(rho_c),maxval(rho_c),sum(rho_c*1d0)
 
     rho8=sum(rho_c*1d0); sync all
     ! co_sum
@@ -144,13 +167,24 @@ program cicpower
     endif; sync all
     rho8=rho8[1]; sync all
     ! convert to density contrast
-    rho_c=rho_c/(rho8/ng_global/ng_global/ng_global)-1
+    do i=1,ng
+      rho_c(:,:,i)=rho_c(:,:,i)/(rho8/ng_global/ng_global/ng_global)-1
+    enddo
+    !rho_c=rho_c/(rho8/ng_global/ng_global/ng_global)-1
     ! check normalization
-    print*, minval(rho_c),maxval(rho_c),sum(rho_c*1d0)/ng/ng/ng; sync all
+    print*,'min',minval(rho_c),'max',maxval(rho_c),'mean',sum(rho_c*1d0)/ng/ng/ng; sync all
+print*,'sample'
+print*,rho_c(1:2,1:2,1)
+print*,rho_c(1:2,1:2,2)
+
+
 
     if (head) print*,'Write delta_c into',output_name('delta_c')
     open(11,file=output_name('delta_c'),status='replace',access='stream')
     write(11) rho_c
+    close(11); sync all
+    open(11,file=output_name('delta_c_proj'),status='replace',access='stream')
+    write(11) sum(rho_c(:,:,:50),dim=3)/50
     close(11); sync all
 #ifdef NEUTRINOS
     ! neutrinos
@@ -234,6 +268,25 @@ program cicpower
     ! power spectrum
     write(str_i,'(i6)') image
     write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
+
+#ifdef analysis
+  open(15,file='/mnt/raid-cita/haoran/CUBEnu/output/universe16/image1/0.000_delta_E_1.bin',access='stream')
+  read(15) rho_c
+  close(15)
+  open(15,file='/mnt/raid-cita/haoran/CUBEnu/output/universe36/image1/0.000_delta_E_1.bin',access='stream')
+  read(15) rho_nu
+  close(15)
+  call cross_power(xi,rho_c,rho_nu)
+  open(15,file='/mnt/raid-cita/haoran/CUBEnu/output/universe16/image1/cc_0.000_delta_EE_16_36.bin',status='replace',access='stream')
+  write(15) xi
+  close(15)
+  print*, 'analysis done'
+  stop
+#endif
+
+
+
+
 #ifdef NEUTRINOS
     call cross_power(xi,rho_c,rho_nu)
 #else
@@ -249,6 +302,10 @@ program cicpower
       close(15)
     endif
     sync all
+
+#ifdef write_xreal
+    close(12)
+#endif
 
   enddo
   call destroy_penfft_plan

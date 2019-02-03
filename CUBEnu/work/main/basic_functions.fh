@@ -45,7 +45,7 @@ function output_dir()
   character(:),allocatable :: output_dir
   character(20) :: str_z,str_i
   write(str_i,'(i6)') image
-  write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
+  !write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
   output_dir=opath//'image'//trim(adjustl(str_i))//'/'
 endfunction
 
@@ -55,6 +55,14 @@ function output_prefix()
   write(str_i,'(i6)') image
   write(str_z,'(f7.3)') z_checkpoint(cur_checkpoint)
   output_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'
+endfunction
+
+function icnu_prefix()
+  character(:),allocatable :: icnu_prefix
+  character(20) :: str_z,str_i
+  write(str_i,'(i6)') image
+  write(str_z,'(f7.3)') z_i_nu
+  icnu_prefix=opath//'image'//trim(adjustl(str_i))//'/'//trim(adjustl(str_z))//'_'
 endfunction
 
 function output_prefix_halo()
@@ -76,6 +84,12 @@ function output_name(zipname)
   character(*) ::  zipname
   character(:),allocatable :: output_name
   output_name=output_prefix()//zipname//output_suffix()
+endfunction
+
+function icnu_name(zipname)
+  character(*) ::  zipname
+  character(:),allocatable :: icnu_name
+  icnu_name=icnu_prefix()//zipname//output_suffix()
 endfunction
 
 function output_name_halo(zipname)

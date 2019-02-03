@@ -1,5 +1,3 @@
-!! add -DNEUTRINOS to compute cross_power(delta_c,delta_nu)
-!! otherwise compute cross_power(delta_L,delta_c)
 program ang_mom_corr
   use parameters
   use halo_output, only: type_halo_catalog, type_halo_info
@@ -19,7 +17,7 @@ program ang_mom_corr
   integer pid(max_halo_np),ipos(3)
   real qpos(3,max_halo_np),qpos_mean(3),vq(3),dx(3),vf,scale_factor,dx_mean(3)
   real spin_q(3),spin_x(3),spin_t(3),spin_u(3)
-  real inertia(3,3),tide(3,3),torque(3,3)
+  real inertia(3,3),tide(3,3),tidu(3,3),torque(3,3)
   real force_cdm(3),force_neu(3),torque_c,torque_u
   real theta_qx(3000),theta_qt(3000),theta_tx(3000),theta_cu(3000),theta_ff(3000)
   real phi(0:nf+1,0:nf+1,0:nf+1)[*]
@@ -55,10 +53,16 @@ program ang_mom_corr
   sync all
 
   cur_checkpoint=1
+  print*,output_name('phi1')
   open(21,file=output_name('phi1'),status='old',access='stream')
-  read(21) phi(1:nf,1:nf,1:nf)
+  !read(21) phi(1:nf,1:nf,1:nf)
+  !open(21,file='../../output/universe2/image1/5.000_phi_z5_1.bin',status='old',access='stream')
+  !open(21,file='../../output/universe2/image1/0.000_phiE_1.bin',status='old',access='stream')
+  read(21) phi(1:nf,1:nf,1:nf)  !! attention 1 layer buffer also loaded
   close(21)
+  print*, output_name('phi1_nu')
   open(21,file=output_name('phi1_nu'),status='old',access='stream')
+  !open(21,file='../../output/universe2/image1/5.000_tf5.000_phi1_nu_1.bin',status='old',access='stream')
   read(21) phu(1:nf,1:nf,1:nf)
   close(21)
   vf=vfactor(1/(1+z_checkpoint(cur_checkpoint)))
@@ -89,15 +93,8 @@ program ang_mom_corr
     print*,output_name('halo')
     open(11,file=output_name('halo'),status='old',access='stream')
     open(12,file=output_name('halo_pid'),status='old',access='stream')
-
     open(13,file=output_name('halo_init_spin'),status='replace',access='stream')
-
-    !open(14,file=output_name('halo_init_I'),status='replace',access='stream')
-
-    !open(15,file=output_name('halo_init_tide'),status='replace',access='stream')
-
-
-
+    
     read(11) halo_catalog
 
     print*,' N_halos_global =',halo_catalog%nhalo_tot
@@ -127,18 +124,20 @@ program ang_mom_corr
       dx_mean=dx_mean/np
       qpos_mean=halo_info%x_mean+dx_mean
       qpos_mean=modulo(qpos_mean,real(nf_global))
-      !if(ihalo==9) then
-      !  print*,halo_info%x_mean
-      !  print*,dx_mean
-      !  print*,halo_info%x_mean+dx_mean
-      !  print*,qpos_mean
-      !endif
+      if(ihalo==1) then
+        print*,'check halo position'
+        print*,halo_info%x_mean
+        print*,dx_mean
+        print*,halo_info%x_mean+dx_mean
+        print*,qpos_mean
+      endif
       spin_q=0; spin_u=0
       force_cdm=0; force_neu=0
       torque_c=0; torque_u=0
       dx_mean=0
       inertia=0
       tide=0
+      tidu=0
       do ip=1,np
         ipos(3)=pid(ip)/nf_global**2
         ipos(2)=(pid(ip)-ipos(3)*nf_global**2)/nf_global
@@ -148,7 +147,7 @@ program ang_mom_corr
         dx=ipos-0.5-qpos_mean
         dx=modulo(dx+nf_global/2,real(nf_global))-nf_global/2
         dx_mean=dx_mean+dx
-        !CDM
+        !CDM ===================================================================
         vq(1)=phi(ipos(1)+1,ipos(2),ipos(3))-phi(ipos(1)-1,ipos(2),ipos(3))
         vq(2)=phi(ipos(1),ipos(2)+1,ipos(3))-phi(ipos(1),ipos(2)-1,ipos(3))
         vq(3)=phi(ipos(1),ipos(2),ipos(3)+1)-phi(ipos(1),ipos(2),ipos(3)-1)
@@ -167,7 +166,7 @@ program ang_mom_corr
         spin_u(3)=spin_u(3)+dx(1)*vq(2)-dx(2)*vq(1)
         force_neu=force_neu+vq
 
-        ! initial inertia tensor
+        ! initial inertia
         inertia(1,1)=inertia(1,1)+dx(1)**2
         inertia(2,2)=inertia(2,2)+dx(2)**2
         inertia(3,3)=inertia(3,3)+dx(3)**2
@@ -186,6 +185,17 @@ program ang_mom_corr
         tide(3,1)=tide(3,1)+(phi(ipos(1)+1,ipos(2),ipos(3)+1)+phi(ipos(1)-1,ipos(2),ipos(3)-1)&
                             -phi(ipos(1)+1,ipos(2),ipos(3)-1)-phi(ipos(1)-1,ipos(2),ipos(3)+1))/4
 
+        tidu(1,1)=tidu(1,1)+phu(ipos(1)+1,ipos(2),ipos(3))-2*phu(ipos(1),ipos(2),ipos(3))+phu(ipos(1)-1,ipos(2),ipos(3))
+        tidu(2,2)=tidu(2,2)+phu(ipos(1),ipos(2)+1,ipos(3))-2*phu(ipos(1),ipos(2),ipos(3))+phu(ipos(1),ipos(2)-1,ipos(3))
+        tidu(3,3)=tidu(3,3)+phu(ipos(1),ipos(2),ipos(3)+1)-2*phu(ipos(1),ipos(2),ipos(3))+phu(ipos(1),ipos(2),ipos(3)-1)
+        tidu(1,2)=tidu(1,2)+(phu(ipos(1)+1,ipos(2)+1,ipos(3))+phu(ipos(1)-1,ipos(2)-1,ipos(3))&
+                            -phu(ipos(1)+1,ipos(2)-1,ipos(3))-phu(ipos(1)-1,ipos(2)+1,ipos(3)))/4
+        tidu(2,3)=tidu(2,3)+(phu(ipos(1),ipos(2)+1,ipos(3)+1)+phu(ipos(1),ipos(2)-1,ipos(3)-1)&
+                            -phu(ipos(1),ipos(2)+1,ipos(3)-1)-phu(ipos(1),ipos(2)-1,ipos(3)+1))/4
+        tidu(3,1)=tidu(3,1)+(phu(ipos(1)+1,ipos(2),ipos(3)+1)+phu(ipos(1)-1,ipos(2),ipos(3)-1)&
+                            -phu(ipos(1)+1,ipos(2),ipos(3)-1)-phu(ipos(1)-1,ipos(2),ipos(3)+1))/4
+
+
         spin_x=halo_info%ang_mom
       enddo
       dx_mean=dx_mean/np ! check mean
@@ -199,7 +209,13 @@ program ang_mom_corr
       tide(2,1)=tide(1,2)
       tide(3,2)=tide(2,3)
       tide(1,3)=tide(3,1)
+      tidu(2,1)=tidu(1,2)
+      tidu(3,2)=tidu(2,3)
+      tidu(1,3)=tidu(3,1)
+      tide=tide/np
+      tidu=tidu/np
       torque=matmul(inertia,tide)
+      !torque=matmul(tidu,tide) ! reconstructed
 
       spin_t(1)=-torque(2,3)+torque(3,2)
       spin_t(2)=-torque(3,1)+torque(1,3)
@@ -213,6 +229,17 @@ program ang_mom_corr
       torque_c=torque_c+sqrt(sum(spin_q**2))
       torque_u=torque_u+sqrt(sum(spin_u**2))
       theta_ff(ihalo)=sum(force_cdm*force_neu)/sqrt(sum(force_cdm**2))/sqrt(sum(force_neu**2))
+
+      if (ihalo==1) then
+        print*,'halo',ihalo
+        print*,'inertia'
+        print*,inertia
+        print*,'tide'
+        print*,tide
+        print*,'spin'
+        print*,spin_t
+      endif
+
     enddo
 
     print*,'mean qx correlation =',sum(theta_qx(:nhalo))/nhalo
@@ -226,11 +253,6 @@ program ang_mom_corr
     deallocate(corr_info)
   enddo
   sync all
-
-
-
-
-
 
   contains
   function vfactor(a)

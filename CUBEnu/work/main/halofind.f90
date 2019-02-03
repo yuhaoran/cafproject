@@ -1,3 +1,4 @@
+#define HID
 module halo_output
   implicit none
 
@@ -9,7 +10,8 @@ module halo_output
   type type_halo_info
     real hpos(3)
     real mass_odc,radius_odc,v_disp
-    real x_mean(3),v_mean(3),ang_mom(3),var_x(3)
+    real x_mean(3),v_mean(3),ang_mom(3),var_x(3),inertia(3,3)
+    real q_mean(3),inertia_q(3,3)
   endtype
 endmodule
 
@@ -41,9 +43,9 @@ subroutine halofind
   integer(4) ilist_odc(max_halo_np),i_odc,GroupOffset,temp_halo(2,200000)
   integer idist(3,nlist),isortdist(nlist),idist_tmp(3,nlist),isortpeak(n_peak_max)
   integer isortpos_odc(max_halo_np)
-  integer iloc,np_odc,np_search
+  integer iloc,np_odc,np_search,nptemp,qtemp
   integer crbox(3,2),csbox(3,2),frbox(3,2),itile(3),newbox(3),imax(3)
-  real den_odc,d1,d2,r1,r2,w1,w2,den1,den2,dx(3),dv(3)
+  real den_odc,d1,d2,r1,r2,w1,w2,den1,den2,dx(3),dv(3),qpos(3),dx_mean(3),qpos_mean(3),inert(3,3)
   real finegrid(0:newbox_max+1,0:newbox_max+1,0:newbox_max+1)
   real xv_odc(6,max_halo_np),r_odc(max_halo_np)
   integer(4) oct(max_halo_np)
@@ -108,8 +110,8 @@ subroutine halofind
   ! open halo file
   open(11,file=output_name_halo('halo'),status='replace',access='stream')
   open(12,file=output_name_halo('halo_pid'),status='replace',access='stream')
-  open(101,file=output_name_halo('group_tab'),status='replace',access='stream')
-  open(102,file=output_name_halo('group_ids'),status='replace',access='stream')
+  !open(101,file=output_name_halo('group_tab'),status='replace',access='stream')
+  !open(102,file=output_name_halo('group_ids'),status='replace',access='stream')
   ! Determine which candidates are to be considered halos and write their properties to file.
 # ifdef HID
     open(21,file=output_name_halo('hid'),status='replace',access='stream')
@@ -125,8 +127,8 @@ subroutine halofind
   header_halo_tab%TotNgroups=0
   header_halo_tab%Nids=0
   header_halo_tab%TotNids=0
-  write(101) header_halo_tab
-  write(102) header_halo_tab,0
+  !write(101) header_halo_tab
+  !write(102) header_halo_tab,0
 
   do itz=nnt,1,-1
   do ity=nnt,1,-1
@@ -250,6 +252,14 @@ subroutine halofind
       ! larger box for identifying particles
       csbox(:,1)=floor((hpos-rsearch)/ncell)+1
       csbox(:,2)=floor((hpos+rsearch)/ncell)+1
+      if (minval(csbox)<1-ncb) then
+        print*,csbox
+        stop
+      endif
+      if (maxval(csbox)>nt+ncb) then
+        print*,csbox
+        stop
+      endif
       ! smaller box for finding center
       crbox(:,1)=floor((hpos-r_proxy)/ncell)+1
       crbox(:,2)=floor((hpos+r_proxy)/ncell)+1
@@ -296,6 +306,13 @@ subroutine halofind
                   idx2=idx1+1
                   dx1=idx1-(pos1-frbox(:,1))/newgrid
                   dx2=1-dx1
+!                  if (minval(idx1)<0 .or. minval(idx2)<0) then
+!                    print*,'r',r_proxy,rsearch
+!                    print*,'frbox',frbox
+!                    print*,'csbox',csbox
+!                    print*,'crbox',crbox
+!                    stop
+!                  endif
                   !print*, idx1
                   !print*, dx1
                   !stop
@@ -324,8 +341,14 @@ subroutine halofind
         !finegrid(81:82,81:82,81:82)=110000
         !finegrid(81,81,81)=170500
         ! debug}
-      imax=maxloc(finegrid)-1
+      !imax=maxloc(finegrid)-1
+      imax=maxloc(finegrid(1:newbox_max,1:newbox_max,1:newbox_max))
+
       !print*,'imax',imax
+!if(i0-1==-1) then
+!  print*, 'maxloc',maxloc(finegrid)
+!  stop
+!endif
       i0=imax(1);j0=imax(2);k0=imax(3)
       hpos(1)=(i0-0.5)+0.5*(finegrid(i0+1,j0,k0)-finegrid(i0-1,j0,k0))&
                        /(-finegrid(i0-1,j0,k0)+2*finegrid(i0,j0,k0)-finegrid(i0+1,j0,k0))
@@ -413,18 +436,22 @@ subroutine halofind
             halo_info%ang_mom(1)=halo_info%ang_mom(1)+dx(2)*dv(3)-dx(3)*dv(2)
             halo_info%ang_mom(2)=halo_info%ang_mom(2)+dx(3)*dv(1)-dx(1)*dv(3)
             halo_info%ang_mom(3)=halo_info%ang_mom(3)+dx(1)*dv(2)-dx(2)*dv(1)
+            halo_info%inertia(1,1)=halo_info%inertia(1,1)+dx(1)*dx(1)
+            halo_info%inertia(2,2)=halo_info%inertia(2,2)+dx(2)*dx(2)
+            halo_info%inertia(3,3)=halo_info%inertia(3,3)+dx(3)*dx(3)
+            halo_info%inertia(1,2)=halo_info%inertia(1,2)+dx(1)*dx(2)
+            halo_info%inertia(2,3)=halo_info%inertia(2,3)+dx(2)*dx(3)
+            halo_info%inertia(3,1)=halo_info%inertia(3,1)+dx(3)*dx(1)
           enddo
-          if (nhalo==4) then
-            print*,'i_odc',i_odc
-            print*,'x_mean',halo_info%x_mean
-            print*,'v_mean',halo_info%v_mean
-            print*,'ang_mom',halo_info%ang_mom
-
+          halo_info%inertia(2,1)=halo_info%inertia(1,2)
+          halo_info%inertia(3,2)=halo_info%inertia(2,3)
+          halo_info%inertia(1,3)=halo_info%inertia(3,1)
+          !print*,halo_info
+          if (minval(pid(ilist_odc(:i_odc)))<1) then
+            print*, "  warning: pids are not all positive integers"
+            !print*, pid(ilist_odc(:i_odc))
             !stop
           endif
-          !print*,halo_info%ang_mom;stop
-          write(11) halo_info ! if the maximum is in physical regions
-          if (minval(pid(ilist_odc(:i_odc)))<1) stop "pids are not all positive integers"
           write(12) i_odc,pid(ilist_odc(:i_odc)),0
 #         ifdef HID
             hid(pid(ilist_odc(:i_odc)))=nhalo
@@ -432,9 +459,64 @@ subroutine halofind
           !write(101) i_odc,GroupOffset
           temp_halo(1,nhalo)=i_odc
           temp_halo(2,nhalo)=GroupOffset
-          write(102) pid(ilist_odc(:i_odc))
+          !write(102) pid(ilist_odc(:i_odc))
           GroupOffset=GroupOffset+i_odc
           header_halo_tab%Nids=header_halo_tab%Nids+i_odc
+
+          ! compute inertia in q-space
+          halo_info%q_mean=0
+          nptemp=0;
+          do ii=1,i_odc
+            qtemp=pid(ilist_odc(ii))-1
+            if (qtemp<0) then
+              cycle
+            endif
+            nptemp=nptemp+1
+            qpos(3)=qtemp/nf_global**2
+            qpos(2)=(qtemp-(qtemp/nf_global**2)*nf_global**2)/nf_global
+            qpos(1)=modulo(qtemp,nf_global)
+            qpos=qpos+0.5
+            dx=qpos-halo_info%x_mean
+            dx=modulo(dx+nf_global/2,real(nf_global))-nf_global/2
+            dx_mean=dx_mean+dx
+          enddo
+          dx_mean=dx_mean/nptemp
+          qpos_mean=halo_info%x_mean+dx_mean
+          qpos_mean=modulo(qpos_mean,real(nf_global))
+          halo_info%q_mean=qpos_mean
+
+          do ii=1,i_odc
+            qtemp=pid(ilist_odc(ii))-1
+            if (qtemp<0) then
+              cycle
+            endif
+            qpos(3)=qtemp/nf_global**2
+            qpos(2)=(qtemp-(qtemp/nf_global**2)*nf_global**2)/nf_global
+            qpos(1)=modulo(qtemp,nf_global)
+            qpos=qpos+0.5
+            dx=qpos+0.5-qpos_mean
+            dx=modulo(dx+nf_global/2,real(nf_global))-nf_global/2
+            ! initial inertia
+            inert(1,1)=inert(1,1)+dx(1)**2
+            inert(2,2)=inert(2,2)+dx(2)**2
+            inert(3,3)=inert(3,3)+dx(3)**2
+            inert(1,2)=inert(1,2)+dx(1)*dx(2)
+            inert(2,3)=inert(2,3)+dx(2)*dx(3)
+            inert(3,1)=inert(3,1)+dx(3)*dx(1)
+          enddo
+          inert(2,1)=inert(1,2); inert(3,2)=inert(2,3); inert(1,3)=inert(3,1)
+          halo_info%inertia_q=inert
+          if (nhalo==1) then
+            print*,'i_odc',i_odc
+            print*,'hpos',halo_info%hpos
+            print*,'x_mean',halo_info%x_mean
+            print*,'v_mean',halo_info%v_mean
+            print*,'ang_mom',halo_info%ang_mom
+            print*,'q_mean',halo_info%q_mean
+            print*,'inertia_q',halo_info%inertia_q
+            !stop
+          endif
+          write(11) halo_info ! if the maximum is in physical regions
         else
 #         ifdef analysis
             print*,'  it is a halo in buffer region'
@@ -467,10 +549,10 @@ subroutine halofind
   sync all
 
   nhalo_tot=0
-  header_halo_tab%TotNids=0
+  !header_halo_tab%TotNids=0
   do ii=1,nn**3
     nhalo_tot=nhalo_tot+nhalo[ii]
-    header_halo_tab%TotNids=header_halo_tab%TotNids+header_halo_tab[ii]%Nids
+    !header_halo_tab%TotNids=header_halo_tab%TotNids+header_halo_tab[ii]%Nids
   enddo
   sync all
   if (head) then
@@ -486,17 +568,17 @@ subroutine halofind
   print*,'  count(hid>0) =', count(hid>0,kind=4)
 #endif
 
-  header_halo_tab%Ngroups=nhalo
-  header_halo_tab%TotNgroups=nhalo_tot
-  header_halo_tab%NFiles=nn**3
-  rewind(101)
-  write(101) header_halo_tab
-  write(101) temp_halo(1,:nhalo),temp_halo(2,:nhalo)
-  close(101)
+  !header_halo_tab%Ngroups=nhalo
+  !header_halo_tab%TotNgroups=nhalo_tot
+  !header_halo_tab%NFiles=nn**3
+  !rewind(101)
+  !write(101) header_halo_tab
+  !write(101) temp_halo(1,:nhalo),temp_halo(2,:nhalo)
+  !close(101)
 
-  rewind(102)
-  write(102) header_halo_tab,0
-  close(102)
+  !rewind(102)
+  !write(102) header_halo_tab,0
+  !close(102)
 
   sync all
 

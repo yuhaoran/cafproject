@@ -3,6 +3,8 @@
 #define READ_NOISE
 #define MTF
 
+!#define only_phi
+
 program initial_conditions_nu
   use omp_lib
   use variables, only: spine_tile
@@ -17,12 +19,19 @@ program initial_conditions_nu
   logical,parameter :: correct_kernel=.true.
   logical,parameter :: write_potential=.true.
 
+#ifdef only_phi
+  integer(8),parameter :: nk=117
+  real tf(7,nk), vtf(7,nk)
+#else
+
 #ifdef sigma_8
   integer(8),parameter :: nk=1000
   real tf(7,nk), vtf(7,nk)
 #else
   integer(8),parameter :: nk=132
   real tf(14,nk)
+#endif
+
 #endif
 
   integer(8) i,j,k,ip,l,nzero,n_min
@@ -118,12 +127,19 @@ program initial_conditions_nu
   if (head) print*,'Transfer function'
   call system_clock(t1,t_rate)
 #ifdef sigma_8
+#ifdef only_phi
+  open(11,file='../../../../projects/caf/camb_transfer_out_z100.dat.txt',form='formatted')
+  read(11,*) tf
+  close(11)
+  vtf=tf
+#else
   open(11,file='../../tf/ith2_mnu0p05_z5_tk.dat',form='formatted')
   read(11,*) tf
   close(11)
   open(11,file='../../tf/ith2_mnu0p05_z5_v_tk.dat',form='formatted')
   read(11,*) vtf
   close(11)
+#endif
   ! normalization
   ! norm=2.*pi**2.*(h0/100.)**4*(h0/100./0.05)**(n_s-1) ! for Xin
   norm=1
@@ -150,6 +166,10 @@ program initial_conditions_nu
   if (head) print*, 's8**2/v8:', v8, s8**2/v8,nyquest
   tf(2:3,:)=tf(2:3,:)*(s8**2/v8)*Dgrow(a_i_nu)**2 ! CDM
   tf(6,:)=tf(6,:)*(s8**2/v8)*Dgrow(a_i_nu)**2 !
+  !print*,tf(1,:)
+  !print*,''
+  !print*,tf(6,:)
+  !stop
   !tf(2,:)=tf(6,:)*(s8**2/v8)*DgrowRatio(z_i,z_tf)**2 ! T_cb rather than T_c
   !tf(2:3,:)= scalar_amp*tf(2:3,:)*Dgrow(a)**2 ! for Xin
   sync all
@@ -173,7 +193,6 @@ program initial_conditions_nu
 
   sync all
 #endif
-
   ! noisemap -------------------------------------
   if (head) print*,''
   if (head) print*,'Generating random noise'
@@ -394,12 +413,15 @@ program initial_conditions_nu
   print*,'  phi',phi(1:4,1,1)
   if (write_potential) then
     if (head) print*, '  write phi1_nu into file'
-    open(11,file=output_name('phi1_nu'),status='replace',access='stream')
+    open(11,file=icnu_name('phi1_nu'),status='replace',access='stream')
     write(11) r3
     close(11)
   endif
   sync all
 
+#ifdef only_phi
+  stop
+#endif
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! build velocity potential
   ! reset tf,vtf
