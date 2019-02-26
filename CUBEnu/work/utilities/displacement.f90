@@ -42,10 +42,6 @@ program displacement
   if (head) then
     print*, 'Displacement field analysis on resolution:'
     print*, 'ng=',ng
-  endif
-  sync all
-
-  if (head) then
     print*, 'checkpoint at:'
     open(16,file='../main/z_checkpoint.txt',status='old')
     do i=1,nmax_redshift
@@ -56,7 +52,6 @@ program displacement
     close(16)
     print*,''
   endif
-
   sync all
   n_checkpoint=n_checkpoint[1]
   z_checkpoint(:)=z_checkpoint(:)[1]
@@ -90,7 +85,6 @@ program displacement
     open(11,file=output_name('np'),status='old',action='read',access='stream')
     read(11) rhoc
     close(11)
-
     open(14,file=output_name('id'),status='old',action='read',access='stream')
     print*, output_name('id')
     read(14) pid ! particle Lagrangian positions
@@ -103,7 +97,6 @@ program displacement
     do itz=1,nnt
     do ity=1,nnt
     do itx=1,nnt
-      if (head) print*, 'CIC interpolation on tile',int(itx,1),int(ity,1),int(itz,1)
       do k=1,nt
       do j=1,nt
       do i=1,nt
@@ -126,7 +119,7 @@ program displacement
           if (np_nc==ncell) then
             dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
             rho0(iq(1)+1,iq(2)+1,iq(3)+1)=rho0(iq(1)+1,iq(2)+1,iq(3)+1)+1
-          elseif (np_nc==ncell/2 .and. body_centered_cubic==.false.) then
+          elseif   (np_nc==ncell/2 .and. body_centered_cubic.eqv..false.) then
             dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
             dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
             dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
@@ -146,14 +139,22 @@ program displacement
             dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/4
             dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/4
             dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/4
-            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
-            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=dsp(:,modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
+            dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=dsp(:,modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+dpos/8
             rho0(iq(1)+1,iq(2)+1,iq(3)+1)=rho0(iq(1)+1,iq(2)+1,iq(3)+1)+8
             rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=rho0(modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+4
             rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=rho0(modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+4
@@ -173,15 +174,23 @@ program displacement
             rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+2
             rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+2
             rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(iq(1)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+2
-            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+1
-            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+1
-            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+1
-            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+1
-            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+1
-            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+1
-            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+1
-            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+1
-          elseif (np_nc==ncell/2 .and. body_centered_cubic==.true.) then
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)&
+=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)+1,ng)+1)+1
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)+1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+            rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=rho0(modulo(iq(1)+1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+            rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)&
+=rho0(modulo(iq(1)-1,ng)+1,modulo(iq(2)-1,ng)+1,modulo(iq(3)-1,ng)+1)+1
+          elseif (np_nc==ncell/2 .and. body_centered_cubic.eqv..true.) then
             dsp(:,iq(1)+1,iq(2)+1,iq(3)+1)=dpos
             dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)+1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
             dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)=dsp(:,modulo(iq(1)-1,ng)+1,iq(2)+1,iq(3)+1)+dpos/2
@@ -226,15 +235,14 @@ program displacement
     close(15)
 
 #ifdef Emode
-      if (head) print*,'Start computing delta_E'
+      print*,''
+      print*,'Start computing delta_E'
       !cphi=0
       cdiv=0
       do i_dim=1,3
-        if (head) print*,'Start working on dim',int(i_dim,1)
+        print*,'  working on dim',int(i_dim,1)
         r3=dsp(i_dim,1:ng,1:ng,1:ng)
-        if (head) print*,'start forward tran'
         call pencil_fft_forward
-        if (head) print*,'loop over k'
         ! cxyz is the fourier of dsp(i_dim,1:ng,1:ng,1:ng)
         do k=1,npen
         do j=1,ng
@@ -250,7 +258,7 @@ program displacement
           dim_3=mod(dim_2,3)+1
           pdim=(ekx(dim_1)-1)*(ekx(dim_2)+1)*(ekx(dim_3)+1)/4
           !cphi(i,j,k)=cphi(i,j,k)+cxyz(i,j,k)*pdim/(-4*sum(sin(pi*kx/ng)**2)+0.000001)
-          cdiv(i,j,k)=cdiv(i,j,k)+cxyz(i,j,k)*pdim*exp(-kr**2*1.8**2/2)**0.25
+          cdiv(i,j,k)=cdiv(i,j,k)+cxyz(i,j,k)*pdim
         enddo
         enddo
         enddo
@@ -267,27 +275,29 @@ program displacement
 #ifdef potential
       delta_k=-cxyz ! backup k-space delta_L
 #endif
-      if (head) print*,'start backward tran'
+      print*,'  btran'
       call pencil_fft_backward
       cube1=-r3
-      if (head) print*,'Write delta_E into file'
+      print*,'  write delta_E into file'
       open(15,file=output_name('delta_E'),status='replace',access='stream')
       write(15) cube1
       close(15)
       sync all
 
-      if (head) print*,'Read delta_L from file'
+      print*,'  read delta_L from file'
       !! linear delta
-      open(15,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
-      read(15) cube0
-      close(15)
-      call cross_power(xi,cube0,cube1)
-      open(15,file=output_name('power_LE'),status='replace',access='stream')
-      write(15) xi
-      close(15)
+      !open(15,file=output_dir()//'delta_L'//output_suffix(),status='old',access='stream')
+      !read(15) cube0
+      !close(15)
+      !print*,'  compute power_LE'
+      !call cross_power(xi,cube0,cube1)
+      !open(15,file=output_name('power_LE'),status='replace',access='stream')
+      !write(15) xi
+      !close(15)
 #endif
 
 #ifdef dspE
+      print*,'dspe'
       kpsi=0
       do i_dim=1,3
         r3=dsp(i_dim,1:ng,1:ng,1:ng)
@@ -513,27 +523,27 @@ program displacement
       call pencil_fft_backward
 
       ! add a 1.8 filter on phiE
-  cxyz=0
-  do k=1,npen
-  do j=1,nf
-  do i=1,nyquest+1
-    ! global grid in Fourier space for i,j,k
-    kg=(nn*(icz-1)+icy-1)*npen+k
-    jg=(icx-1)*nf+j
-    ig=i
-    kx(3)=mod(kg+nyquest-1,nf_global)-nyquest
-    kx(2)=mod(jg+nyquest-1,nf_global)-nyquest
-    kx(1)=ig-1
-    kr=sqrt(sum(kx**2))
-    kr=max(kr,1.0)
-    kr=2*pi*kr/box
-    pow=exp(-kr**2*1.8**2/2)**0.25 ! apply E-mode window function
-    cxyz(i,j,k)=delta_k(i,j,k)*pow
-  enddo
-  enddo
-  enddo
-  if (head) cxyz(1,1,1)=0 ! DC frequency
-  call pencil_fft_backward
+!  cxyz=0
+!  do k=1,npen
+!  do j=1,nf
+!  do i=1,nyquest+1
+!    ! global grid in Fourier space for i,j,k
+!    kg=(nn*(icz-1)+icy-1)*npen+k
+!    jg=(icx-1)*nf+j
+!    ig=i
+!    kx(3)=mod(kg+nyquest-1,nf_global)-nyquest
+!    kx(2)=mod(jg+nyquest-1,nf_global)-nyquest
+!    kx(1)=ig-1
+!    kr=sqrt(sum(kx**2))
+!    kr=max(kr,1.0)
+!    kr=2*pi*kr/box
+!    pow=exp(-kr**2*1.8**2/2)**0.25 ! apply E-mode window function
+!    cxyz(i,j,k)=delta_k(i,j,k)*pow
+!  enddo
+!  enddo
+!  enddo
+!  if (head) cxyz(1,1,1)=0 ! DC frequency
+!  call pencil_fft_backward
 
 
       if (head) print*, '  write phi1 into file'
@@ -542,7 +552,6 @@ program displacement
       close(11)
 
 #endif
-
     !open(15,file='../output/universe1/image1/0.000dsp_1.bin',access='stream')
     !read(15) dsp0(1,1:ng,1:ng,1:ng)
     !read(15) dsp0(2,1:ng,1:ng,1:ng)

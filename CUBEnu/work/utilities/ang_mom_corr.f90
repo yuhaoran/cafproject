@@ -1,5 +1,6 @@
 !#define eig
 !#define Voronoi
+!#define NEUTRINOS
 program ang_mom_corr
   use parameters
   use halo_output, only: type_halo_catalog, type_halo_info
@@ -54,10 +55,9 @@ program ang_mom_corr
   z_checkpoint(:)=z_checkpoint(:)[1]
   sync all
 
-  cur_checkpoint=1
+  cur_checkpoint=1 ! read phi for the initial condition
   open(21,file=output_name('phi1'),status='old',access='stream')
   !open(21,file='../../output/universe16/image1/50.000_phi1_1.bin',access='stream')
-
   !read(21) phi(1:nf,1:nf,1:nf)
   !open(21,file='../../output/universe2/image1/5.000_phi_z5_1.bin',status='old',access='stream')
   !open(21,file='../../output/universe3/image1/0.000_phiE_1.bin',status='old',access='stream')
@@ -67,10 +67,12 @@ program ang_mom_corr
   write(str_i,'(i6)') image
   !print*, output_name('phi1_nu')
   !open(21,file=output_name('phi1_nu'),status='old',access='stream')
+#ifdef NEUTRINOS
   open(21,file=opath//'image'//trim(adjustl(str_i))//'/5.000_tf5.000_phi1_nu'//output_suffix(),status='old',access='stream')
     !open(21,file='../../output/universe16/image1/50.000_phi1_1.bin',status='old',access='stream')
   read(21) phu(1:nf,1:nf,1:nf)
   close(21)
+#endif
   vf=vfactor(1/(1+z_checkpoint(cur_checkpoint)))
 
   if (head) print*, '  buffer phi'
@@ -93,6 +95,10 @@ program ang_mom_corr
   phu(:,:,nf+1)=phu(:,:,1)[image1d(icx,icy,ipz)]
   sync all
 
+
+
+
+
   do cur_checkpoint= n_checkpoint,n_checkpoint
     if (head) print*, 'Start analyzing redshift ',z2str(z_checkpoint(cur_checkpoint))
     scale_factor=1/(1+z_checkpoint(cur_checkpoint))
@@ -103,14 +109,12 @@ program ang_mom_corr
     print*,' N_halos_local  =',halo_catalog%nhalo
     print*,' Overdensity    =',halo_catalog%den_odc
     nhalo=halo_catalog%nhalo
-    !nhalo=500
 
-    open(12,file=output_name('halo_pid'),status='old',access='stream')
-
+    open(12,file=output_name('halo_pid'),status='old',access='stream') ! for computing protohalo regions
     ! read halo_init_spin file for writing
-    open(13,file=output_name('halo_init_spin'),status='replace',access='stream')
-    open(14,file=output_name('halo_init_Tc'),status='replace',access='stream')
-    open(16,file=output_name('halo_init_I'),status='replace',access='stream')
+    open(13,file=output_name('halo_init_spin'),status='replace',access='stream') ! to write
+    open(14,file=output_name('halo_init_Tc'),status='replace',access='stream') ! to write
+    open(16,file=output_name('halo_init_I'),status='replace',access='stream') ! to write
 #ifdef Voronoi
     open(19,file=output_name('protohalo_vor_I'),status='old',access='stream')
     allocate(inert_v(3,3,nhalo),inert_temp(3,3,nhalo))
@@ -141,7 +145,7 @@ program ang_mom_corr
     do ihalo=1,nhalo
       pid=0; np=0
       read(11) halo_info
-      read(12) np
+      read(12) np ! PID
       read(12) pid(1:np)
       read(12) ncheck
       halonp(ihalo)=real(np) ! for sorting output
@@ -187,7 +191,7 @@ program ang_mom_corr
       inertia=0
       tide=0
       tidu=0
-      
+
       do ip=1,np
         if (pid(ip)==-1) then
           cycle
@@ -361,7 +365,7 @@ program ang_mom_corr
     print*,''
     print*,'mean ve correlation =',sum(theta(9:11,:nhalo),2)/nhalo
     print*,'mean ff correlation =',sum(theta(8,:nhalo))/nhalo
-    
+
     print*,'torque_c/torque_u=',torque_u/torque_c
 
     close(11);close(12);close(13);close(14);close(16)
@@ -373,6 +377,9 @@ program ang_mom_corr
     enddo
     open(16,file=output_name('halo_correlation'),status='replace',access='stream')
     write(16) theta
+    close(16)
+    open(16,file=output_name('halo_sort_index'),status='replace',access='stream')
+    write(16) isort_mass(nhalo:1:-1)
     close(16)
   enddo
   sync all

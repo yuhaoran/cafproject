@@ -1,7 +1,7 @@
 export FC='gfortran'
-#export XFLAG=' -O3 -cpp -fopenmp -fcoarray=single -mcmodel=medium'
+export XFLAG=' -O3 -cpp -fopenmp -fcoarray=single'
 #export XFLAG=' -cpp -fopenmp -fcoarray=single -fcheck=all'
-export XFLAG='-O3 -cpp -fcoarray=single -fopenmp'
+#export XFLAG='-O3 -cpp -fcoarray=single -fopenmp'
 export OFLAG=${XFLAG}' -c'
 export FFTFLAG='-I/usr/local/include/ -L/usr/local/lib/ -lfftw3f -lm -ldl'
 # -fopenmp cause (maybe memory) probelm: Segmentation fault: 11

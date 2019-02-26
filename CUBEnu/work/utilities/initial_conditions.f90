@@ -409,7 +409,7 @@ print*,r3(1:4,1,1)/Dgrow(sim%a)
   close(11); sync all
 
   open(11,file=output_dir()//'delta_L_proj'//output_suffix(),status='replace',access='stream')
-  write(11) sum(r3,dim=3)/ng/Dgrow(sim%a)
+  write(11) sum(r3(:,:,:50),dim=3)/50/Dgrow(sim%a)
   close(11); sync all
   call system_clock(t2,t_rate)
   if (head) print*, '  elapsed time =',real(t2-t1)/t_rate,'secs';

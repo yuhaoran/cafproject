@@ -8,7 +8,7 @@ OPTIONS+=-DPID
 #OPTIONS+=-Dpositive
 #OPTIONS+=-DEmode -DdspE
 
-all: ic.x ic_nu.x cicpower.x cicrsd.x halofinder.x ang_mom_corr.x #dsp.x #vel.x qspace.x corr.x #convert.x
+all: ic.x ic_nu.x cicpower.x cicrsd.x halofinder.x dsp.x lpt.x ang_mom_corr.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 
 ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o powerspectrum.o
@@ -16,6 +16,8 @@ ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o powerspectru
 ic_nu.x: parameters.o variables.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 
+lpt.x: parameters.o variables.o pencil_fft.o lpt.o halofind.o powerspectrum.o indexedsort.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o
@@ -55,6 +57,8 @@ initial_conditions.o:    initial_conditions.f90    parameters.o variables.o penc
 initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o variables.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 
+lpt.o: lpt.f90 parameters.o variables.o pencil_fft.o powerspectrum.o
+	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 displacement.o: displacement.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 xva_qspace.o: xva_qspace.f90 parameters.o
