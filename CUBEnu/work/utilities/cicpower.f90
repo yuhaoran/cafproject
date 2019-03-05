@@ -3,6 +3,7 @@
 
 !#define write_xreal
 !#define analysis
+#define RSD
 program cicpower
   use parameters
   use pencil_fft
@@ -302,6 +303,12 @@ print*,rho_c(1:2,1:2,2)
       close(15)
     endif
     sync all
+#ifdef RSD
+  open(15,file=output_name('delta_rsd'),status='old',access='stream')
+  read(15) rho_nu
+  close(15)
+    call cross_power(xi,rho_c,rho_nu)
+#endif
 
 #ifdef write_xreal
     close(12)

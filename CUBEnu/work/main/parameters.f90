@@ -22,11 +22,11 @@ module parameters
   ! (hereafter 'number of coarse cells' = 'nc')
   ! (hereafter 'per dimension' = '/dim')
   integer(8),parameter :: nn=1 ! number of imgages (nodes) /dim
-  integer(8),parameter :: ncore=8
+  integer(8),parameter :: ncore=32
   integer(8),parameter :: n_nest=1 ! number of nested threads
   integer(8),parameter :: ncell=4 ! number of nf in each nc, /dim
   integer(8),parameter :: nnt=2 ! number of tiles /image/dim
-  integer(8),parameter :: nc=64 ! nc/image/dim, in physical volume, >=24
+  integer(8),parameter :: nc=128 ! nc/image/dim, in physical volume, >=24
   integer(8),parameter :: nt=nc/nnt ! nc/tile/dim, in physical volume, >=12
 
   integer(8),parameter :: nf=nc*ncell ! >=96
@@ -67,7 +67,7 @@ module parameters
   real,parameter :: pi=4*atan(1.)
 
   ! cosmological parameters
-  real,parameter :: box=50*nn  ! simulation scale /dim, in unit of Mpc/h
+  real,parameter :: box=600*nn  ! simulation scale /dim, in unit of Mpc/h
   real,parameter :: s8=0.8 ! use -Dsigma_8 in initial_conditions
 
   real,parameter :: z_i_nu=5.0 ! initial redshift for neutrinos

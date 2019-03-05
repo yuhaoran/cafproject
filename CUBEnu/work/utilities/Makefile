@@ -17,7 +17,7 @@ ic_nu.x: parameters.o variables.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 
 lpt.x: parameters.o variables.o pencil_fft.o lpt.o halofind.o powerspectrum.o indexedsort.o
-	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+	$(FC) $(XFLAG_NO_OMP) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o
@@ -58,7 +58,7 @@ initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o variables.o penc
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 
 lpt.o: lpt.f90 parameters.o variables.o pencil_fft.o powerspectrum.o
-	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
+	$(FC) $(OFLAG_NO_OMP) $(OPTIONS) $< $(FFTFLAG)
 displacement.o: displacement.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 xva_qspace.o: xva_qspace.f90 parameters.o

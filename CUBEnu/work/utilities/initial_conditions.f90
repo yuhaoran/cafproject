@@ -2,6 +2,7 @@
 #define sigma_8
 !#define READ_SEED
 !#define READ_NOISE
+!#define READ_RECO
 !#define filter_phi
 !#define force_power
 
@@ -385,6 +386,14 @@ program initial_conditions
   call pencil_fft_forward
 #endif
 
+#ifdef READ_RECO
+  open(11,file='/home/yuyu22/0.000_recon_1.bin',access='stream')
+  read(11) r3
+  close(11)
+  r3=r3*Dgrow(sim%a)
+  call pencil_fft_forward
+#endif
+
 
   if (head) cxyz(1,1,1)=0 ! DC frequency
   sync all
@@ -501,6 +510,12 @@ print*,r3(1:4,1,1)/Dgrow(sim%a)
   phi=0
   phi(1:nf,1:nf,1:nf)=r3 ! phi1
   print*,'  phi',phi(1:4,1,1)
+#ifdef READ_RECO
+  open(11,file=output_name('phireco'),status='replace',access='stream')
+  write(11) r3
+  close(11)
+  stop
+#endif
   if (write_potential) then
     if (head) print*, '  write phi1 into file'
     open(11,file=output_name('phi1'),status='replace',access='stream')

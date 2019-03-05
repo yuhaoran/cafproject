@@ -4,6 +4,7 @@
 ! auto-power can be memory optimized
 ! check nexp frequently
 #define linear_kbin
+#define pl2d
 
 module powerspectrum
 use pencil_fft
@@ -12,6 +13,12 @@ use pencil_fft
   integer(8),parameter :: nbin=nint(nyquest*sqrt(3.))
 #else
   integer(8),parameter :: nbin=floor(4*log(nyquest*sqrt(3.)/0.95)/log(2.))
+#endif
+#ifdef pl2d
+  integer kp,kl
+  integer nmode(nint(nyquest*sqrt(2.))+1,nyquest+1)
+  real pow2d(nint(nyquest*sqrt(2.))+1,nyquest+1)
+  real pow2drsd(nint(nyquest*sqrt(2.))+1,nyquest+1)
 #endif
 complex cx1(ng*nn/2+1,ng,npen),cx2(ng*nn/2+1,ng,npen)
 
@@ -43,6 +50,11 @@ subroutine cross_power(xi,cube1,cube2)
 
   xi=0
   sync all
+#ifdef pl2d
+  print*, 'size of pow2d',nint(nyquest*sqrt(2.))+1,nyquest+1
+  pow2d=0
+  nmode=0
+#endif
 
   do k=1,npen
   do j=1,ng
@@ -70,7 +82,13 @@ subroutine cross_power(xi,cube1,cube2)
     amp11=real(cx1(i,j,k)*conjg(cx1(i,j,k)))/(sinc**4.0)*4*pi*kr**3
     amp22=real(cx2(i,j,k)*conjg(cx2(i,j,k)))/(sinc**4.0)*4*pi*kr**3
     amp12=real(cx1(i,j,k)*conjg(cx2(i,j,k)))/(sinc**4.0)*4*pi*kr**3
-
+#ifdef pl2d
+    kp=nint(sqrt(kx(1)**2+kx(3)**2))+1
+    kl=abs(kx(2))+1
+    nmode(kp,kl)=nmode(kp,kl)+1
+    pow2d(kp,kl)=pow2d(kp,kl)+amp11
+    pow2drsd(kp,kl)=pow2drsd(kp,kl)+amp22
+#endif
     xi(3,ibin)=xi(3,ibin)+amp11 ! auto power 1
     xi(4,ibin)=xi(4,ibin)+amp22 ! auto power 2
     xi(5,ibin)=xi(5,ibin)+amp12 ! cross power
@@ -81,6 +99,15 @@ subroutine cross_power(xi,cube1,cube2)
   enddo
   enddo
   sync all
+#ifdef pl2d
+  nmode=max(1,nmode)
+  pow2d=pow2d/nmode
+  pow2drsd=pow2drsd/nmode
+  open(55,file=output_name('pow2d'),status='replace',access='stream')
+  write(55) pow2d
+  write(55) pow2drsd
+  close(55)
+#endif
 
   ! co_sum
   if (head) then
