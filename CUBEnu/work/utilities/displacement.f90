@@ -1,6 +1,7 @@
 !! add -DRECONSTRUCTION to compute delta_E from dsp
 #define Emode
 #define potential
+!#define RSD
 program displacement
   use parameters
 #ifdef Emode
@@ -13,9 +14,10 @@ program displacement
   integer(8) i,j,k,l,i_dim,iq(3),pid8,itx,ity,itz,nlast,ip,np
   integer(4) rhoc(nt,nt,nt,nnt,nnt,nnt),rhoc0(nt,nt,nt,nnt,nnt,nnt)
   integer(1) rho0(ng,ng,ng) !!!! for checking there is one and only one particle per fine grid
-  real dsp(3,ng,ng,ng),pos0(3),pos1(3),dpos(3),pow
-
+  real dsp(3,ng,ng,ng),pos0(3),pos1(3),dpos(3),pow,zshift
+  real(4) vc(3,nt,nt,nt,nnt,nnt,nnt)
   integer(izipx),allocatable :: xp(:,:)
+  integer(izipv),allocatable :: vp(:,:)
   integer(4),allocatable :: pid(:)
 
 #ifdef Emode
@@ -77,13 +79,19 @@ program displacement
       print*, 'nplocal =',sim%nplocal
     endif
     !cdm
-    allocate(xp(3,sim%nplocal))
+    allocate(xp(3,sim%nplocal),vp(3,sim%nplocal))
     allocate(pid(sim%nplocal))
     open(11,file=output_name('xp'),status='old',action='read',access='stream')
     read(11) xp
     close(11)
+    open(11,file=output_name('vp'),status='old',action='read',access='stream')
+    read(11) vp
+    close(11)
     open(11,file=output_name('np'),status='old',action='read',access='stream')
     read(11) rhoc
+    close(11)
+    open(11,file=output_name('vc'),status='old',action='read',access='stream')
+    read(11) vc
     close(11)
     open(14,file=output_name('id'),status='old',action='read',access='stream')
     print*, output_name('id')
@@ -111,7 +119,14 @@ program displacement
           pos0=iq+0.5
           pos1=nt*((/itx,ity,itz/)-1) + (/i,j,k/)-1 + (int(xp(:,ip)+ishift,izipx)+rshift)*x_resolution
           pos1=real(ng)*((/icx,icy,icz/)-1) + pos1*real(ng)/real(nc)
-
+#ifdef RSD
+          zshift=vc(zdim,i,j,k,itx,ity,itz) ! coarse grid velocity field
+          zshift=zshift+tan((pi*real(vp(zdim,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sim%sigma_vi*vrel_boost))
+          zshift=zshift*sim%vsim2phys/sim%a/(100*h0) ! convert to km/h and multiply 1/aH, in Mpc
+          zshift=zshift/(h0*box/nf_global) ! convert to find grid
+          pos1(zdim)=pos1(zdim)+zshift ! add shift field
+          pos1(zdim)=modulo(pos1(zdim),real(ng)) ! peridoc over box
+#endif
           dpos=pos1-pos0
           dpos=modulo(dpos+ng*nn/2,real(ng*nn))-ng*nn/2
           dpos=dpos*real(nf)/real(ng)
@@ -279,7 +294,11 @@ program displacement
       call pencil_fft_backward
       cube1=-r3
       print*,'  write delta_E into file'
+#ifdef RSD
+      open(15,file=output_name('delta_Es'),status='replace',access='stream')
+#else
       open(15,file=output_name('delta_E'),status='replace',access='stream')
+#endif
       write(15) cube1
       close(15)
       sync all

@@ -3,7 +3,8 @@
 
 !#define write_xreal
 !#define analysis
-#define RSD
+!define RSD
+#define RSD_Emode
 program cicpower
   use parameters
   use pencil_fft
@@ -151,10 +152,10 @@ program cicpower
     enddo
     enddo
     enddo
-print*,rho_grid(1:2,1:2,1)
-print*,rho_grid(1:2,1:2,2)
-print*,rho_c(1:2,1:2,1)
-print*,rho_c(1:2,1:2,2)
+    print*,rho_grid(1:2,1:2,1)
+    print*,rho_grid(1:2,1:2,2)
+    print*,rho_c(1:2,1:2,1)
+    print*,rho_c(1:2,1:2,2)
     print*, 'check: min,max,sum of rho_grid = '
     print*, minval(rho_c),maxval(rho_c),sum(rho_c*1d0)
 
@@ -174,9 +175,9 @@ print*,rho_c(1:2,1:2,2)
     !rho_c=rho_c/(rho8/ng_global/ng_global/ng_global)-1
     ! check normalization
     print*,'min',minval(rho_c),'max',maxval(rho_c),'mean',sum(rho_c*1d0)/ng/ng/ng; sync all
-print*,'sample'
-print*,rho_c(1:2,1:2,1)
-print*,rho_c(1:2,1:2,2)
+    print*,'sample'
+    print*,rho_c(1:2,1:2,1)
+    print*,rho_c(1:2,1:2,2)
 
 
 
@@ -296,18 +297,39 @@ print*,rho_c(1:2,1:2,2)
   close(15)
     call cross_power(xi,rho_c,rho_nu)
 #endif
-    sync all
-    if (head) then
-      open(15,file=output_name('cicpower'),status='replace',access='stream')
-      write(15) xi
-      close(15)
-    endif
-    sync all
+  sync all
+  if (head) then
+    open(15,file=output_name('cicpower'),status='replace',access='stream')
+    write(15) xi
+    close(15)
+  endif
+  sync all
+
 #ifdef RSD
-  open(15,file=output_name('delta_rsd'),status='old',access='stream')
-  read(15) rho_nu
+  !open(15,file=output_name('delta_rsd'),status='old',access='stream')
+  open(15,file=output_name('delta_E'),status='old',access='stream')
+  read(15) rho_c
   close(15)
-    call cross_power(xi,rho_c,rho_nu)
+  call cross_power(xi,rho_c,rho_nu)
+  sync all
+  if (head) then
+    open(15,file=output_name('cicpower_LEx'),status='replace',access='stream')
+    write(15) xi
+    close(15)
+  endif
+  sync all
+
+  open(15,file=output_name('delta_Es'),status='old',access='stream')
+  read(15) rho_c
+  close(15)
+  call cross_power(xi,rho_c,rho_nu)
+  sync all
+  if (head) then
+    open(15,file=output_name('cicpower_LEs'),status='replace',access='stream')
+    write(15) xi
+    close(15)
+  endif
+  sync all
 #endif
 
 #ifdef write_xreal

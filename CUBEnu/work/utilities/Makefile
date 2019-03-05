@@ -17,7 +17,7 @@ ic_nu.x: parameters.o variables.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 
 lpt.x: parameters.o variables.o pencil_fft.o lpt.o halofind.o powerspectrum.o indexedsort.o
-	$(FC) $(XFLAG_NO_OMP) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o

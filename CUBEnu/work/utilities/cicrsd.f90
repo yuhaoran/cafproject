@@ -6,7 +6,6 @@ program cicrsd
   ! nc: coarse grid per node per dim
   ! nf: fine grid per node per dim
   real,parameter :: density_buffer=1.2
-  integer,parameter :: zdim=2 ! the dimension being the redhisft direction
   integer(8) i,j,k,l,i_dim,iq(3),nplocal,nplocal_nu,itx,ity,itz
   integer(8) nlast,ip,np,idx1(3),idx2(3)
 
@@ -101,7 +100,7 @@ program cicrsd
           zshift=vc(zdim,i,j,k,itx,ity,itz) ! coarse grid velocity field
           zshift=zshift+tan((pi*real(vp(zdim,ip)))/real(nvbin-1)) / (sqrt(pi/2)/(sigma_vi*vrel_boost))
           zshift=zshift*sim%vsim2phys/sim%a/(100*h0) ! convert to km/h and multiply 1/aH, in Mpc
-          zshift=zshift/(h0*box/nf_global)
+          zshift=zshift/(h0*box/nf_global) ! convert to find grid
           pos1(zdim)=pos1(zdim)+zshift ! add shift field
           pos1(zdim)=modulo(pos1(zdim),real(ng)) ! peridoc over box
 

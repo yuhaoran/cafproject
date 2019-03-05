@@ -4,7 +4,7 @@
 ! auto-power can be memory optimized
 ! check nexp frequently
 #define linear_kbin
-#define pl2d
+!#define pl2d
 
 module powerspectrum
 use pencil_fft
