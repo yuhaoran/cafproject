@@ -1,4 +1,6 @@
+!#define Emode
 !#define specify_potential
+#define get_tcpf
 program lpt
 !  use omp_lib
   use variables, only: spine_tile
@@ -27,9 +29,15 @@ program lpt
   real,allocatable :: spin_x(:,:),spin_q(:,:),spin_t(:,:),theta(:,:),imass(:),imass_info(:,:)
   real,allocatable :: corr_x(:,:,:),corr_q(:,:,:),corr_t(:,:,:),r_small(:),ratio_scale(:)
   integer,allocatable :: ind(:,:),isort_mass(:),i1(:),i2(:),ii1,ii2
+#ifdef get_tcpf
+  integer i_dim
+  complex cmu(ng*nn/2+1,ng,npen)
+#endif
+
 
 #ifdef specify_potential
-  character(*),parameter :: fn='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe38/image1/0.000_phiE_1.bin'
+  !character(*),parameter :: fn='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe38/image1/50.000_phi1_1.bin'
+  character(*),parameter :: fn='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe18/image1/0.000_phireco_1.bin'
 #endif
 
   ! nc: coarse grid per image per dim
@@ -92,7 +100,7 @@ program lpt
   ! construct halo mass bins
   rm=2.0 ! mass bin ratio
   n_rsmall=50
-  n_ratio=1
+  n_ratio=20
   nmassbin=ceiling(log(imass(1)/imass(nhalo))/log(rm))
   allocate(imass_info(4,nmassbin),i1(nmassbin),i2(nmassbin))
   allocate(corr_x(n_rsmall,n_ratio,nmassbin),corr_q(n_rsmall,n_ratio,nmassbin),corr_t(n_rsmall,n_ratio,nmassbin))
@@ -116,27 +124,37 @@ program lpt
   enddo
   ! construct scale bins
   do i=1,n_rsmall
-    r_small(i)=0.1+0.2*(i-1)
+    r_small(i)=0.1+0.1*(i-1)
   enddo
   do i=1,n_ratio
-    ratio_scale(i)=1.1+0.1*(i-1)
+    ratio_scale(i)=1.1+0.3*(i-1)
   enddo
 
   ! open potential file
 #ifdef specify_potential
   open(11,file=fn,access='stream')
 #else
+# ifndef Emode
   cur_checkpoint=1;            open(11,file=output_name('phi1'),access='stream')
-  !cur_checkpoint=n_checkpoint; open(11,file=output_name('phiE'),access='stream')
+# else
+  cur_checkpoint=n_checkpoint; open(11,file=output_name('phiE'),access='stream')
+# endif
 #endif
   read(11) r3
   close(11)
   call pencil_fft_forward ! complex phi stored in cxyz
   phi_k=cxyz ! store raw complex phi into phi_k
 
+#ifdef get_tcpf
+  call write_spin_and_stop(1.2,1.2*1.1)
+#endif
 
   cur_checkpoint=n_checkpoint
-  open(11,file=output_name('lptcorr'),status='replace',access='stream')
+#ifndef Emode
+  open(11,file=output_name('lptcorr_i'),status='replace',access='stream')
+#else
+  open(11,file=output_name('lptcorr_e'),status='replace',access='stream')
+#endif
   write(11),nmassbin,n_rsmall,n_ratio,imass_info(:,:),r_small(:),ratio_scale(:)
   do jj=1,n_ratio
     print*, jj,'/',n_ratio,' rs, ratio, t, q, x'
@@ -164,6 +182,67 @@ call destroy_penfft_plan
 
 
 contains
+
+  subroutine write_spin_and_stop(r_small,ratio_scale)
+    ! use phi_k, apply 2 filters, spinfield, tpcf.
+    implicit none
+    save
+    integer,parameter :: n_dist=ng/2*sqrt(3.)+1
+    integer i_dist(3),ibin
+    real r_small,ratio_scale,r_dist,tpcf(3,n_dist)
+
+    call tophat_fourier_filter(phi_k,r_small)
+    call pencil_fft_backward
+    !call tophat_fourier_filter(phi_k,6.0)
+    !call pencil_fft_backward
+    !open(11,file=output_name('phismall'),status='replace',access='stream')
+    !write(11) r3
+    !close(11)
+    phi(1:nf,1:nf,1:nf)=r3
+    call buffer_1layer(phi)
+
+    call tophat_fourier_filter(phi_k,r_small*ratio_scale)
+    call pencil_fft_backward
+    phi_large(1:nf,1:nf,1:nf)=r3
+    call buffer_1layer(phi_large)
+
+    call spinfield
+    open(11,file=output_name('spinfield'),status='replace',access='stream')
+    write(11) spin
+    close(11)
+    cmu=0 ! complex mu
+    do i_dim=1,3
+      r3=spin(i_dim,:,:,:) ! real space unit vector field, i_dim'th component
+      call pencil_fft_forward
+      cmu=cmu+(abs(cxyz))**2
+    enddo
+    cxyz=cmu/ng_global/ng_global/ng_global
+    call pencil_fft_backward
+    open(11,file=output_name('mu3d'),status='replace',access='stream')
+    write(11) r3
+    close(11)
+    ! angular average (single node)
+    tpcf=0
+    do k=1,ng
+    do j=1,ng
+    do i=1,ng
+      i_dist=mod((/i,j,k/)+ng/2-1,ng)-ng/2
+      r_dist=sqrt(1.0*sum(i_dist**2))
+      ibin=nint(r_dist)+1
+      tpcf(1,ibin)=tpcf(1,ibin)+1
+      tpcf(2,ibin)=tpcf(2,ibin)+r_dist
+      tpcf(3,ibin)=tpcf(3,ibin)+r3(i,j,k)
+    enddo
+    enddo
+    enddo
+    tpcf(2,:)=tpcf(2,:)/tpcf(1,:)*box/ng
+    tpcf(3,:)=tpcf(3,:)/tpcf(1,:)
+    open(11,file=output_name('mu1d'),status='replace',access='stream')
+    write(11) n_dist,tpcf
+    close(11)
+    print*, 'called write_spin_and_stop'
+    stop
+  endsubroutine
 
   subroutine correlate_spin(r_small,ratio_scale)
     implicit none
@@ -239,10 +318,11 @@ contains
       tlarge(1,3)=tlarge(3,1)
 
       torque=-matmul(tsmall,tlarge)
-      spin(1,i,j,k)=-torque(2,3)+torque(3,2);
-      spin(2,i,j,k)=-torque(3,1)+torque(1,3);
+      spin(1,i,j,k)=-torque(2,3)+torque(3,2)
+      spin(2,i,j,k)=-torque(3,1)+torque(1,3)
       spin(3,i,j,k)=-torque(1,2)+torque(2,1)
       spinmag(i,j,k)=norm2(spin(:,i,j,k))
+      spin(:,i,j,k)=spin(:,i,j,k)/spinmag(i,j,k)
     enddo
     enddo
     enddo
@@ -275,6 +355,35 @@ contains
     enddo
     enddo
     if (head) cxyz(1,1,1)=0 ! DC frequency
+  endsubroutine
+
+  subroutine tophat_fourier_filter(phi_k,r_filter)
+    ! apply tophat window function with radius r_filter to Fourier space phi_k
+    ! returns Fourier space cxyz
+    implicit none
+    integer,parameter :: n_dist=ng/2*sqrt(3.)+1
+    integer i_dist(3),ibin
+    real r_small,ratio_scale,r_dist,r_filter
+    complex phi_k(nyquest+1,nf,npen)
+
+    ! construct real space tophat
+    do k=1,ng
+    do j=1,ng
+    do i=1,ng
+      i_dist=mod((/i,j,k/)+ng/2-1,ng)-ng/2
+      r_dist=sqrt(1.0*sum(i_dist**2))*box/ng
+      r3(i,j,k)=merge(1.0,0.0,r_dist<=r_filter)
+    enddo
+    enddo
+    enddo
+    !open(11,file=output_name('tophat'),status='replace',access='stream')
+    !write(11) r3
+    !close(11)
+    call pencil_fft_forward ! get complex tophat
+    !open(11,file=output_name('ctophat'),status='replace',access='stream')
+    !write(11) cxyz
+    !close(11)
+    cxyz=phi_k*cxyz
   endsubroutine
 
 endprogram
