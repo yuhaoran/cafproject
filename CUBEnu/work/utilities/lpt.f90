@@ -333,7 +333,8 @@ contains
         r_dist=norm2(real(i_dist))
         xixjr2=merge(i_dist(i_dim)*i_dist(j_dim)/r_dist**2,0.0,r_dist/=0)
         proj_b=proj_b+2*xixjr2
-        ibin=nint(r_dist)+1
+        !ibin=nint(r_dist)+1
+        ibin=floor(log(max(r_dist,0.51))/log(2.)+2)
         abr(1,ibin)=abr(1,ibin)+1
         abr(2,ibin)=abr(2,ibin)+r_dist
         abr(3,ibin)=abr(3,ibin)+r3(i,j,k)*proj_a
