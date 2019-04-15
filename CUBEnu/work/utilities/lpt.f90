@@ -18,11 +18,14 @@ program lpt
   real phi(0:nf+1,0:nf+1,0:nf+1)[*]
   real phi_large(0:nf+1,0:nf+1,0:nf+1)[*]
   complex phi_k(nyquest+1,nf,npen)
+  complex phi_k_extra1(nyquest+1,nf,npen)
+  complex phi_k_extra2(nyquest+1,nf,npen)
   real delta2(ng,ng,ng)
   integer i,j,k,n_rsmall,n_ratio,nmassbin,itemp,l
   real t11,t22,t33,t12,t23,t31
   real tsmall(3,3),tlarge(3,3),torque(3,3)
   real spin(3,ng,ng,ng),spinmag(ng,ng,ng),n_object(ng,ng,ng)
+  real spin_extra(3,ng,ng,ng)
   type(type_halo_info) halo_info
   type(type_halo_catalog) halo_catalog
   real,allocatable :: spin_x(:,:),spin_q(:,:),spin_t(:,:),theta(:,:),imass(:),imass_info(:,:)
@@ -141,8 +144,33 @@ program lpt
   phi_k=cxyz ! store raw complex phi into phi_k
 
 #ifdef debug
-  call ngp_spinfield
-  call spin_analysis(0.8,2.2)
+  !call ngp_spinfield
+  open(11,file='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe2/image1/50.000_phi1_1.bin',access='stream')
+  !open(11,file='/Users/haoran/cloud/cafproject/CUBEnu/output/universe1/image1/50.000_phi1_1.bin',access='stream')
+  read(11) r3
+  close(11)
+  call pencil_fft_forward
+  phi_k_extra1=cxyz
+
+  open(11,file='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe2/image1/50.000_phi1_1.bin',access='stream')
+  !open(11,file='/Users/haoran/cloud/cafproject/CUBEnu/output/universe1/image1/50.000_phi1_1.bin',access='stream')
+  read(11) r3
+  close(11)
+  call pencil_fft_forward
+  phi_k_extra2=cxyz
+
+  call spin_analysis(phi_k_extra1,phi_k_extra2,phi_k,0.8,2.2)
+
+  open(11,file='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe2/image1/delta_L_1.bin',access='stream')
+  !open(11,file='/Users/haoran/cloud/cafproject/CUBEnu/output/universe1/image1/delta_L_1.bin',access='stream')
+  read(11) r3
+  close(11)
+  call pencil_fft_forward
+  phi_k=cxyz
+  call tophat_fourier_filter(phi_k,0.8)
+  call pencil_fft_backward
+  call stpcf(flag_discrete=.false.)
+
   print*,'debug complete'
   stop
 #endif
@@ -209,29 +237,96 @@ contains
     print*,'  called ngp_spinfield'
   endsubroutine
 
-  subroutine spin_analysis(r_small,ratio_scale)
+  subroutine spin_analysis(cphi1,cphi2,cphi,r_small,ratio_scale)
     ! use phi_k, apply 2 filters, spinfield, ar.
     implicit none
     save
     real r_small,ratio_scale
+
+    complex cphi1(nyquest+1,nf,npen)
+    complex cphi2(nyquest+1,nf,npen)
+    complex cphi(nyquest+1,nf,npen)
     ! phi
-    call tophat_fourier_filter(phi_k,r_small)
+    call tophat_fourier_filter(cphi1,r_small)
     call pencil_fft_backward
     phi(1:nf,1:nf,1:nf)=r3
     call buffer_1layer(phi)
     ! phi+
-    call tophat_fourier_filter(phi_k,r_small*ratio_scale)
+    call tophat_fourier_filter(cphi,r_small*ratio_scale)
     call pencil_fft_backward
     phi_large(1:nf,1:nf,1:nf)=r3
     call buffer_1layer(phi_large)
-    ! e T T+
     call spinfield
-    !open(11,file=output_name('spinfield'),status='replace',access='stream')
-    !write(11) spin
-    !close(11)
+    spin_extra=spin
+
+    call tophat_fourier_filter(cphi2,r_small)
+    call pencil_fft_backward
+    phi(1:nf,1:nf,1:nf)=r3
+    call buffer_1layer(phi)
+    call spinfield
     call vtpcf(flag_discrete=.false.)
     print*,'  called spin_analysis'
   endsubroutine
+
+  subroutine stpcf(flag_discrete)
+    ! scalar-field two point correlation function
+    implicit none
+    save
+    integer,parameter :: n_dist=ng/2*sqrt(3.)+1
+    logical flag_discrete
+    integer(8) nmode(n_dist)
+    real proj_a,r_dist
+    real(8) abr(3,n_dist)
+    integer i_dist(3),ibin
+
+    call pencil_fft_forward
+    cxyz = real(cxyz*conjg(cxyz)) ! trace
+    if (flag_discrete) then
+      r3=n_object
+      call pencil_fft_forward
+      cxyz=real(cxyz*conjg(cxyz))
+      call pencil_fft_backward
+      n_object=r3
+    endif
+    abr=0; nmode=0
+
+    call pencil_fft_backward
+
+    if (flag_discrete) then
+      n_object=max(0.001,n_object) ! remove zeros
+      r3=r3/n_object
+    else
+      r3=r3/ng_global/ng_global/ng_global
+    endif
+
+    do k=1,ng
+    do j=1,ng
+    do i=1,ng
+      i_dist=mod((/i,j,k/)+ng/2-1,ng)-ng/2
+      r_dist=norm2(real(i_dist))
+      !ibin=nint(r_dist)+1
+      ibin=floor(log(max(r_dist,0.91))/log(1.1)+2)
+      nmode(ibin)=nmode(ibin)+1
+      abr(1,ibin)=abr(1,ibin)+r_dist
+      abr(2,ibin)=abr(2,ibin)+r3(i,j,k) ! A(r)
+    enddo
+    enddo
+    enddo
+    abr(1,:)=abr(1,:)/nmode*box/ng
+    abr(2,:)=abr(2,:)/nmode
+
+    if (flag_discrete) then
+      open(11,file=output_name('ar_discrete'),status='replace',access='stream')
+    else
+      open(11,file=output_name('ar'),status='replace',access='stream')
+    endif
+    write(11) n_dist,nmode,abr
+    close(11)
+    print*, '    called stpcf'
+  endsubroutine
+
+
+
 
   subroutine vtpcf(flag_discrete)
     ! vector-field two point correlation function
@@ -240,21 +335,26 @@ contains
     save
     integer,parameter :: n_dist=ng/2*sqrt(3.)+1
     logical flag_discrete
-    real proj_a,proj_b,r_dist,abr(4,n_dist),xixjr2
+    integer(8) nmode(n_dist)
+    real proj_a,proj_b,r_dist,xixjr2
+    real(8) abr(3,n_dist)
     complex complex_Cij(ng*nn/2+1,ng,npen,6)
     integer i_dim,j_dim,i_dist(3),ibin
-    complex c_i(ng*nn/2+1,ng,npen)
-
+    complex c1_i(ng*nn/2+1,ng,npen)
+    complex c2_i(ng*nn/2+1,ng,npen)
     complex_Cij=0 ! complex L_i*L_j
     do i_dim=1,3
       r3=spin(i_dim,:,:,:) ! real space unit vector field, i_dim'th component
       call pencil_fft_forward
-      c_i=cxyz
-      complex_Cij(:,:,:,i_dim) = cxyz*conjg(cxyz) ! trace
+      c1_i=cxyz
+      r3=spin_extra(i_dim,:,:,:) ! real space unit vector field, i_dim'th component
+      call pencil_fft_forward
+      c2_i=cxyz
+      complex_Cij(:,:,:,i_dim) = real(c1_i*conjg(c2_i)) ! trace
       do j_dim=1,i_dim-1 ! off-diag
-        r3=spin(j_dim,:,:,:)
+        r3=spin_extra(j_dim,:,:,:)
         call pencil_fft_forward
-        complex_Cij(:,:,:,i_dim+j_dim+1) = c_i*conjg(cxyz)
+        complex_Cij(:,:,:,i_dim+j_dim+1) = real(c1_i*conjg(cxyz))
       enddo
     enddo
 
@@ -265,49 +365,16 @@ contains
       call pencil_fft_backward
       n_object=r3
     endif
-    !open(11,file=output_name('n_object'),status='replace',access='stream')
-    !write(11) r3
-    !close(11)
-    !stop
-
-    ! calculate A(r) & B(r)
-    ! diagonal part
-    !cxyz=complex_Cii/ng_global/ng_global/ng_global
-    !call pencil_fft_backward
-    !open(11,file=output_name('mu3d'),status='replace',access='stream')
-    !write(11) r3
-    !close(11)
-    ! angular average (single node)
-    !abr=0
-    !do k=1,ng
-    !do j=1,ng
-    !do i=1,ng
-    !  i_dist=mod((/i,j,k/)+ng/2-1,ng)-ng/2
-    !  r_dist=norm2(real(i_dist))
-    !  ibin=nint(r_dist)+1
-    !  abr(1,ibin)=abr(1,ibin)+1
-    !  abr(2,ibin)=abr(2,ibin)+r_dist
-    !  abr(3,ibin)=abr(3,ibin)+r3(i,j,k)
-    !enddo
-    !enddo
-    !enddo
-    !abr(2,:)=abr(2,:)/abr(1,:)*box/ng
-    !abr(3,:)=abr(3,:)/abr(1,:)
-    !open(11,file=output_name('mu1d'),status='replace',access='stream')
-    !write(11) n_dist,ar
-    !close(11)
-
-    ! off-diagonal part
 
     ! angular average (single node)
-    abr=0
+    abr=0; nmode=0
     do l=1,6 ! xx,yy,zz,xy,xz,yz
       if     (l==1) then
-        i_dim=1; j_dim=1; proj_a=1; proj_b=-2./3.
+        i_dim=1; j_dim=1; proj_a=1; proj_b=-1./3.
       elseif (l==2) then
-        i_dim=2; j_dim=2; proj_a=1; proj_b=-2./3.
+        i_dim=2; j_dim=2; proj_a=1; proj_b=-1./3.
       elseif (l==3) then
-        i_dim=3; j_dim=3; proj_a=1; proj_b=-2./3.
+        i_dim=3; j_dim=3; proj_a=1; proj_b=-1./3.
       elseif (l==4) then
         i_dim=1; j_dim=2; proj_a=0; proj_b=0
       elseif (l==5) then
@@ -334,25 +401,31 @@ contains
         xixjr2=merge(i_dist(i_dim)*i_dist(j_dim)/r_dist**2,0.0,r_dist/=0)
         proj_b=proj_b+2*xixjr2
         !ibin=nint(r_dist)+1
-        ibin=floor(log(max(r_dist,0.51))/log(2.)+2)
-        abr(1,ibin)=abr(1,ibin)+1
-        abr(2,ibin)=abr(2,ibin)+r_dist
-        abr(3,ibin)=abr(3,ibin)+r3(i,j,k)*proj_a
-        if (i_dim/=j_dim) abr(4,ibin)=abr(4,ibin)+r3(i,j,k)*proj_b
+        ibin=floor(log(max(r_dist,0.91))/log(1.1)+2)
+        nmode(ibin)=nmode(ibin)+1
+        abr(1,ibin)=abr(1,ibin)+r_dist
+        abr(2,ibin)=abr(2,ibin)+r3(i,j,k)*proj_a ! A(r)
+        if (i_dim==j_dim) then ! reduces noise
+          abr(3,ibin)=abr(3,ibin)+r3(i,j,k)*(-1./3.)
+        else
+          abr(3,ibin)=abr(3,ibin)+r3(i,j,k)*proj_b ! B(r)
+        endif
       enddo
       enddo
       enddo
     enddo
-    abr(2,:)=abr(2,:)/abr(1,:)*box/ng
-    abr(3,:)=abr(3,:)/abr(1,:)/1.5
-    abr(4,:)=abr(4,:)/abr(1,:)/1.5
+
+    abr(1,:)=abr(1,:)/nmode*box/ng
+
+    abr(2,:)=abr(2,:)/nmode/1.5
+    abr(3,:)=abr(3,:)/nmode/1.5
 
     if (flag_discrete) then
       open(11,file=output_name('arbr_discrete'),status='replace',access='stream')
     else
       open(11,file=output_name('arbr'),status='replace',access='stream')
     endif
-    write(11) n_dist,abr
+    write(11) n_dist,nmode,abr
     close(11)
     print*, '    called vtpcf'
   endsubroutine
@@ -372,7 +445,7 @@ contains
     phi_large(1:nf,1:nf,1:nf)=r3
     call buffer_1layer(phi_large)
 
-    call spinfield
+    call spinfield !(phi,phi_large,spin)
     do ihalo=1,nhalo
       theta(1,ihalo)=ccc(spin_t(:,ihalo),spin(:,ind(1,ihalo),ind(2,ihalo),ind(3,ihalo)))
       theta(2,ihalo)=ccc(spin_q(:,ihalo),spin(:,ind(1,ihalo),ind(2,ihalo),ind(3,ihalo)))
@@ -408,8 +481,12 @@ contains
     phi(:,:,nf+1)=phi(:,:,1)[image1d(icx,icy,ipz)]; sync all
   endsubroutine
 
-  subroutine spinfield
+  subroutine spinfield !(phi,phi_large,spin)
     implicit none
+    save
+    !real phi(0:nf+1,0:nf+1,0:nf+1)[*]
+    !real phi_large(0:nf+1,0:nf+1,0:nf+1)[*]
+    !real spin(3,ng,ng,ng)
     do k=1,ng
     do j=1,ng
     do i=1,ng
