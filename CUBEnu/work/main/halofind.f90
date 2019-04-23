@@ -447,6 +447,7 @@ subroutine halofind
           halo_info%inertia(3,2)=halo_info%inertia(2,3)
           halo_info%inertia(1,3)=halo_info%inertia(3,1)
           !print*,halo_info
+#ifdef PID
           if (minval(pid(ilist_odc(:i_odc)))<1) then
             print*, "  warning: pids are not all positive integers"
             !print*, pid(ilist_odc(:i_odc))
@@ -456,13 +457,14 @@ subroutine halofind
 #         ifdef HID
             hid(pid(ilist_odc(:i_odc)))=nhalo
 #         endif
+#endif
           !write(101) i_odc,GroupOffset
           temp_halo(1,nhalo)=i_odc
           temp_halo(2,nhalo)=GroupOffset
           !write(102) pid(ilist_odc(:i_odc))
           GroupOffset=GroupOffset+i_odc
           header_halo_tab%Nids=header_halo_tab%Nids+i_odc
-
+#ifdef PID
           ! compute inertia in q-space
           halo_info%q_mean=0
           nptemp=0;
@@ -516,6 +518,7 @@ subroutine halofind
             print*,'inertia_q',halo_info%inertia_q
             !stop
           endif
+#endif
           write(11) halo_info ! if the maximum is in physical regions
         else
 #         ifdef analysis
