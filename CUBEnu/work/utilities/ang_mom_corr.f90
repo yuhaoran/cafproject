@@ -1,6 +1,23 @@
 !#define eig
 !#define Voronoi
 !#define NEUTRINOS
+
+module halo_output
+  implicit none
+
+  type type_halo_catalog
+    integer nhalo_tot,nhalo
+    real den_odc
+  endtype
+
+  type type_halo_info
+    real hpos(3)
+    real mass_odc,radius_odc,v_disp
+    real x_mean(3),v_mean(3),ang_mom(3),var_x(3),inertia(3,3)
+    real q_mean(3),inertia_q(3,3)
+  endtype
+endmodule
+
 program ang_mom_corr
   use parameters
   use halo_output, only: type_halo_catalog, type_halo_info
@@ -8,6 +25,8 @@ program ang_mom_corr
   save
   ! nc: coarse grid per node per dim
   ! nf: fine grid per node per dim
+
+
 
   integer,parameter :: nc_halo_max=128
   integer,parameter :: newbox_max=30

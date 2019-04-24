@@ -26,7 +26,7 @@ cicrsd.x: parameters.o variables.o particle_initialization.o cicrsd.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 halofinder.x: parameters.o variables.o halofind.o indexedsort.o buffer_grid.o buffer_particle.o particle_initialization.o halofinder.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
-ang_mom_corr.x: parameters.o variables.o ang_mom_corr.o halofind.o indexedsort.o
+ang_mom_corr.x: parameters.o variables.o ang_mom_corr.o indexedsort.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 vel.x:  parameters.o pencil_fft.o powerspectrum.o velocity_field.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
