@@ -11,7 +11,7 @@ module halo_output
     real hpos(3)
     real mass_odc,radius_odc,v_disp
     real x_mean(3),v_mean(3),ang_mom(3),var_x(3),inertia(3,3)
-    real q_mean(3),inertia_q(3,3)
+    real q_mean(3),inertia_q(3,3),s_mean(3)
   endtype
 endmodule
 
@@ -55,6 +55,9 @@ subroutine halofind
 #ifdef HID
   integer(2) hid(nf**3)
 #endif
+
+  real,parameter :: cen(3)=[30,370,370]
+  real(4) los(3),sx(3)
 
   if (head) print*, ''
   if (head) print*, 'halofind'
@@ -422,13 +425,21 @@ subroutine halofind
             print*,'  it is a physical halo'
 #         endif
           nhalo=nhalo+1
-          halo_info%hpos=hpos+([itx,ity,itz]-1)*nft
+          halo_info%hpos=modulo(hpos+([itx,ity,itz]-1)*nft,real(nf_global))
           halo_info%mass_odc=real(i_odc)
           halo_info%x_mean=sum(xv_odc(1:3,:i_odc),2)/i_odc
           halo_info%var_x=sum((xv_odc(1:3,:i_odc)-spread(halo_info%x_mean,2,i_odc))**2,2)/(i_odc-1)
-          halo_info%x_mean=halo_info%x_mean+([itx,ity,itz]-1)*nft
+          halo_info%x_mean=modulo(halo_info%x_mean+([itx,ity,itz]-1)*nft,real(nf_global))
           halo_info%v_mean=sum(xv_odc(4:6,:i_odc),2)/i_odc
           halo_info%v_disp=sqrt(sum((xv_odc(4:6,:i_odc)-spread(halo_info%v_mean,2,i_odc))**2)/(i_odc-1))
+
+          los=halo_info%x_mean-(cen/500.)*ng_global
+          los=los/norm2(los)
+          sx=sum(halo_info%v_mean*los)*los ! project velocity to line of sight
+          sx=sx*sim%vsim2phys/sim%a/(100*h0) ! convert to km/h and multiply 1/aH, in Mpc
+          sx=sx/(h0*box/nf_global) ! convert to find grid
+          halo_info%s_mean=modulo(halo_info%x_mean+sx,real(nf_global))
+
           halo_info%ang_mom=0
           do ii=1,i_odc
             dx=xv_odc(1:3,ii)-(halo_info%x_mean-([itx,ity,itz]-1)*nft)

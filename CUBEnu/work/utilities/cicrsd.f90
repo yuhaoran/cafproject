@@ -7,7 +7,7 @@ program cicrsd
   ! nc: coarse grid per node per dim
   ! nf: fine grid per node per dim
   real,parameter :: density_buffer=1.2
-  real,parameter :: cen(3)=[370,370,30]
+  real,parameter :: cen(3)=[30,370,370]
   integer(8) i,j,k,l,i_dim,iq(3),nplocal,nplocal_nu,itx,ity,itz
   integer(8) nlast,ip,np,idx1(3),idx2(3)
 
