@@ -3,12 +3,12 @@ OPTIONS+=-Dsigma8
 #OPTIONS+=-Danalysis
 #OPTIONS+=-Ddiv3 -Dhackdsp
 
-#OPTIONS+=-Wall
+#OPTIONS+=-w2
 OPTIONS+=-DPID
 #OPTIONS+=-Dpositive
 #OPTIONS+=-DEmode -DdspE
 
-all: ic.x ic_nu.x cicpower.x cicrsd.x halofinder.x dsp.x lpt.x ang_mom_corr.x #vel.x qspace.x corr.x #convert.x
+all: ic.x cicpower.x cicrsd.x cicrsd1.x halofinder.x dsp.x lpt.x lpt1.x ang_mom_corr.x #vel.x qspace.x corr.x #convert.x
 	@echo "done"
 
 ic.x:    parameters.o variables.o pencil_fft.o initial_conditions.o powerspectrum.o
@@ -17,12 +17,16 @@ ic_nu.x: parameters.o variables.o pencil_fft.o initial_conditions_nu.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 
 lpt.x: parameters.o variables.o pencil_fft.o lpt.o halofind.o powerspectrum.o indexedsort.o
-	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+	$(FC) $(XFLAG_NO_OMP) $(OPTIONS) $^ -o $@ $(FFTFLAG)
+lpt1.x: parameters.o lpt1.o
+	$(FC) $(XFLAG_NO_OMP) $(OPTIONS) $^ -o $@ $(FFTFLAG)
 dsp.x: parameters.o pencil_fft.o powerspectrum.o displacement.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
-cicpower.x: parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o cicpower.o
+cicpower.x: parameters.o variables.o pencil_fft.o powerspectrum.o cicpower.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@ $(FFTFLAG)
-cicrsd.x: parameters.o variables.o particle_initialization.o cicrsd.o
+cicrsd.x: parameters.o cicrsd.o
+	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
+cicrsd1.x: parameters.o cicrsd1.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
 halofinder.x: parameters.o variables.o halofind.o indexedsort.o buffer_grid.o buffer_particle.o particle_initialization.o halofinder.o
 	$(FC) $(XFLAG) $(OPTIONS) $^ -o $@
@@ -59,15 +63,19 @@ initial_conditions_nu.o: initial_conditions_nu.f90 parameters.o variables.o penc
 
 lpt.o: lpt.f90 parameters.o variables.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG_NO_OMP) $(OPTIONS) $< $(FFTFLAG)
+lpt1.o: lpt1.f90 parameters.o
+	$(FC) $(OFLAG_NO_OMP) $(OPTIONS) $< $(FFTFLAG)
 displacement.o: displacement.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
 xva_qspace.o: xva_qspace.f90 parameters.o
 	$(FC) $(OFLAG) $(OPTIONS) $<
 correlation_qspace.o: correlation_qspace.f90 parameters.o pencil_fft.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-cicpower.o: cicpower.f90 parameters.o variables.o particle_initialization.o pencil_fft.o powerspectrum.o
+cicpower.o: cicpower.f90 parameters.o variables.o pencil_fft.o powerspectrum.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)
-cicrsd.o: cicrsd.f90 parameters.o variables.o particle_initialization.o
+cicrsd.o: cicrsd.f90 parameters.o 
+	$(FC) $(OFLAG) $(OPTIONS) $<
+cicrsd1.o: cicrsd1.f90 parameters.o 
 	$(FC) $(OFLAG) $(OPTIONS) $<
 ang_mom_corr.o: ang_mom_corr.f90 parameters.o indexedsort.o
 	$(FC) $(OFLAG) $(OPTIONS) $< $(FFTFLAG)

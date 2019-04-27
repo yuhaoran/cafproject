@@ -169,11 +169,6 @@ program cicrsd
     enddo
     enddo
 
-    print*,rho_grid(1:2,1:2,1)
-    print*,rho_grid(1:2,1:2,2)
-    print*,rho_c(1:2,1:2,1)
-    print*,rho_c(1:2,1:2,2)
-
     print*, 'check: min,max,sum of rho_grid = '
     print*, minval(rho_c),maxval(rho_c),sum(rho_c*1d0)
 

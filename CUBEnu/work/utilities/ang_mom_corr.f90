@@ -14,7 +14,7 @@ module halo_output
     real hpos(3)
     real mass_odc,radius_odc,v_disp
     real x_mean(3),v_mean(3),ang_mom(3),var_x(3),inertia(3,3)
-    real q_mean(3),inertia_q(3,3)
+    real q_mean(3),inertia_q(3,3),s_mean(3)
   endtype
 endmodule
 

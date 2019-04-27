@@ -1,6 +1,6 @@
 !#define Emode
 !#define specify_potential
-#define debug
+!#define debug
 program lpt
 !  use omp_lib
   use variables, only: spine_tile
@@ -97,8 +97,8 @@ program lpt
   ind=ind(:,isort_mass)
   ! construct halo mass bins
   rm=2.0 ! mass bin ratio
-  n_rsmall=15
-  n_ratio=20
+  n_rsmall=10
+  n_ratio=5
   nmassbin=ceiling(log(imass(1)/imass(nhalo))/log(rm))
   allocate(imass_info(4,nmassbin),i1(nmassbin),i2(nmassbin))
   allocate(corr_x(n_rsmall,n_ratio,nmassbin),corr_q(n_rsmall,n_ratio,nmassbin),corr_t(n_rsmall,n_ratio,nmassbin))
@@ -122,10 +122,10 @@ program lpt
   enddo
   ! construct scale bins
   do i=1,n_rsmall
-    r_small(i)=0.4+0.4*(i-1)
+    r_small(i)=1.0+0.4*(i-1)
   enddo
   do i=1,n_ratio
-    ratio_scale(i)=1.5+0.2*(i-1)
+    ratio_scale(i)=1.1+0.2*(i-1)
   enddo
 
   ! open potential file
@@ -186,7 +186,10 @@ program lpt
   do jj=1,n_ratio
     print*, jj,'/',n_ratio,' rs, ratio, t, q, x'
     do ii=1,n_rsmall
+      call system_clock(tt1,t_rate)
       call correlate_spin(r_small(ii),ratio_scale(jj)) ! loop over mass bins
+      call system_clock(tt2,t_rate)
+      print*, '  elapsed time =',real(tt2-tt1)/t_rate,'secs';
     enddo
     print*,''
   enddo
@@ -435,12 +438,12 @@ contains
     save
     real r_small,ratio_scale
 
-    call tophat_fourier_filter(phi_k,r_small)
+    call gaussian_fourier_filter(phi_k,r_small)
     call pencil_fft_backward
     phi(1:nf,1:nf,1:nf)=r3
     call buffer_1layer(phi)
 
-    call tophat_fourier_filter(phi_k,r_small*ratio_scale)
+    call gaussian_fourier_filter(phi_k,r_small*ratio_scale)
     call pencil_fft_backward
     phi_large(1:nf,1:nf,1:nf)=r3
     call buffer_1layer(phi_large)
