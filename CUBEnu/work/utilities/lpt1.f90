@@ -1,7 +1,6 @@
 !#define macbook
-!#define Emode
-!#define specify_potential
 !#define debug
+#define reco_idsp
 program lpt
   use omp_lib
   use parameters
@@ -12,16 +11,17 @@ program lpt
 
   integer,parameter :: ngrid=500 ! ELUCID grid number
 
-  integer(4) t1,t2,tt1,tt2,ttt1,ttt2,t_rate,nhalo,ihalo
+  integer(4) t1,t2,tt1,tt2,ttt1,ttt2,t_rate,nhalo,ihalo,hgrid(3)
   integer(8) kg,jg,ig,ii,jj,imassbin
   real kr,kx,ky,kz,pow,r_filter,rm,masstemp
-  real spin_u(3),spin_v(3),spin_r(3),spin_e(3,3),spin_vor(3)
+  real spin_u(3),spin_v(3),spin_r(3),spin_e(3,3),hpos1(3),hpos0(3)
   integer(8) plan_fft_fine,plan_ifft_fine
   real rho_f(ngrid+2,ngrid,ngrid)
   complex crho_f(ngrid/2+1,ngrid,ngrid)
 
   real phi(0:ngrid+1,0:ngrid+1,0:ngrid+1)
   real phi_large(0:ngrid+1,0:ngrid+1,0:ngrid+1)
+  real idsp(3,ngrid,ngrid,ngrid)
   complex phi_k(ngrid/2+1,ngrid,ngrid)
   integer i,j,k,n_rsmall,n_ratio,nmassbin,itemp,l
   real t11,t22,t33,t12,t23,t31
@@ -47,10 +47,6 @@ program lpt
   type(type_halo_info) halo_info
   type(type_halo_catalog) halo_catalog
 
-#ifdef specify_potential
-  !character(*),parameter :: fn='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe38/image1/50.000_phi1_1.bin'
-  character(*),parameter :: fn='/mnt/raid-cita/haoran/spin/cafproject/CUBEnu/output/universe18/image1/0.000_phireco_1.bin'
-#endif
 
   !call omp_set_num_threads(ncore)
   !call geometry
@@ -89,11 +85,26 @@ program lpt
   allocate(isort_mass(nhalo),imass(nhalo))
   allocate(spin_x(3,nhalo),spin_q(3,nhalo),spin_t(3,nhalo),ind(3,nhalo),theta(3,nhalo))
   ! read halo q-pos & spin
+
+#ifdef reco_idsp
+  open(10,file=output_name('idsp_c'),status='old',access='stream')
+  read(10) idsp
+  close(10)
+#endif
+
   do ihalo=1,nhalo
     read(11) halo_info
     read(12) spin_q(:,ihalo),spin_t(:,ihalo),spin_x(:,ihalo),spin_u,spin_v,spin_r,spin_e(:,1:3)
     imass(ihalo)=halo_info%mass_odc
-    ind(:,ihalo)=floor(halo_info%q_mean/real(ng_global)*real(ngrid))+1
+#   ifdef reco_idsp
+      hpos1 = halo_info%s_mean/real(ng_global)*real(ngrid)
+      hgrid = ceiling(hpos1)
+      hpos0 = hpos1 + idsp(:,hgrid(1),hgrid(2),hgrid(3))
+      hpos0 = modulo(hpos0,real(ngrid))
+      ind(:,ihalo) = ceiling(hpos0)
+#   else
+    ind(:,ihalo)=ceiling(halo_info%q_mean/real(ng_global)*real(ngrid))
+#   endif
   enddo
   read(13) isort_mass ! read index by halo mass sort
   close(11)
@@ -138,24 +149,6 @@ program lpt
     ratio_scale(i)=1.1+0.2*(i-1)
   enddo
 
-  ! open potential file
-!#ifdef specify_potential
-!  open(11,file=fn,access='stream')
-!#else
-!# ifndef Emode
-!  cur_checkpoint=1;            open(11,file=output_name('phi1'),access='stream')
-!# else
-!  cur_checkpoint=n_checkpoint; open(11,file=output_name('phiE'),access='stream')
-!# endif
-!#endif
-!  read(11) rho_f(:ngrid,:,:)
-!  close(11)
-!  call system_clock(tt1,t_rate)
-!  call sfftw_execute(plan_fft_fine)
-!  call system_clock(tt2,t_rate)
-!  print*, '  elapsed time =',real(tt2-tt1)/t_rate,'secs';
-!  print*, rho_f(1:10,100,100)
-
   open(11,file='../../S500_5001/cxyz_251_500_500.bin',access='stream')
   read(11) rho_f
   close(11)
@@ -188,11 +181,7 @@ program lpt
 
 
   cur_checkpoint=n_checkpoint
-#ifndef Emode
   open(11,file=output_name('lptcorr_i'),status='replace',access='stream')
-#else
-  open(11,file=output_name('lptcorr_e'),status='replace',access='stream')
-#endif
   write(11),nmassbin,n_rsmall,n_ratio,imass_info(:,:),r_small(:),ratio_scale(:)
   do jj=1,n_ratio
     print*, jj,'/',n_ratio,' rs, ratio, t, q, x'
