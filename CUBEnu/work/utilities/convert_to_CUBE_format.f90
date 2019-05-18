@@ -2,7 +2,7 @@ program convert_format
   implicit none
 
   integer,parameter :: np=256**3
-  integer,parameter :: nc=64
+  integer,parameter :: nc=128
   integer,parameter :: nnt=2
   integer,parameter :: nt=nc/nnt
   integer,parameter :: ncell=4
@@ -90,7 +90,7 @@ program convert_format
   sim%vsim2phys=(150./sim%a)*box*sqrt(sim%omega_m)/nf
   sim%z_i=99
   sim%z_i_nu=99
-  sim%mass_p_cdm=1
+  sim%mass_p_cdm=real(nf**3)/real(np)
   print*,'sim%vsim2phys =',sim%vsim2phys
 
   open(11,file='IC.dat',status='old',action='read',access='stream')
